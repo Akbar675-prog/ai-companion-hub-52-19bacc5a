@@ -194,6 +194,7 @@ function AppForm({
   const [version, setVersion] = useState(existing?.Version ?? "");
   const [playLink, setPlayLink] = useState(existing?.Play_link ?? "");
   const [sizeLabel, setSizeLabel] = useState(existing?.Size_label ?? "");
+  const [packageName, setPackageName] = useState(existing?.Package_name ?? "");
   const [archArm64V8a, setArchArm64V8a] = useState(existing?.Arch?.arm64_v8a ?? false);
   const [archArmeabiV7a, setArchArmeabiV7a] = useState(existing?.Arch?.armeabi_v7a ?? false);
   const [archX86, setArchX86] = useState(existing?.Arch?.x86 ?? false);
@@ -373,6 +374,7 @@ function AppForm({
             version: version.trim() || null,
             play_link: playLink.trim() || null,
             size_label: sizeLabel.trim() || null,
+            package_name: packageName.trim() || null,
             banner_id,
             banner_content_type,
             arch: {
@@ -405,6 +407,7 @@ function AppForm({
             version: version.trim() || null,
             play_link: playLink.trim() || null,
             size_label: sizeLabel.trim() || null,
+            package_name: packageName.trim() || null,
             banner_action: banner_id
               ? ("replace" as const)
               : bannerRemoved
@@ -538,6 +541,19 @@ function AppForm({
             onChange={(e) => setSizeLabel(e.target.value)}
             placeholder="Contoh: 120 MB"
             maxLength={40}
+            className="input"
+          />
+        </div>
+        <div className="mt-4">
+          <Label>Package Name (opsional)</Label>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Nama package Android, contoh: com.example.app. Hanya muncul di JSON katalog.
+          </p>
+          <input
+            value={packageName}
+            onChange={(e) => setPackageName(e.target.value)}
+            placeholder="com.example.app"
+            maxLength={200}
             className="input"
           />
         </div>

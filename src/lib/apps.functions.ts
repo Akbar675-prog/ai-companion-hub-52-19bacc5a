@@ -33,6 +33,7 @@ export type AppListItem = {
   Play_link?: string | null;
   Size_label?: string | null;
   Banner_url?: string | null;
+  Package_name?: string | null;
   Previews?: PreviewItem[]; // list of preview media (image or video)
 };
 
@@ -68,6 +69,7 @@ const createInput = z.object({
   version: z.string().trim().max(40).optional().nullable(),
   play_link: z.string().trim().max(2000).optional().nullable(),
   size_label: z.string().trim().max(40).optional().nullable(),
+  package_name: z.string().trim().max(200).optional().nullable(),
   banner_id: z.string().max(64).optional().nullable(),
   banner_content_type: z.string().max(100).optional().nullable(),
   arch: archSchema.optional(),
@@ -96,6 +98,7 @@ const updateInput = z.object({
   version: z.string().trim().max(40).optional().nullable(),
   play_link: z.string().trim().max(2000).optional().nullable(),
   size_label: z.string().trim().max(40).optional().nullable(),
+  package_name: z.string().trim().max(200).optional().nullable(),
   banner_action: z.enum(["keep", "replace", "remove"]).optional(),
   banner_id: z.string().max(64).optional().nullable(),
   banner_content_type: z.string().max(100).optional().nullable(),
@@ -170,6 +173,7 @@ export const listAppsFn = createServerFn({ method: "GET" }).handler(
         Play_link: meta?.playLink ?? null,
         Size_label: meta?.sizeLabel ?? null,
         Banner_url: meta?.banner?.id ? `/apps/preview/${meta.banner.id}` : null,
+        Package_name: meta?.packageName ?? null,
         Previews: previewUrls(meta?.previews),
       };
     });
@@ -215,6 +219,7 @@ export const getAppFn = createServerFn({ method: "GET" })
       Play_link: meta?.playLink ?? null,
       Size_label: meta?.sizeLabel ?? null,
       Banner_url: meta?.banner?.id ? `/apps/preview/${meta.banner.id}` : null,
+      Package_name: meta?.packageName ?? null,
       Previews: previewUrls(meta?.previews),
     };
   });
@@ -389,6 +394,7 @@ export const createAppFn = createServerFn({ method: "POST" })
       comingSoon: !!data.coming_soon,
       playLink: (data.play_link ?? "").trim() || null,
       sizeLabel: (data.size_label ?? "").trim() || null,
+      packageName: (data.package_name ?? "").trim() || null,
       banner: data.banner_id
         ? {
             id: data.banner_id,
@@ -526,6 +532,7 @@ export const updateAppFn = createServerFn({ method: "POST" })
       comingSoon?: boolean;
       playLink?: string | null;
       sizeLabel?: string | null;
+      packageName?: string | null;
       banner?: PreviewMeta | null;
     } = {};
     if (data.coming_soon !== undefined) metaPatch.comingSoon = data.coming_soon;
@@ -537,6 +544,8 @@ export const updateAppFn = createServerFn({ method: "POST" })
       metaPatch.playLink = (data.play_link ?? "").trim() || null;
     if (data.size_label !== undefined)
       metaPatch.sizeLabel = (data.size_label ?? "").trim() || null;
+    if (data.package_name !== undefined)
+      metaPatch.packageName = (data.package_name ?? "").trim() || null;
     if (data.banner_action === "remove") metaPatch.banner = null;
     else if (data.banner_action === "replace" && data.banner_id)
       metaPatch.banner = {
