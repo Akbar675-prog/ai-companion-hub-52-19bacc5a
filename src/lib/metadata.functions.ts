@@ -26,6 +26,7 @@ export type AppMeta = {
   playLink?: string | null;
   sizeLabel?: string | null;
   banner?: PreviewMeta | null;
+  packageName?: string | null;
 };
 
 export type AppMetaIndex = Record<string, AppMeta>;
@@ -116,6 +117,8 @@ export async function updateAppMeta(
     sizeLabel:
       patch.sizeLabel !== undefined ? patch.sizeLabel : prev.sizeLabel ?? null,
     banner: patch.banner !== undefined ? patch.banner : prev.banner ?? null,
+    packageName:
+      patch.packageName !== undefined ? patch.packageName : prev.packageName ?? null,
   };
   idx[id] = next;
   await writeIndex(idx);

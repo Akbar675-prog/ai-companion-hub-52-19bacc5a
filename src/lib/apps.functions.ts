@@ -33,6 +33,7 @@ export type AppListItem = {
   Play_link?: string | null;
   Size_label?: string | null;
   Banner_url?: string | null;
+  Package_name?: string | null;
   Previews?: PreviewItem[]; // list of preview media (image or video)
 };
 
@@ -68,6 +69,7 @@ const createInput = z.object({
   version: z.string().trim().max(40).optional().nullable(),
   play_link: z.string().trim().max(2000).optional().nullable(),
   size_label: z.string().trim().max(40).optional().nullable(),
+  package_name: z.string().trim().max(200).optional().nullable(),
   banner_id: z.string().max(64).optional().nullable(),
   banner_content_type: z.string().max(100).optional().nullable(),
   arch: archSchema.optional(),
@@ -96,6 +98,7 @@ const updateInput = z.object({
   version: z.string().trim().max(40).optional().nullable(),
   play_link: z.string().trim().max(2000).optional().nullable(),
   size_label: z.string().trim().max(40).optional().nullable(),
+  package_name: z.string().trim().max(200).optional().nullable(),
   banner_action: z.enum(["keep", "replace", "remove"]).optional(),
   banner_id: z.string().max(64).optional().nullable(),
   banner_content_type: z.string().max(100).optional().nullable(),
