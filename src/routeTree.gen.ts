@@ -49,6 +49,8 @@ import { Route as BroadcastsImageIdRouteImport } from './routes/broadcasts.image
 import { Route as AppsPreviewIdRouteImport } from './routes/apps.preview.$id'
 import { Route as AppsGypsB64RouteImport } from './routes/apps.gyps.$b64'
 import { Route as AppsIconFGJ01IdRouteImport } from './routes/apps.icon.FGJ01.$id'
+import { Route as ApiV1ChatCompletionsRouteImport } from './routes/api.v1.chat.completions'
+import { Route as ApiPublicV1ChatCompletionsRouteImport } from './routes/api.public.v1.chat.completions'
 
 const VoteMakerRoute = VoteMakerRouteImport.update({
   id: '/vote-maker',
@@ -250,6 +252,17 @@ const AppsIconFGJ01IdRoute = AppsIconFGJ01IdRouteImport.update({
   path: '/apps/icon/FGJ01/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1ChatCompletionsRoute = ApiV1ChatCompletionsRouteImport.update({
+  id: '/api/v1/chat/completions',
+  path: '/api/v1/chat/completions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1ChatCompletionsRoute =
+  ApiPublicV1ChatCompletionsRouteImport.update({
+    id: '/api/public/v1/chat/completions',
+    path: '/api/public/v1/chat/completions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -291,7 +304,9 @@ export interface FileRoutesByFullPath {
   '/u/p/$b64': typeof UPB64Route
   '/users/$id/profile': typeof UsersIdProfileRoute
   '/apps/index/applist.json': typeof AppsIndexApplistDotjsonRoute
+  '/api/v1/chat/completions': typeof ApiV1ChatCompletionsRoute
   '/apps/icon/FGJ01/$id': typeof AppsIconFGJ01IdRoute
+  '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -333,7 +348,9 @@ export interface FileRoutesByTo {
   '/u/p/$b64': typeof UPB64Route
   '/users/$id/profile': typeof UsersIdProfileRoute
   '/apps/index/applist.json': typeof AppsIndexApplistDotjsonRoute
+  '/api/v1/chat/completions': typeof ApiV1ChatCompletionsRoute
   '/apps/icon/FGJ01/$id': typeof AppsIconFGJ01IdRoute
+  '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -376,7 +393,9 @@ export interface FileRoutesById {
   '/u/p/$b64': typeof UPB64Route
   '/users/$id/profile': typeof UsersIdProfileRoute
   '/apps/index/applist.json': typeof AppsIndexApplistDotjsonRoute
+  '/api/v1/chat/completions': typeof ApiV1ChatCompletionsRoute
   '/apps/icon/FGJ01/$id': typeof AppsIconFGJ01IdRoute
+  '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -420,7 +439,9 @@ export interface FileRouteTypes {
     | '/u/p/$b64'
     | '/users/$id/profile'
     | '/apps/index/applist.json'
+    | '/api/v1/chat/completions'
     | '/apps/icon/FGJ01/$id'
+    | '/api/public/v1/chat/completions'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -462,7 +483,9 @@ export interface FileRouteTypes {
     | '/u/p/$b64'
     | '/users/$id/profile'
     | '/apps/index/applist.json'
+    | '/api/v1/chat/completions'
     | '/apps/icon/FGJ01/$id'
+    | '/api/public/v1/chat/completions'
   id:
     | '__root__'
     | '/'
@@ -504,7 +527,9 @@ export interface FileRouteTypes {
     | '/u/p/$b64'
     | '/users/$id/profile'
     | '/apps/index/applist.json'
+    | '/api/v1/chat/completions'
     | '/apps/icon/FGJ01/$id'
+    | '/api/public/v1/chat/completions'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -547,7 +572,9 @@ export interface RootRouteChildren {
   UPB64Route: typeof UPB64Route
   UsersIdProfileRoute: typeof UsersIdProfileRoute
   AppsIndexApplistDotjsonRoute: typeof AppsIndexApplistDotjsonRoute
+  ApiV1ChatCompletionsRoute: typeof ApiV1ChatCompletionsRoute
   AppsIconFGJ01IdRoute: typeof AppsIconFGJ01IdRoute
+  ApiPublicV1ChatCompletionsRoute: typeof ApiPublicV1ChatCompletionsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -832,6 +859,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppsIconFGJ01IdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/chat/completions': {
+      id: '/api/v1/chat/completions'
+      path: '/api/v1/chat/completions'
+      fullPath: '/api/v1/chat/completions'
+      preLoaderRoute: typeof ApiV1ChatCompletionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/chat/completions': {
+      id: '/api/public/v1/chat/completions'
+      path: '/api/public/v1/chat/completions'
+      fullPath: '/api/public/v1/chat/completions'
+      preLoaderRoute: typeof ApiPublicV1ChatCompletionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -875,7 +916,9 @@ const rootRouteChildren: RootRouteChildren = {
   UPB64Route: UPB64Route,
   UsersIdProfileRoute: UsersIdProfileRoute,
   AppsIndexApplistDotjsonRoute: AppsIndexApplistDotjsonRoute,
+  ApiV1ChatCompletionsRoute: ApiV1ChatCompletionsRoute,
   AppsIconFGJ01IdRoute: AppsIconFGJ01IdRoute,
+  ApiPublicV1ChatCompletionsRoute: ApiPublicV1ChatCompletionsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
