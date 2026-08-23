@@ -6,6 +6,9 @@
 
 const MODEL = "deepseek/deepseek-chat";
 
+/** Fallback bearer used when PUBLIC_API_BEARER is not present in the deployment env. */
+const DEFAULT_BEARER = "41e82c54d284b25399f2009c382eb7fbe5012729";
+
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -84,7 +87,7 @@ export async function handleChatCompletions(request: Request): Promise<Response>
 
   const url = new URL(request.url);
 
-  const expected = normalizeToken(process.env["PUBLIC_API_BEARER"] ?? "");
+  const expected = normalizeToken(process.env["PUBLIC_API_BEARER"] ?? DEFAULT_BEARER);
   const provided = normalizeToken(extractToken(request, url));
   if (!expected || !provided || provided !== expected) {
     return json(
