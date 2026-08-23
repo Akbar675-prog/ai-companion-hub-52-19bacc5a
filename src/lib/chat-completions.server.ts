@@ -84,7 +84,7 @@ export async function handleChatCompletions(request: Request): Promise<Response>
 
   const url = new URL(request.url);
 
-  const expected = normalizeToken(process.env["PUBLIC_API_BEARER"] ?? "");
+  const expected = normalizeToken(process.env["PUBLIC_API_BEARER"] ?? DEFAULT_BEARER);
   const provided = normalizeToken(extractToken(request, url));
   if (!expected || !provided || provided !== expected) {
     return json(
