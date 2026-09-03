@@ -206,6 +206,12 @@ function AppDetail() {
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
         </div>
       )}
+      {!banner && (
+        <div
+          aria-hidden="true"
+          className="m3-aura pointer-events-none absolute inset-x-0 -top-20 h-80 opacity-50 blur-2xl"
+        />
+      )}
       <header className="relative mx-auto flex max-w-3xl items-center gap-3 px-5 pt-6 md:px-10">
         <Link
           to="/"
@@ -214,7 +220,7 @@ function AppDetail() {
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <span className="text-sm text-muted-foreground">Detail aplikasi</span>
+        <span className="text-sm font-medium text-muted-foreground">Detail aplikasi</span>
       </header>
 
       <main className="relative mx-auto max-w-3xl px-5 pb-32 pt-6 md:px-10">
