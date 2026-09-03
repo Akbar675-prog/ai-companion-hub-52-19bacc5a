@@ -70,29 +70,57 @@ function Home() {
         .map((x) => x.a)
     : apps;
 
+  const totalDownloads = apps.reduce((s, a) => s + (a.Download_count ?? 0), 0);
+  const exclusiveCount = apps.filter((a) => a.Is_exclusive).length;
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
 
-      <header className="px-5 pt-8 pb-6 md:px-10 md:pt-12">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-medium uppercase tracking-widest text-primary">
+      <header className="relative overflow-hidden px-5 pt-8 pb-8 md:px-10 md:pt-14">
+        <div
+          aria-hidden="true"
+          className="m3-aura pointer-events-none absolute inset-x-0 -top-24 h-[26rem] opacity-60 blur-2xl"
+        />
+        <div className="relative mx-auto max-w-6xl">
+          <span className="m3-hairline inline-flex items-center gap-2 rounded-full bg-card/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary backdrop-blur-md">
+            <Sparkles className="size-3.5" />
             Galileo Mod APK
-          </p>
-          <h1 className="mt-2 font-display text-4xl leading-tight md:text-6xl">
+          </span>
+          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.05] md:text-6xl">
             {t("Katalog aplikasi")}
-            <span className="block text-primary">{t("siap di-download.")}</span>
+            <span className="block bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
+              {t("siap di-download.")}
+            </span>
           </h1>
-          <p className="mt-4 max-w-xl text-base text-muted-foreground">
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
             {t("Ketuk kartu untuk membuka detail dan mengunduh APK-nya.")}
           </p>
+
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            <StatChip
+              icon={<Package className="size-4" />}
+              label={`${apps.length} aplikasi`}
+            />
+            <StatChip
+              icon={<Download className="size-4" />}
+              label={`${new Intl.NumberFormat("id-ID").format(totalDownloads)} unduhan`}
+            />
+            {exclusiveCount > 0 && (
+              <StatChip
+                icon={<Gem className="size-4" />}
+                label={`${exclusiveCount} exclusive`}
+              />
+            )}
+          </div>
+
           {keyword && (
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-5 text-sm text-muted-foreground">
               Hasil pencarian untuk{" "}
               <span className="font-semibold text-foreground">"{q}"</span> —{" "}
               {filtered.length} aplikasi
               {" · "}
-              <Link to="/" className="text-primary underline">
+              <Link to="/" className="font-medium text-primary underline">
                 Reset
               </Link>
             </p>
@@ -112,6 +140,15 @@ function Home() {
         )}
       </main>
     </div>
+  );
+}
+
+function StatChip({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <span className="m3-hairline inline-flex items-center gap-2 rounded-full bg-card/70 px-3.5 py-2 text-sm font-medium text-foreground/80 backdrop-blur-md">
+      <span className="text-primary">{icon}</span>
+      {label}
+    </span>
   );
 }
 
