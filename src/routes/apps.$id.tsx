@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, Download, CalendarDays, Users, Lock, Loader2, Gem, Cpu, Tag, Sparkles, Images, Clock, HardDrive, Play, ExternalLink } from "lucide-react";
+import { ArrowLeft, Download, CalendarDays, Users, Lock, Loader2, Gem, Cpu, Tag, Sparkles, Images, Clock, HardDrive, Play, ExternalLink, FileText } from "lucide-react";
 import {
   getAppFn,
   incrementDownloadFn,
@@ -221,8 +221,8 @@ function AppDetail() {
         <div
           className={
             banner
-              ? "m3-shadow-1 rounded-4xl border border-white/20 bg-card/45 p-6 backdrop-blur-2xl md:p-10"
-              : "m3-shadow-1 rounded-4xl bg-card p-6 md:p-10"
+              ? "m3-shadow-2 rounded-4xl border border-white/25 bg-card/50 p-6 backdrop-blur-2xl md:p-10"
+              : "m3-shadow-1 m3-hairline rounded-4xl bg-card p-6 md:p-10"
           }
         >
 
@@ -231,10 +231,10 @@ function AppDetail() {
               <img
                 src={app.App_icon}
                 alt={app.App_name}
-                className="size-28 rounded-xl bg-surface-variant object-cover md:size-32"
+                className="m3-icon-glow size-28 rounded-3xl bg-surface-variant object-cover ring-1 ring-black/5 md:size-32"
               />
             ) : (
-              <div className="flex size-28 items-center justify-center rounded-xl bg-tertiary-container font-display text-4xl text-on-tertiary-container md:size-32">
+              <div className="m3-icon-glow flex size-28 items-center justify-center rounded-3xl bg-tertiary-container font-display text-4xl text-on-tertiary-container md:size-32">
                 {app.App_name.slice(0, 1).toUpperCase()}
               </div>
             )}
@@ -302,7 +302,7 @@ function AppDetail() {
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="flex items-center gap-3 rounded-2xl bg-surface-variant p-4">
+            <div className="m3-hairline flex items-center gap-3 rounded-3xl bg-surface-variant/60 p-4 transition-colors hover:bg-surface-variant">
               <div className="flex size-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
                 <CalendarDays className="size-5" />
               </div>
@@ -311,7 +311,7 @@ function AppDetail() {
                 <p className="font-semibold">{formatDate(app.Created_at)}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-2xl bg-surface-variant p-4">
+            <div className="m3-hairline flex items-center gap-3 rounded-3xl bg-surface-variant/60 p-4 transition-colors hover:bg-surface-variant">
               <div className="flex size-10 items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container">
                 <Users className="size-5" />
               </div>
@@ -327,7 +327,7 @@ function AppDetail() {
           {(app.Size_label || app.Play_link) && (
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {app.Size_label && (
-                <div className="flex items-center gap-3 rounded-2xl bg-surface-variant p-4">
+                <div className="m3-hairline flex items-center gap-3 rounded-3xl bg-surface-variant/60 p-4 transition-colors hover:bg-surface-variant">
                   <div className="flex size-10 items-center justify-center rounded-full bg-secondary-container text-on-secondary-container">
                     <HardDrive className="size-5" />
                   </div>
@@ -342,7 +342,7 @@ function AppDetail() {
                   href={app.Play_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 rounded-2xl bg-surface-variant p-4 transition-colors hover:bg-primary-container"
+                  className="m3-hairline flex items-center gap-3 rounded-3xl bg-surface-variant/60 p-4 transition-colors hover:bg-primary-container"
                 >
                   <div className="flex size-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
                     <Play className="size-5" />
@@ -361,7 +361,7 @@ function AppDetail() {
           {previews.length > 0 && (
             <section className="mt-8">
               <h2 className="flex items-center gap-2 font-display text-xl">
-                <Images className="size-5" /> Preview
+                <Images className="size-5 text-primary" /> Preview
               </h2>
               <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3">
                 {previews.map((p, i) => {
@@ -406,10 +406,10 @@ function AppDetail() {
             </section>
           )}
 
-          <hr className="my-8 border-border" />
-
-          <section>
-            <h2 className="font-display text-xl">Deskripsi</h2>
+          <section className="m3-hairline mt-8 rounded-3xl bg-surface-variant/40 p-5 md:p-6">
+            <h2 className="flex items-center gap-2 font-display text-xl">
+              <FileText className="size-5 text-primary" /> Deskripsi
+            </h2>
             <p className="mt-3 whitespace-pre-wrap text-base leading-relaxed text-foreground/90">
               {app.Description || "Tidak ada deskripsi."}
             </p>
