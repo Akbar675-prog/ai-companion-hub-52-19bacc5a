@@ -260,3 +260,47 @@ body.no-ripple [data-ripple] {
   display: none !important;
 }
 
+
+/* --- Expressive polish helpers --- */
+@utility m3-aura {
+  background-image:
+    radial-gradient(
+      42rem 22rem at 12% -10%,
+      color-mix(in oklch, var(--primary) 28%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      34rem 20rem at 92% 0%,
+      color-mix(in oklch, var(--secondary) 22%, transparent),
+      transparent 70%
+    ),
+    radial-gradient(
+      28rem 18rem at 60% 40%,
+      color-mix(in oklch, var(--tertiary) 14%, transparent),
+      transparent 70%
+    );
+}
+
+@utility m3-hairline {
+  border: 1px solid color-mix(in oklch, var(--outline) 35%, transparent);
+}
+
+@utility m3-icon-glow {
+  box-shadow:
+    0 6px 18px color-mix(in oklch, var(--primary) 28%, transparent),
+    0 1px 2px oklch(0 0 0 / 0.12);
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@utility animate-float-soft {
+  animation: float-soft 6s ease-in-out infinite;
+}

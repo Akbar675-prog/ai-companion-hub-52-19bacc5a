@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Plus, Download, Gem, Sparkles, Clock } from "lucide-react";
+import { Plus, Download, Gem, Sparkles, Clock, Package, ArrowUpRight } from "lucide-react";
 import { z } from "zod";
 import { listAppsFn, type AppListItem } from "@/lib/apps.functions";
 import { versionLabel } from "@/lib/metadata.functions";
@@ -70,29 +70,57 @@ function Home() {
         .map((x) => x.a)
     : apps;
 
+  const totalDownloads = apps.reduce((s, a) => s + (a.Download_count ?? 0), 0);
+  const exclusiveCount = apps.filter((a) => a.Is_exclusive).length;
+
   return (
     <div className="min-h-screen bg-background">
       <AppHeader />
 
-      <header className="px-5 pt-8 pb-6 md:px-10 md:pt-12">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-medium uppercase tracking-widest text-primary">
+      <header className="relative overflow-hidden px-5 pt-8 pb-8 md:px-10 md:pt-14">
+        <div
+          aria-hidden="true"
+          className="m3-aura pointer-events-none absolute inset-x-0 -top-24 h-[26rem] opacity-60 blur-2xl"
+        />
+        <div className="relative mx-auto max-w-6xl">
+          <span className="m3-hairline inline-flex items-center gap-2 rounded-full bg-card/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary backdrop-blur-md">
+            <Sparkles className="size-3.5" />
             Galileo Mod APK
-          </p>
-          <h1 className="mt-2 font-display text-4xl leading-tight md:text-6xl">
+          </span>
+          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.05] md:text-6xl">
             {t("Katalog aplikasi")}
-            <span className="block text-primary">{t("siap di-download.")}</span>
+            <span className="block bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
+              {t("siap di-download.")}
+            </span>
           </h1>
-          <p className="mt-4 max-w-xl text-base text-muted-foreground">
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
             {t("Ketuk kartu untuk membuka detail dan mengunduh APK-nya.")}
           </p>
+
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            <StatChip
+              icon={<Package className="size-4" />}
+              label={`${apps.length} aplikasi`}
+            />
+            <StatChip
+              icon={<Download className="size-4" />}
+              label={`${new Intl.NumberFormat("id-ID").format(totalDownloads)} unduhan`}
+            />
+            {exclusiveCount > 0 && (
+              <StatChip
+                icon={<Gem className="size-4" />}
+                label={`${exclusiveCount} exclusive`}
+              />
+            )}
+          </div>
+
           {keyword && (
-            <p className="mt-3 text-sm text-muted-foreground">
+            <p className="mt-5 text-sm text-muted-foreground">
               Hasil pencarian untuk{" "}
               <span className="font-semibold text-foreground">"{q}"</span> —{" "}
               {filtered.length} aplikasi
               {" · "}
-              <Link to="/" className="text-primary underline">
+              <Link to="/" className="font-medium text-primary underline">
                 Reset
               </Link>
             </p>
@@ -115,6 +143,15 @@ function Home() {
   );
 }
 
+function StatChip({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <span className="m3-hairline inline-flex items-center gap-2 rounded-full bg-card/70 px-3.5 py-2 text-sm font-medium text-foreground/80 backdrop-blur-md">
+      <span className="text-primary">{icon}</span>
+      {label}
+    </span>
+  );
+}
+
 function AppCard({ app, index }: { app: AppListItem; index: number }) {
   const t = useT();
   const fresh = isNew(app.Created_at);
@@ -126,45 +163,52 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
         animationDelay: `${Math.min(index * 40, 400)}ms`,
         animationFillMode: "backwards",
       }}
-      className="group m3-shadow-1 relative flex animate-fade-in flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 transition-all duration-200 hover:m3-shadow-2 hover:-translate-y-1 hover:scale-[1.01] active:scale-[0.98]"
+      className="group m3-shadow-1 m3-hairline relative flex animate-fade-in flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 transition-all duration-300 hover:m3-shadow-2 hover:-translate-y-1.5 active:scale-[0.985]"
     >
-      <div className="absolute right-3 top-3 flex flex-col items-end gap-1.5">
-        {fresh && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-950 shadow-md animate-fade-in">
-            <Sparkles className="size-3" />
-            New
-          </span>
-        )}
-        {app.Coming_soon && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow-md">
-            <Clock className="size-3" />
-            Soon
-          </span>
-        )}
-        {app.Is_exclusive && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-950 shadow-md">
-            <Gem className="size-3" />
-            Exclusive
-          </span>
-        )}
-      </div>
-      <div className="flex items-center gap-4">
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-16 -top-16 size-40 rounded-full bg-primary/15 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100"
+      />
+      <div className="relative flex items-start gap-4">
         <IconBox src={app.App_icon} alt={app.App_name} />
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-display text-lg leading-tight">
-            {t(app.App_name)}
-          </h2>
-          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+          <div className="flex items-start gap-2">
+            <h2 className="min-w-0 flex-1 truncate font-display text-lg leading-tight">
+              {t(app.App_name)}
+            </h2>
+            <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-muted-foreground opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
+          </div>
+          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
             {t(app.Description || "Tidak ada deskripsi.")}
           </p>
+          <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {fresh && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-950">
+                <Sparkles className="size-3" />
+                New
+              </span>
+            )}
+            {app.Coming_soon && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
+                <Clock className="size-3" />
+                Soon
+              </span>
+            )}
+            {app.Is_exclusive && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-950">
+                <Gem className="size-3" />
+                Exclusive
+              </span>
+            )}
+          </div>
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="relative mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-border/60 pt-3.5">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="rounded-full bg-secondary-container px-2.5 py-1 text-[11px] font-medium text-on-secondary-container">
             APK
           </span>
-          <span className="rounded-full bg-surface-variant px-2.5 py-1 text-[11px] font-mono font-medium text-muted-foreground">
+          <span className="rounded-full bg-surface-variant px-2.5 py-1 font-mono text-[11px] font-medium text-muted-foreground">
             v{versionLabel(app.Version)}
           </span>
         </div>
@@ -180,7 +224,7 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
 function IconBox({ src, alt }: { src: string; alt: string }) {
   if (!src) {
     return (
-      <div className="flex size-14 shrink-0 items-center justify-center rounded-lg bg-tertiary-container font-display text-xl text-on-tertiary-container">
+      <div className="m3-icon-glow flex size-14 shrink-0 items-center justify-center rounded-2xl bg-tertiary-container font-display text-xl text-on-tertiary-container">
         {alt.slice(0, 1).toUpperCase()}
       </div>
     );
@@ -189,7 +233,7 @@ function IconBox({ src, alt }: { src: string; alt: string }) {
     <img
       src={src}
       alt={alt}
-      className="size-14 shrink-0 rounded-lg object-cover bg-surface-variant"
+      className="size-14 shrink-0 rounded-2xl bg-surface-variant object-cover ring-1 ring-black/5 transition-transform duration-300 group-hover:scale-105"
       loading="lazy"
     />
   );
