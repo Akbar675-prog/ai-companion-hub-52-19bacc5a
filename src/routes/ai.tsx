@@ -57,6 +57,33 @@ type Draft = {
   analyzedImage?: boolean;
 };
 
+export type CatalogApp = { ID: string; App_name: string; Description: string };
+
+let catalogCache: { at: number; list: CatalogApp[] } | null = null;
+
+/** Katalog aplikasi dibaca dari endpoint publik /apps/index/applist.json. */
+async function fetchAppCatalog(signal?: AbortSignal): Promise<CatalogApp[]> {
+  if (catalogCache && Date.now() - catalogCache.at < 5 * 60_000) return catalogCache.list;
+  try {
+    const res = await fetch("/apps/index/applist.json", { signal });
+    if (!res.ok) return catalogCache?.list ?? [];
+    const raw = (await res.json()) as Record<string, unknown>[];
+    const list = (Array.isArray(raw) ? raw : [])
+      .map((a) => ({
+        ID: String(a["ID"] ?? ""),
+        App_name: String(a["App_name"] ?? ""),
+        Description: String(a["Description"] ?? ""),
+      }))
+      .filter((a) => a.ID && a.App_name)
+      .slice(0, 200);
+    catalogCache = { at: Date.now(), list };
+    return list;
+  } catch {
+    return catalogCache?.list ?? [];
+  }
+}
+
+
 function AiChatPage() {
   const { userId, profile } = useAccount();
   const [aiProfile, setAiProfile] = useState<AiProfile | null>(null);
