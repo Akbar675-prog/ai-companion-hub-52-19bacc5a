@@ -446,7 +446,10 @@ function AiChatPage() {
             reasoning: needsReasoning && !resume,
             vision,
             search,
+            apps,
+            origin,
           }),
+
           signal,
         });
 
