@@ -243,7 +243,7 @@ function AiChatPage() {
     const paint = () => {
       const target = acc.content.length;
       if (revealed < target) {
-        revealed = Math.min(target, revealed + Math.max(2, Math.ceil((target - revealed) / 6)));
+        revealed = Math.min(target, revealed + Math.max(24, Math.ceil((target - revealed) / 2)));
       }
       setDraft({ ...acc, content: acc.content.slice(0, revealed) });
       if (painting) rafId = requestAnimationFrame(paint);
