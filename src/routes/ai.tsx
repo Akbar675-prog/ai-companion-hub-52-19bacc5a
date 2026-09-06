@@ -509,6 +509,9 @@ function AiChatPage() {
 
       if (!acc.content.trim()) throw new Error("AI tidak memberi jawaban. Coba ulangi.");
 
+      title = (await titlePromise) || title;
+
+
 
       const reply: ChatMessage = {
         role: "assistant",
