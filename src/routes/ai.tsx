@@ -57,6 +57,33 @@ type Draft = {
   analyzedImage?: boolean;
 };
 
+export type CatalogApp = { ID: string; App_name: string; Description: string };
+
+let catalogCache: { at: number; list: CatalogApp[] } | null = null;
+
+/** Katalog aplikasi dibaca dari endpoint publik /apps/index/applist.json. */
+async function fetchAppCatalog(signal?: AbortSignal): Promise<CatalogApp[]> {
+  if (catalogCache && Date.now() - catalogCache.at < 5 * 60_000) return catalogCache.list;
+  try {
+    const res = await fetch("/apps/index/applist.json", { signal });
+    if (!res.ok) return catalogCache?.list ?? [];
+    const raw = (await res.json()) as Record<string, unknown>[];
+    const list = (Array.isArray(raw) ? raw : [])
+      .map((a) => ({
+        ID: String(a["ID"] ?? ""),
+        App_name: String(a["App_name"] ?? ""),
+        Description: String(a["Description"] ?? ""),
+      }))
+      .filter((a) => a.ID && a.App_name)
+      .slice(0, 200);
+    catalogCache = { at: Date.now(), list };
+    return list;
+  } catch {
+    return catalogCache?.list ?? [];
+  }
+}
+
+
 function AiChatPage() {
   const { userId, profile } = useAccount();
   const [aiProfile, setAiProfile] = useState<AiProfile | null>(null);
@@ -216,7 +243,7 @@ function AiChatPage() {
     const paint = () => {
       const target = acc.content.length;
       if (revealed < target) {
-        revealed = Math.min(target, revealed + Math.max(2, Math.ceil((target - revealed) / 6)));
+        revealed = Math.min(target, revealed + Math.max(24, Math.ceil((target - revealed) / 2)));
       }
       setDraft({ ...acc, content: acc.content.slice(0, revealed) });
       if (painting) rafId = requestAnimationFrame(paint);
@@ -241,6 +268,24 @@ function AiChatPage() {
       const deepResearch = plugin === "deepResearch";
       let needsReasoning = tool === "thinkLonger" || plugin === "deepResearch";
       let vision = "";
+
+      // Katalog aplikasi + judul chat diambil paralel sejak awal supaya tidak
+      // menahan jawaban utama.
+      let catalogDone = false;
+      const catalogPromise = fetchAppCatalog(controller.signal).then((list) => {
+        catalogDone = true;
+        return list;
+      });
+      const titlePromise = fetch("/api/ai-title", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: lastUser }),
+        signal: stepSignal(15_000),
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((value: { title?: string } | null) => value?.title ?? "")
+        .catch(() => "");
+
 
       // 1. Gambar → analisis visual dulu, lalu cari info akurat di web.
       if (attached) {
@@ -301,23 +346,13 @@ function AiChatPage() {
         if (queries.length === 0 && query) queries = [query];
       }
 
-      // Judul dan query dibuat oleh dua AI spesialis terpisah agar planner
-      // tidak mengorbankan ejaan atau kualitas query saat mengerjakan semuanya sekaligus.
-      const titlePromise = fetch("/api/ai-title", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: lastUser }),
-        signal: stepSignal(15_000),
-      })
-        .then((response) => (response.ok ? response.json() : null))
-        .then((value: { title?: string } | null) => value?.title ?? "")
-        .catch(() => "");
+      // Query pencarian dibuat AI spesialis terpisah agar ejaan & kualitas query terjaga.
       if (needsSearch) {
         const specialized = await fetch("/api/ai-query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: lastUser, deep: deepResearch }),
-          signal: stepSignal(15_000),
+          signal: stepSignal(12_000),
         })
           .then((response) => (response.ok ? response.json() : null))
           .catch(() => null) as { queries?: string[] } | null;
@@ -327,7 +362,7 @@ function AiChatPage() {
           query = improved[0] ?? query;
         }
       }
-      title = (await titlePromise) || title;
+
 
       // 3. Pencarian web nyata via Serper.
       let search: { query?: string; direct?: string; results?: ChatSource[] } | null = null;
@@ -368,12 +403,21 @@ function AiChatPage() {
 
       if (attached) acc = { ...acc, analyzedImage: true };
 
+      // Katalog aplikasi situs: tampilkan indikator hanya bila memang belum siap.
+      if (!catalogDone) setStatus("Fetching data...");
+      const apps = await Promise.race([
+        catalogPromise,
+        new Promise<CatalogApp[]>((r) => setTimeout(() => r([]), 6_000)),
+      ]);
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+
       // 4. Jawaban streaming — dengan sambung-ulang otomatis kalau koneksi
       //    putus di tengah jalan (sinyal lag), supaya jawaban tidak patah.
       setStatus(null);
       bumpWatchdog();
 
       const baseMessages = history.map((m) => ({ role: m.role, content: m.content }));
+
 
       const runStream = async (): Promise<boolean> => {
         const ctrl = new AbortController();
@@ -402,7 +446,10 @@ function AiChatPage() {
             reasoning: needsReasoning && !resume,
             vision,
             search,
+            apps,
+            origin,
           }),
+
           signal,
         });
 
@@ -461,6 +508,9 @@ function AiChatPage() {
       attempt.ctrl = null;
 
       if (!acc.content.trim()) throw new Error("AI tidak memberi jawaban. Coba ulangi.");
+
+      title = (await titlePromise) || title;
+
 
 
       const reply: ChatMessage = {
