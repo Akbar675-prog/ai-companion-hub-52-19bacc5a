@@ -346,23 +346,13 @@ function AiChatPage() {
         if (queries.length === 0 && query) queries = [query];
       }
 
-      // Judul dan query dibuat oleh dua AI spesialis terpisah agar planner
-      // tidak mengorbankan ejaan atau kualitas query saat mengerjakan semuanya sekaligus.
-      const titlePromise = fetch("/api/ai-title", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: lastUser }),
-        signal: stepSignal(15_000),
-      })
-        .then((response) => (response.ok ? response.json() : null))
-        .then((value: { title?: string } | null) => value?.title ?? "")
-        .catch(() => "");
+      // Query pencarian dibuat AI spesialis terpisah agar ejaan & kualitas query terjaga.
       if (needsSearch) {
         const specialized = await fetch("/api/ai-query", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ message: lastUser, deep: deepResearch }),
-          signal: stepSignal(15_000),
+          signal: stepSignal(12_000),
         })
           .then((response) => (response.ok ? response.json() : null))
           .catch(() => null) as { queries?: string[] } | null;
@@ -372,7 +362,7 @@ function AiChatPage() {
           query = improved[0] ?? query;
         }
       }
-      title = (await titlePromise) || title;
+
 
       // 3. Pencarian web nyata via Serper.
       let search: { query?: string; direct?: string; results?: ChatSource[] } | null = null;
