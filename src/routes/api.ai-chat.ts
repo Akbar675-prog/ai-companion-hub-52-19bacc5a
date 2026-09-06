@@ -20,6 +20,8 @@ type Body = {
   } | null;
   reasoning?: boolean;
   vision?: string;
+  apps?: { ID?: string; App_name?: string; Description?: string }[];
+  origin?: string;
   search?: {
     query?: string;
     direct?: string;
@@ -111,7 +113,25 @@ export const Route = createFileRoute("/api/ai-chat")({
           `\n\nWaktu sekarang: ${nowLabel} WIB (UTC: ${now.toISOString()}). ` +
           "Gunakan ini bila pengguna bertanya tanggal, hari, jam, umur, atau hal yang bergantung waktu.";
 
-        // Instruksi admin + katalog aplikasi (dibatasi waktu, tidak boleh menahan jawaban).
+        // Katalog aplikasi situs dikirim klien (hasil fetch /apps/index/applist.json),
+        // jadi tidak ada query database yang menahan awal streaming.
+        const apps = (body.apps ?? []).slice(0, 200).filter((a) => a?.ID && a?.App_name);
+        const origin = String(body.origin ?? "").replace(/\/$/, "");
+        if (apps.length > 0) {
+          extra +=
+            "\n\nDAFTAR APLIKASI DI SITUS GALILEO MOD APK (sumber: /apps/index/applist.json):\n" +
+            apps
+              .map(
+                (a) =>
+                  `- ${a.App_name} (ID: ${a.ID}) — ${String(a.Description ?? "")
+                    .replace(/\s+/g, " ")
+                    .slice(0, 200)} — halaman: ${origin}/apps/${a.ID}`,
+              )
+              .join("\n") +
+            "\nBila pengguna bertanya soal aplikasi atau minta rekomendasi, gunakan daftar ini: sebutkan nama aplikasi, ringkas deskripsinya, dan sertakan tautan halamannya (gabungan alamat situs + /apps/ + ID). Jangan mengarang aplikasi yang tidak ada di daftar.";
+        }
+
+        // Instruksi admin + fakta resmi (dibatasi waktu, tidak boleh menahan jawaban).
         extra += await getAiExtraContext();
 
         // Batas waktu keras: kalau upstream diam, jangan tunggu selamanya.

@@ -39,34 +39,10 @@ async function factsBlock(): Promise<string> {
   );
 }
 
-async function catalogBlock(): Promise<string> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("apps")
-    .select("id, app_name, description")
-    .order("created_at", { ascending: false })
-    .limit(60);
-  if (error || !data || data.length === 0) return "";
-  const catalog = data
-    .map(
-      (a) =>
-        `- ${a.app_name}: ${String(a.description ?? "")
-          .replace(/\s+/g, " ")
-          .slice(0, 140)} (halaman: /apps/${a.id})`,
-    )
-    .join("\n");
-  return (
-    "\n\nDAFTAR APLIKASI YANG TERSEDIA DI SITUS GALILEO MOD APK:\n" +
-    catalog +
-    "\nBila pengguna minta rekomendasi aplikasi, pikirkan kebutuhan sebenarnya lalu sarankan aplikasi dari daftar ini beserta tautan halamannya. Jika tidak ada yang cocok, katakan aplikasi itu belum ada di situs."
-  );
-}
-
 export async function getAiExtraContext(): Promise<string> {
-  const [instructions, facts, catalog] = await Promise.all([
-    withTimeout(instructionsBlock(), 3500, ""),
-    withTimeout(factsBlock(), 3500, ""),
-    withTimeout(catalogBlock(), 3500, ""),
+  const [instructions, facts] = await Promise.all([
+    withTimeout(instructionsBlock(), 1200, ""),
+    withTimeout(factsBlock(), 1200, ""),
   ]);
-  return instructions + facts + catalog;
+  return instructions + facts;
 }
