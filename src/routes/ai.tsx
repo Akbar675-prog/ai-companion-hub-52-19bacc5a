@@ -269,6 +269,24 @@ function AiChatPage() {
       let needsReasoning = tool === "thinkLonger" || plugin === "deepResearch";
       let vision = "";
 
+      // Katalog aplikasi + judul chat diambil paralel sejak awal supaya tidak
+      // menahan jawaban utama.
+      let catalogDone = false;
+      const catalogPromise = fetchAppCatalog(controller.signal).then((list) => {
+        catalogDone = true;
+        return list;
+      });
+      const titlePromise = fetch("/api/ai-title", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: lastUser }),
+        signal: stepSignal(15_000),
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((value: { title?: string } | null) => value?.title ?? "")
+        .catch(() => "");
+
+
       // 1. Gambar → analisis visual dulu, lalu cari info akurat di web.
       if (attached) {
         setStatus("Menganalisis gambar...");
