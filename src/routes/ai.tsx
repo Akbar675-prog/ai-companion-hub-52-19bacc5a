@@ -403,12 +403,21 @@ function AiChatPage() {
 
       if (attached) acc = { ...acc, analyzedImage: true };
 
+      // Katalog aplikasi situs: tampilkan indikator hanya bila memang belum siap.
+      if (!catalogDone) setStatus("Fetching data...");
+      const apps = await Promise.race([
+        catalogPromise,
+        new Promise<CatalogApp[]>((r) => setTimeout(() => r([]), 6_000)),
+      ]);
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+
       // 4. Jawaban streaming — dengan sambung-ulang otomatis kalau koneksi
       //    putus di tengah jalan (sinyal lag), supaya jawaban tidak patah.
       setStatus(null);
       bumpWatchdog();
 
       const baseMessages = history.map((m) => ({ role: m.role, content: m.content }));
+
 
       const runStream = async (): Promise<boolean> => {
         const ctrl = new AbortController();
