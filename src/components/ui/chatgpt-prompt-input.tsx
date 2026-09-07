@@ -3,6 +3,9 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { AI_PLUGINS, pluginById, type AiPluginId } from "@/lib/ai-plugins";
+import { BUILTIN_MODELS, modelById, type AiModel } from "@/lib/ai-models";
+import { NewBadge } from "@/components/NewBadge";
+
 
 type ClassValue = string | number | boolean | null | undefined;
 function cn(...inputs: ClassValue[]): string {
