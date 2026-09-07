@@ -195,6 +195,7 @@ const StopIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 const toolsList = [
+
   { id: "searchWeb", name: "Cari di web", shortName: "Search", icon: GlobeIcon },
   { id: "writeCode", name: "Tulis atau ngoding", shortName: "Write", icon: PencilIcon },
   { id: "thinkLonger", name: "Berpikir lebih lama", shortName: "Think", icon: LightbulbIcon },
