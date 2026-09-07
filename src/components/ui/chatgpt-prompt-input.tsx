@@ -194,7 +194,18 @@ const StopIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <rect x="6" y="6" width="12" height="12" rx="2" />
   </svg>
 );
+const SparkIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M12 2l1.9 5.1L19 9l-5.1 1.9L12 16l-1.9-5.1L5 9l5.1-1.9L12 2zm6.5 12l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z" />
+  </svg>
+);
+const ChevronIcon = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" {...props}>
+    <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
 const toolsList = [
+
 
   { id: "searchWeb", name: "Cari di web", shortName: "Search", icon: GlobeIcon },
   { id: "writeCode", name: "Tulis atau ngoding", shortName: "Write", icon: PencilIcon },
