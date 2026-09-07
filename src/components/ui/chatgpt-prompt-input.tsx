@@ -519,12 +519,6 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
                       </button>
                     ))}
                   </div>
-                  <a
-                    href="/ai/addai"
-                    className="mt-2 flex items-center justify-center rounded-xl border border-dashed border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent"
-                  >
-                    + Tambah AI sendiri
-                  </a>
                 </PopoverContent>
               </Popover>
 
