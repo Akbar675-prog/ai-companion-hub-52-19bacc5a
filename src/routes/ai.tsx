@@ -129,6 +129,15 @@ function AiChatPage() {
     setActiveId(null);
   }, [userId]);
 
+  // Daftar model (termasuk AI buatan pengguna dari /ai/addai) + pilihan terakhir.
+  useEffect(() => {
+    const list = allModels();
+    setModels(list);
+    const saved = loadSelectedModelId();
+    setModelId(list.some((m) => m.id === saved) ? saved : DEFAULT_MODEL_ID);
+  }, []);
+
+
   // Profil GetrixAI + kredit chat (khusus pengguna yang login).
   useEffect(() => {
     if (!userId) {
