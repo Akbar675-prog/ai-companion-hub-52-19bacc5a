@@ -14,6 +14,16 @@ import { chatCreditsFn, recordChatUsageFn } from "@/lib/ai-credits.functions";
 import type { AiProfile } from "@/lib/ai-profile.server";
 import { useAccount } from "@/lib/use-account";
 import {
+  BUILTIN_MODELS,
+  DEFAULT_MODEL_ID,
+  allModels,
+  loadSelectedModelId,
+  modelById,
+  saveSelectedModelId,
+  type AiModel,
+} from "@/lib/ai-models";
+
+import {
   loadThreads,
   saveThreads,
   newThreadId,
