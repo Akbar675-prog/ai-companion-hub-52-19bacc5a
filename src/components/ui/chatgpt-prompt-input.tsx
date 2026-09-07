@@ -450,7 +450,66 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
                 </TooltipContent>
               </Tooltip>
 
+              <Popover open={isModelOpen} onOpenChange={setIsModelOpen}>
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex h-8 min-w-0 items-center gap-1.5 rounded-full bg-surface-variant px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-primary-container"
+                  >
+                    {activeModel.logo ? (
+                      <img src={activeModel.logo} alt="" className="size-4 rounded-full object-cover" />
+                    ) : (
+                      <SparkIcon className="size-4 text-primary" />
+                    )}
+                    <span className="max-w-[8.5rem] truncate">{activeModel.name}</span>
+                    {activeModel.isNew && <NewBadge className="hidden sm:inline-flex" />}
+                    <ChevronIcon className="size-3.5 opacity-60" />
+                    <span className="sr-only">Pilih model AI</span>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent side="top" align="start" className="w-[19rem]">
+                  <div className="flex max-h-72 flex-col gap-1 overflow-y-auto">
+                    {modelList.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => {
+                          onModelChange?.(m.id);
+                          setIsModelOpen(false);
+                        }}
+                        className={cn(
+                          "flex w-full items-start gap-2.5 rounded-xl p-2 text-left transition-colors hover:bg-accent",
+                          m.id === activeModel.id && "bg-primary/10",
+                        )}
+                      >
+                        {m.logo ? (
+                          <img src={m.logo} alt="" className="mt-0.5 size-5 rounded-full object-cover" />
+                        ) : (
+                          <SparkIcon className="mt-0.5 size-5 text-primary" />
+                        )}
+                        <span className="min-w-0 flex-1">
+                          <span className="flex flex-wrap items-center gap-1.5 text-sm font-medium">
+                            {m.name}
+                            {m.isNew && <NewBadge />}
+                          </span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            {m.tagline}
+                          </span>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <a
+                    href="/ai/addai"
+                    className="mt-2 flex items-center justify-center rounded-xl border border-dashed border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent"
+                  >
+                    + Tambah AI sendiri
+                  </a>
+                </PopoverContent>
+              </Popover>
+
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <PopoverTrigger asChild>
