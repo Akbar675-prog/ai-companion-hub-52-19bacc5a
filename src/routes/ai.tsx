@@ -14,6 +14,16 @@ import { chatCreditsFn, recordChatUsageFn } from "@/lib/ai-credits.functions";
 import type { AiProfile } from "@/lib/ai-profile.server";
 import { useAccount } from "@/lib/use-account";
 import {
+  BUILTIN_MODELS,
+  DEFAULT_MODEL_ID,
+  allModels,
+  loadSelectedModelId,
+  modelById,
+  saveSelectedModelId,
+  type AiModel,
+} from "@/lib/ai-models";
+
+import {
   loadThreads,
   saveThreads,
   newThreadId,
@@ -100,6 +110,9 @@ function AiChatPage() {
   const [attachedDocument, setAttachedDocument] = useState<{ name: string; text: string } | null>(null);
   const [tool, setTool] = useState<string | null>(null);
   const [plugin, setPlugin] = useState<AiPluginId | null>(null);
+  const [models, setModels] = useState<AiModel[]>(BUILTIN_MODELS);
+  const [modelId, setModelId] = useState<string>(DEFAULT_MODEL_ID);
+
   const [imaging, setImaging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -115,6 +128,15 @@ function AiChatPage() {
     setThreads(loadThreads(userId));
     setActiveId(null);
   }, [userId]);
+
+  // Daftar model (termasuk AI buatan pengguna dari /ai/addai) + pilihan terakhir.
+  useEffect(() => {
+    const list = allModels();
+    setModels(list);
+    const saved = loadSelectedModelId();
+    setModelId(list.some((m) => m.id === saved) ? saved : DEFAULT_MODEL_ID);
+  }, []);
+
 
   // Profil GetrixAI + kredit chat (khusus pengguna yang login).
   useEffect(() => {
@@ -448,6 +470,9 @@ function AiChatPage() {
             search,
             apps,
             origin,
+            persona: modelById(modelId, models).persona,
+            modelLabel: modelById(modelId, models).name,
+
           }),
 
           signal,
@@ -808,6 +833,13 @@ function AiChatPage() {
             onToolChange={setTool}
             plugin={plugin}
             onPluginChange={setPlugin}
+            models={models}
+            modelId={modelId}
+            onModelChange={(id) => {
+              setModelId(id);
+              saveSelectedModelId(id);
+            }}
+
             onValueChange={setInput}
             onStop={stop}
             onChange={(e) => setInput(e.target.value)}
