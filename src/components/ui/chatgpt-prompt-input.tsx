@@ -266,6 +266,10 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
     const [isImageDialogOpen, setIsImageDialogOpen] = React.useState(false);
     const [pluginMenuOpen, setPluginMenuOpen] = React.useState(false);
     const activePlugin = pluginById(plugin ?? null);
+    const [isModelOpen, setIsModelOpen] = React.useState(false);
+    const modelList = models && models.length > 0 ? models : BUILTIN_MODELS;
+    const activeModel = modelById(modelId, modelList);
+
 
     React.useImperativeHandle(ref, () => internalTextareaRef.current!, []);
 
