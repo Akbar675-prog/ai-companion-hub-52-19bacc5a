@@ -211,9 +211,14 @@ export interface PromptBoxProps extends React.TextareaHTMLAttributes<HTMLTextAre
   /** Plugin aktif (dipilih lewat "@"). */
   plugin?: AiPluginId | null;
   onPluginChange?: (id: AiPluginId | null) => void;
+  /** Daftar model yang bisa dipilih + model aktif. */
+  models?: AiModel[];
+  modelId?: string;
+  onModelChange?: (id: string) => void;
   /** Dipakai supaya komponen bisa membersihkan karakter "@" dari teks. */
   onValueChange?: (value: string) => void;
 }
+
 
 export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
   (
