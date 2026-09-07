@@ -41,6 +41,7 @@ import { Route as ApiAiPlanRouteImport } from './routes/api.ai-plan'
 import { Route as ApiAiChatRouteImport } from './routes/api.ai-chat'
 import { Route as AiProfileRouteImport } from './routes/ai_.profile'
 import { Route as AiCreditsRouteImport } from './routes/ai_.credits'
+import { Route as AiAddaiRouteImport } from './routes/ai_.addai'
 import { Route as AppsIndexApplistDotjsonRouteImport } from './routes/apps.index.applist[.]json'
 import { Route as UsersIdProfileRouteImport } from './routes/users.$id.profile'
 import { Route as UPB64RouteImport } from './routes/u.p.$b64'
@@ -213,6 +214,11 @@ const AiCreditsRoute = AiCreditsRouteImport.update({
   path: '/ai/credits',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiAddaiRoute = AiAddaiRouteImport.update({
+  id: '/ai_/addai',
+  path: '/ai/addai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppsIndexApplistDotjsonRoute = AppsIndexApplistDotjsonRouteImport.update({
   id: '/apps/index/applist.json',
   path: '/apps/index/applist.json',
@@ -290,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/trainingai': typeof TrainingaiRoute
   '/verified': typeof VerifiedRoute
   '/vote-maker': typeof VoteMakerRoute
+  '/ai/addai': typeof AiAddaiRoute
   '/ai/credits': typeof AiCreditsRoute
   '/ai/profile': typeof AiProfileRoute
   '/api/ai-chat': typeof ApiAiChatRoute
@@ -335,6 +342,7 @@ export interface FileRoutesByTo {
   '/trainingai': typeof TrainingaiRoute
   '/verified': typeof VerifiedRoute
   '/vote-maker': typeof VoteMakerRoute
+  '/ai/addai': typeof AiAddaiRoute
   '/ai/credits': typeof AiCreditsRoute
   '/ai/profile': typeof AiProfileRoute
   '/api/ai-chat': typeof ApiAiChatRoute
@@ -381,6 +389,7 @@ export interface FileRoutesById {
   '/trainingai': typeof TrainingaiRoute
   '/verified': typeof VerifiedRoute
   '/vote-maker': typeof VoteMakerRoute
+  '/ai_/addai': typeof AiAddaiRoute
   '/ai_/credits': typeof AiCreditsRoute
   '/ai_/profile': typeof AiProfileRoute
   '/api/ai-chat': typeof ApiAiChatRoute
@@ -428,6 +437,7 @@ export interface FileRouteTypes {
     | '/trainingai'
     | '/verified'
     | '/vote-maker'
+    | '/ai/addai'
     | '/ai/credits'
     | '/ai/profile'
     | '/api/ai-chat'
@@ -473,6 +483,7 @@ export interface FileRouteTypes {
     | '/trainingai'
     | '/verified'
     | '/vote-maker'
+    | '/ai/addai'
     | '/ai/credits'
     | '/ai/profile'
     | '/api/ai-chat'
@@ -518,6 +529,7 @@ export interface FileRouteTypes {
     | '/trainingai'
     | '/verified'
     | '/vote-maker'
+    | '/ai_/addai'
     | '/ai_/credits'
     | '/ai_/profile'
     | '/api/ai-chat'
@@ -564,6 +576,7 @@ export interface RootRouteChildren {
   TrainingaiRoute: typeof TrainingaiRoute
   VerifiedRoute: typeof VerifiedRoute
   VoteMakerRoute: typeof VoteMakerRoute
+  AiAddaiRoute: typeof AiAddaiRoute
   AiCreditsRoute: typeof AiCreditsRoute
   AiProfileRoute: typeof AiProfileRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
@@ -816,6 +829,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AiCreditsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai_/addai': {
+      id: '/ai_/addai'
+      path: '/ai/addai'
+      fullPath: '/ai/addai'
+      preLoaderRoute: typeof AiAddaiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/apps/index/applist.json': {
       id: '/apps/index/applist.json'
       path: '/apps/index/applist.json'
@@ -916,6 +936,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrainingaiRoute: TrainingaiRoute,
   VerifiedRoute: VerifiedRoute,
   VoteMakerRoute: VoteMakerRoute,
+  AiAddaiRoute: AiAddaiRoute,
   AiCreditsRoute: AiCreditsRoute,
   AiProfileRoute: AiProfileRoute,
   ApiAiChatRoute: ApiAiChatRoute,
