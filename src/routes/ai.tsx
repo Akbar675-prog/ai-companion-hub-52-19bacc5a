@@ -100,6 +100,9 @@ function AiChatPage() {
   const [attachedDocument, setAttachedDocument] = useState<{ name: string; text: string } | null>(null);
   const [tool, setTool] = useState<string | null>(null);
   const [plugin, setPlugin] = useState<AiPluginId | null>(null);
+  const [models, setModels] = useState<AiModel[]>(BUILTIN_MODELS);
+  const [modelId, setModelId] = useState<string>(DEFAULT_MODEL_ID);
+
   const [imaging, setImaging] = useState(false);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
