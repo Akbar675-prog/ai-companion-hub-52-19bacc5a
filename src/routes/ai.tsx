@@ -833,6 +833,13 @@ function AiChatPage() {
             onToolChange={setTool}
             plugin={plugin}
             onPluginChange={setPlugin}
+            models={models}
+            modelId={modelId}
+            onModelChange={(id) => {
+              setModelId(id);
+              saveSelectedModelId(id);
+            }}
+
             onValueChange={setInput}
             onStop={stop}
             onChange={(e) => setInput(e.target.value)}
