@@ -238,6 +238,10 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
       onStop,
       plugin,
       onPluginChange,
+      models,
+      modelId,
+      onModelChange,
+
       onValueChange,
       ...props
     },
