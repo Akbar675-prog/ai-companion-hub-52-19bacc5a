@@ -196,15 +196,44 @@ function AddAiPage() {
             />
           </Field>
 
-          <Field label="Prompting AI (gaya & aturan menjawab)">
-            <textarea
-              value={persona}
-              onChange={(e) => setPersona(e.target.value)}
-              rows={5}
-              placeholder="Contoh: Jawab formal, selalu beri contoh nyata, dan akhiri dengan ringkasan tiga poin."
-              className={`${inputClass} resize-y`}
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={realModel}
+              onChange={(e) => setRealModel(e.target.checked)}
+              className="mt-0.5 size-4 accent-primary"
             />
-          </Field>
+            <span>
+              Real model
+              <span className="block text-xs text-muted-foreground">
+                Pakai model resmi (bukan prompting). Isi model type di bawah.
+              </span>
+            </span>
+          </label>
+
+          {realModel ? (
+            <Field label="Model type">
+              <input
+                value={modelType}
+                onChange={(e) => setModelType(e.target.value)}
+                placeholder="nvidia/nemotron-3.5-lightning:free"
+                className={inputClass}
+                autoCapitalize="none"
+                spellCheck={false}
+              />
+            </Field>
+          ) : (
+            <Field label="Prompting AI (gaya & aturan menjawab)">
+              <textarea
+                value={persona}
+                onChange={(e) => setPersona(e.target.value)}
+                rows={5}
+                placeholder="Contoh: Jawab formal, selalu beri contoh nyata, dan akhiri dengan ringkasan tiga poin."
+                className={`${inputClass} resize-y`}
+              />
+            </Field>
+          )}
+
 
           <label className="flex items-center gap-2 text-sm">
             <input
