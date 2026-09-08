@@ -14,7 +14,12 @@ export type AiModel = {
   logo?: string;
   /** Model buatan pengguna dari halaman /ai/addai. */
   custom?: boolean;
+  /** Bila true, pakai model resmi (modelType) alih-alih prompting/persona. */
+  realModel?: boolean;
+  /** ID model resmi, contoh: nvidia/nemotron-3.5-lightning:free */
+  modelType?: string;
 };
+
 
 export const BUILTIN_MODELS: AiModel[] = [
   {
@@ -57,7 +62,10 @@ const SELECTED_KEY = "gma:ai:model";
 const OVERRIDE_KEY = "gma:ai:model-overrides";
 const HIDDEN_KEY = "gma:ai:hidden-models";
 
-type Override = Partial<Pick<AiModel, "name" | "tagline" | "persona" | "logo" | "isNew">>;
+type Override = Partial<
+  Pick<AiModel, "name" | "tagline" | "persona" | "logo" | "isNew" | "realModel" | "modelType">
+>;
+
 
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
