@@ -68,6 +68,8 @@ function AddAiPage() {
     setTagline("");
     setPersona("");
     setMarkNew(true);
+    setRealModel(false);
+    setModelType("");
   }
 
   function startEdit(m: AiModel) {
@@ -77,6 +79,8 @@ function AddAiPage() {
     setTagline(m.tagline ?? "");
     setPersona(m.persona ?? "");
     setMarkNew(Boolean(m.isNew));
+    setRealModel(Boolean(m.realModel));
+    setModelType(m.modelType ?? "");
     setError(null);
     setSaved(null);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -89,16 +93,23 @@ function AddAiPage() {
       setError("Nama AI minimal 2 karakter.");
       return;
     }
-    if (persona.trim().length < 10) {
+    if (realModel) {
+      if (!/^[\w.-]+\/[\w.:-]+$/.test(modelType.trim())) {
+        setError("Model type harus seperti: nvidia/nemotron-3.5-lightning:free");
+        return;
+      }
+    } else if (persona.trim().length < 10) {
       setError("Prompting AI minimal 10 karakter supaya gayanya jelas.");
       return;
     }
     const patch = {
       name: name.trim().slice(0, 40),
       tagline: tagline.trim().slice(0, 120) || "AI kustom buatan kamu.",
-      persona: persona.trim().slice(0, 4000),
+      persona: realModel ? "" : persona.trim().slice(0, 4000),
       logo: logo.trim() || undefined,
       isNew: markNew,
+      realModel,
+      modelType: realModel ? modelType.trim().slice(0, 120) : undefined,
     };
 
     if (editingId) {
@@ -114,6 +125,7 @@ function AddAiPage() {
     resetForm();
     refresh();
   }
+
 
   function remove(m: AiModel) {
     deleteModel(m.id);
