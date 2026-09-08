@@ -51,9 +51,12 @@ function AddAiPage() {
   const [tagline, setTagline] = useState("");
   const [persona, setPersona] = useState("");
   const [markNew, setMarkNew] = useState(true);
+  const [realModel, setRealModel] = useState(false);
+  const [modelType, setModelType] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
 
   const refresh = () => setList(allModels());
   useEffect(refresh, []);
