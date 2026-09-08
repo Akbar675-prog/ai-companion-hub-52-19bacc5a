@@ -1,27 +1,30 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Check, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { NewBadge } from "@/components/NewBadge";
 import {
-  BUILTIN_MODELS,
+  allModels,
+  deleteModel,
   loadCustomModels,
+  restoreBuiltins,
   saveCustomModels,
+  updateModel,
   type AiModel,
 } from "@/lib/ai-models";
 
 export const Route = createFileRoute("/ai_/addai")({
   head: () => ({
     meta: [
-      { title: "Tambah AI — Galileo Mod APK" },
+      { title: "Tambah & Kelola AI — Galileo Mod APK" },
       {
         name: "description",
         content:
-          "Buat AI sendiri: atur nama, logo, dan gaya prompting, lalu pakai langsung di kotak chat GetrixAI.",
+          "Buat, edit, atau hapus AI sendiri: atur nama, logo, dan gaya prompting, lalu pakai langsung di kotak chat GetrixAI.",
       },
-      { property: "og:title", content: "Tambah AI — Galileo Mod APK" },
+      { property: "og:title", content: "Tambah & Kelola AI — Galileo Mod APK" },
       {
         property: "og:description",
-        content: "Bikin model AI kustom dengan nama, logo, dan prompt kamu sendiri.",
+        content: "Bikin, ubah, dan hapus model AI dengan nama, logo, dan prompt kamu sendiri.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -38,26 +41,47 @@ function slugId(name: string) {
   return `custom-${base || "ai"}-${Math.random().toString(36).slice(2, 6)}`;
 }
 
+const inputClass =
+  "w-full rounded-2xl bg-background px-4 py-3 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-primary";
+
 function AddAiPage() {
-  const [custom, setCustom] = useState<AiModel[]>([]);
+  const [list, setList] = useState<AiModel[]>([]);
   const [name, setName] = useState("");
   const [logo, setLogo] = useState("");
   const [tagline, setTagline] = useState("");
   const [persona, setPersona] = useState("");
   const [markNew, setMarkNew] = useState(true);
-  const [saved, setSaved] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => setCustom(loadCustomModels()), []);
+  const refresh = () => setList(allModels());
+  useEffect(refresh, []);
 
-  function persist(list: AiModel[]) {
-    setCustom(list);
-    saveCustomModels(list);
+  function resetForm() {
+    setEditingId(null);
+    setName("");
+    setLogo("");
+    setTagline("");
+    setPersona("");
+    setMarkNew(true);
   }
 
-  function add() {
+  function startEdit(m: AiModel) {
+    setEditingId(m.id);
+    setName(m.name);
+    setLogo(m.logo ?? "");
+    setTagline(m.tagline ?? "");
+    setPersona(m.persona ?? "");
+    setMarkNew(Boolean(m.isNew));
     setError(null);
-    setSaved(false);
+    setSaved(null);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function submit() {
+    setError(null);
+    setSaved(null);
     if (name.trim().length < 2) {
       setError("Nama AI minimal 2 karakter.");
       return;
@@ -66,21 +90,33 @@ function AddAiPage() {
       setError("Prompting AI minimal 10 karakter supaya gayanya jelas.");
       return;
     }
-    const model: AiModel = {
-      id: slugId(name),
+    const patch = {
       name: name.trim().slice(0, 40),
       tagline: tagline.trim().slice(0, 120) || "AI kustom buatan kamu.",
       persona: persona.trim().slice(0, 4000),
-      ...(logo.trim() ? { logo: logo.trim() } : {}),
-      ...(markNew ? { isNew: true } : {}),
-      custom: true,
+      logo: logo.trim() || undefined,
+      isNew: markNew,
     };
-    persist([...custom, model]);
-    setName("");
-    setLogo("");
-    setTagline("");
-    setPersona("");
-    setSaved(true);
+
+    if (editingId) {
+      updateModel(editingId, patch);
+      setSaved("Perubahan disimpan.");
+    } else {
+      saveCustomModels([
+        ...loadCustomModels(),
+        { id: slugId(name), ...patch, custom: true } as AiModel,
+      ]);
+      setSaved("AI berhasil ditambahkan.");
+    }
+    resetForm();
+    refresh();
+  }
+
+  function remove(m: AiModel) {
+    deleteModel(m.id);
+    if (editingId === m.id) resetForm();
+    setSaved(`${m.name} dihapus.`);
+    refresh();
   }
 
   return (
@@ -93,22 +129,37 @@ function AddAiPage() {
         >
           <ArrowLeft className="size-5" />
         </Link>
-        <h1 className="font-display text-lg">Tambah AI</h1>
+        <h1 className="font-display text-lg">Tambah & Kelola AI</h1>
       </header>
 
       <main className="mx-auto w-full max-w-2xl space-y-8 px-4 pt-6">
         <p className="text-sm text-muted-foreground">
-          Bikin AI kamu sendiri: atur nama, logo, dan cara dia menjawab. Setelah disimpan, AI ini
-          langsung muncul di kotak pilihan model pada halaman chat.
+          Bikin AI kamu sendiri, atau ubah dan hapus AI yang sudah ada. Semua perubahan langsung
+          terlihat di kotak pilihan model pada halaman chat.
         </p>
 
         <section className="space-y-4 rounded-3xl border border-border/60 bg-surface-variant/40 p-4 md:p-6">
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-base">
+              {editingId ? "Edit AI" : "Tambah AI baru"}
+            </h2>
+            {editingId && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition hover:bg-accent"
+              >
+                <X className="size-3.5" /> Batal edit
+              </button>
+            )}
+          </div>
+
           <Field label="Nama AI">
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: Getrix Titan"
-              className="w-full rounded-2xl bg-background px-4 py-3 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-primary"
+              className={inputClass}
             />
           </Field>
 
@@ -117,7 +168,7 @@ function AddAiPage() {
               value={logo}
               onChange={(e) => setLogo(e.target.value)}
               placeholder="https://..."
-              className="w-full rounded-2xl bg-background px-4 py-3 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-primary"
+              className={inputClass}
             />
           </Field>
 
@@ -126,7 +177,7 @@ function AddAiPage() {
               value={tagline}
               onChange={(e) => setTagline(e.target.value)}
               placeholder="Contoh: Fokus pada analisis panjang dan detail."
-              className="w-full rounded-2xl bg-background px-4 py-3 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-primary"
+              className={inputClass}
             />
           </Field>
 
@@ -136,7 +187,7 @@ function AddAiPage() {
               onChange={(e) => setPersona(e.target.value)}
               rows={5}
               placeholder="Contoh: Jawab formal, selalu beri contoh nyata, dan akhiri dengan ringkasan tiga poin."
-              className="w-full resize-y rounded-2xl bg-background px-4 py-3 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-primary"
+              className={`${inputClass} resize-y`}
             />
           </Field>
 
@@ -154,26 +205,49 @@ function AddAiPage() {
           {error && <p className="text-sm text-destructive">{error}</p>}
           {saved && (
             <p className="inline-flex items-center gap-1.5 text-sm text-primary">
-              <Check className="size-4" /> AI berhasil ditambahkan.
+              <Check className="size-4" /> {saved}
             </p>
           )}
 
           <button
             type="button"
-            onClick={add}
+            onClick={submit}
             className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
           >
-            <Plus className="size-4" /> Tambah AI
+            {editingId ? (
+              <>
+                <Check className="size-4" /> Simpan perubahan
+              </>
+            ) : (
+              <>
+                <Plus className="size-4" /> Tambah AI
+              </>
+            )}
           </button>
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-display text-base">AI buatan kamu</h2>
-          {custom.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Belum ada AI kustom.</p>
+          <div className="flex items-center justify-between gap-2">
+            <h2 className="font-display text-base">Semua AI</h2>
+            <button
+              type="button"
+              onClick={() => {
+                restoreBuiltins();
+                resetForm();
+                setSaved("Model bawaan dipulihkan.");
+                refresh();
+              }}
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition hover:bg-accent"
+            >
+              <RotateCcw className="size-3.5" /> Pulihkan bawaan
+            </button>
+          </div>
+
+          {list.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Belum ada AI.</p>
           ) : (
             <ul className="space-y-2">
-              {custom.map((m) => (
+              {list.map((m) => (
                 <li
                   key={m.id}
                   className="flex items-start gap-3 rounded-2xl border border-border/60 p-3"
@@ -187,12 +261,25 @@ function AddAiPage() {
                     <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
                       {m.name}
                       {m.isNew && <NewBadge />}
+                      {!m.custom && (
+                        <span className="rounded-full bg-surface-variant px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+                          bawaan
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-muted-foreground">{m.tagline}</p>
                   </div>
                   <button
                     type="button"
-                    onClick={() => persist(custom.filter((c) => c.id !== m.id))}
+                    onClick={() => startEdit(m)}
+                    aria-label={`Edit ${m.name}`}
+                    className="rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-foreground"
+                  >
+                    <Pencil className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => remove(m)}
                     aria-label={`Hapus ${m.name}`}
                     className="rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-destructive"
                   >
@@ -202,21 +289,6 @@ function AddAiPage() {
               ))}
             </ul>
           )}
-        </section>
-
-        <section className="space-y-3">
-          <h2 className="font-display text-base">Model bawaan</h2>
-          <ul className="space-y-2">
-            {BUILTIN_MODELS.map((m) => (
-              <li key={m.id} className="rounded-2xl border border-border/60 p-3">
-                <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
-                  {m.name}
-                  {m.isNew && <NewBadge />}
-                </p>
-                <p className="text-xs text-muted-foreground">{m.tagline}</p>
-              </li>
-            ))}
-          </ul>
         </section>
       </main>
     </div>

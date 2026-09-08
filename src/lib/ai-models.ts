@@ -54,29 +54,84 @@ export const DEFAULT_MODEL_ID = BUILTIN_MODELS[0]!.id;
 
 const CUSTOM_KEY = "gma:ai:custom-models";
 const SELECTED_KEY = "gma:ai:model";
+const OVERRIDE_KEY = "gma:ai:model-overrides";
+const HIDDEN_KEY = "gma:ai:hidden-models";
 
-export function loadCustomModels(): AiModel[] {
-  if (typeof window === "undefined") return [];
+type Override = Partial<Pick<AiModel, "name" | "tagline" | "persona" | "logo" | "isNew">>;
+
+function readJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
   try {
-    const raw = window.localStorage.getItem(CUSTOM_KEY);
-    const parsed = raw ? (JSON.parse(raw) as AiModel[]) : [];
-    return Array.isArray(parsed)
-      ? parsed
-          .filter((m) => m && typeof m.id === "string" && typeof m.name === "string")
-          .map((m) => ({ ...m, custom: true }))
-      : [];
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
   } catch {
-    return [];
+    return fallback;
   }
 }
 
-export function saveCustomModels(list: AiModel[]) {
+function writeJson(key: string, value: unknown) {
   if (typeof window === "undefined") return;
   try {
-    window.localStorage.setItem(CUSTOM_KEY, JSON.stringify(list));
+    window.localStorage.setItem(key, JSON.stringify(value));
   } catch {
     /* storage penuh / diblokir */
   }
+}
+
+export function loadCustomModels(): AiModel[] {
+  const parsed = readJson<AiModel[]>(CUSTOM_KEY, []);
+  return Array.isArray(parsed)
+    ? parsed
+        .filter((m) => m && typeof m.id === "string" && typeof m.name === "string")
+        .map((m) => ({ ...m, custom: true }))
+    : [];
+}
+
+export function saveCustomModels(list: AiModel[]) {
+  writeJson(CUSTOM_KEY, list);
+}
+
+export function loadOverrides(): Record<string, Override> {
+  const o = readJson<Record<string, Override>>(OVERRIDE_KEY, {});
+  return o && typeof o === "object" ? o : {};
+}
+
+export function loadHiddenIds(): string[] {
+  const h = readJson<string[]>(HIDDEN_KEY, []);
+  return Array.isArray(h) ? h.filter((x) => typeof x === "string") : [];
+}
+
+/** Simpan hasil edit sebuah model (bawaan maupun kustom). */
+export function updateModel(id: string, patch: Override) {
+  const customs = loadCustomModels();
+  const idx = customs.findIndex((c) => c.id === id);
+  if (idx >= 0) {
+    const next = [...customs];
+    next[idx] = { ...next[idx]!, ...patch };
+    if (!patch.logo) delete next[idx]!.logo;
+    saveCustomModels(next);
+    return;
+  }
+  const overrides = loadOverrides();
+  overrides[id] = { ...(overrides[id] ?? {}), ...patch };
+  writeJson(OVERRIDE_KEY, overrides);
+}
+
+/** Hapus model: kustom dibuang, bawaan disembunyikan. */
+export function deleteModel(id: string) {
+  const customs = loadCustomModels();
+  if (customs.some((c) => c.id === id)) {
+    saveCustomModels(customs.filter((c) => c.id !== id));
+    return;
+  }
+  const hidden = loadHiddenIds();
+  if (!hidden.includes(id)) writeJson(HIDDEN_KEY, [...hidden, id]);
+}
+
+/** Kembalikan model bawaan ke kondisi awal (batalkan edit & sembunyikan). */
+export function restoreBuiltins() {
+  writeJson(OVERRIDE_KEY, {});
+  writeJson(HIDDEN_KEY, []);
 }
 
 export function loadSelectedModelId(): string {
@@ -94,9 +149,15 @@ export function saveSelectedModelId(id: string) {
 }
 
 export function allModels(): AiModel[] {
-  return [...BUILTIN_MODELS, ...loadCustomModels()];
+  const overrides = loadOverrides();
+  const hidden = new Set(loadHiddenIds());
+  const list = [...BUILTIN_MODELS, ...loadCustomModels()]
+    .filter((m) => !hidden.has(m.id))
+    .map((m) => ({ ...m, ...(overrides[m.id] ?? {}) }));
+  return list.length > 0 ? list : [BUILTIN_MODELS[0]!];
 }
 
 export function modelById(id: string | null | undefined, list: AiModel[]): AiModel {
-  return list.find((m) => m.id === id) ?? BUILTIN_MODELS[0]!;
+  return list.find((m) => m.id === id) ?? list[0] ?? BUILTIN_MODELS[0]!;
 }
+
