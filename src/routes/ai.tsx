@@ -470,8 +470,14 @@ function AiChatPage() {
             search,
             apps,
             origin,
-            persona: modelById(modelId, models).persona,
+            persona: modelById(modelId, models).realModel
+              ? ""
+              : modelById(modelId, models).persona,
             modelLabel: modelById(modelId, models).name,
+            realModelId: modelById(modelId, models).realModel
+              ? modelById(modelId, models).modelType
+              : undefined,
+
 
           }),
 

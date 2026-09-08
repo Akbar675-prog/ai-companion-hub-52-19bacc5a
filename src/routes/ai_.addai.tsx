@@ -51,9 +51,12 @@ function AddAiPage() {
   const [tagline, setTagline] = useState("");
   const [persona, setPersona] = useState("");
   const [markNew, setMarkNew] = useState(true);
+  const [realModel, setRealModel] = useState(false);
+  const [modelType, setModelType] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
 
   const refresh = () => setList(allModels());
   useEffect(refresh, []);
@@ -65,6 +68,8 @@ function AddAiPage() {
     setTagline("");
     setPersona("");
     setMarkNew(true);
+    setRealModel(false);
+    setModelType("");
   }
 
   function startEdit(m: AiModel) {
@@ -74,6 +79,8 @@ function AddAiPage() {
     setTagline(m.tagline ?? "");
     setPersona(m.persona ?? "");
     setMarkNew(Boolean(m.isNew));
+    setRealModel(Boolean(m.realModel));
+    setModelType(m.modelType ?? "");
     setError(null);
     setSaved(null);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -86,16 +93,23 @@ function AddAiPage() {
       setError("Nama AI minimal 2 karakter.");
       return;
     }
-    if (persona.trim().length < 10) {
+    if (realModel) {
+      if (!/^[\w.-]+\/[\w.:-]+$/.test(modelType.trim())) {
+        setError("Model type harus seperti: nvidia/nemotron-3.5-lightning:free");
+        return;
+      }
+    } else if (persona.trim().length < 10) {
       setError("Prompting AI minimal 10 karakter supaya gayanya jelas.");
       return;
     }
     const patch = {
       name: name.trim().slice(0, 40),
       tagline: tagline.trim().slice(0, 120) || "AI kustom buatan kamu.",
-      persona: persona.trim().slice(0, 4000),
+      persona: realModel ? "" : persona.trim().slice(0, 4000),
       logo: logo.trim() || undefined,
       isNew: markNew,
+      realModel,
+      modelType: realModel ? modelType.trim().slice(0, 120) : undefined,
     };
 
     if (editingId) {
@@ -111,6 +125,7 @@ function AddAiPage() {
     resetForm();
     refresh();
   }
+
 
   function remove(m: AiModel) {
     deleteModel(m.id);
@@ -181,15 +196,44 @@ function AddAiPage() {
             />
           </Field>
 
-          <Field label="Prompting AI (gaya & aturan menjawab)">
-            <textarea
-              value={persona}
-              onChange={(e) => setPersona(e.target.value)}
-              rows={5}
-              placeholder="Contoh: Jawab formal, selalu beri contoh nyata, dan akhiri dengan ringkasan tiga poin."
-              className={`${inputClass} resize-y`}
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={realModel}
+              onChange={(e) => setRealModel(e.target.checked)}
+              className="mt-0.5 size-4 accent-primary"
             />
-          </Field>
+            <span>
+              Real model
+              <span className="block text-xs text-muted-foreground">
+                Pakai model resmi (bukan prompting). Isi model type di bawah.
+              </span>
+            </span>
+          </label>
+
+          {realModel ? (
+            <Field label="Model type">
+              <input
+                value={modelType}
+                onChange={(e) => setModelType(e.target.value)}
+                placeholder="nvidia/nemotron-3.5-lightning:free"
+                className={inputClass}
+                autoCapitalize="none"
+                spellCheck={false}
+              />
+            </Field>
+          ) : (
+            <Field label="Prompting AI (gaya & aturan menjawab)">
+              <textarea
+                value={persona}
+                onChange={(e) => setPersona(e.target.value)}
+                rows={5}
+                placeholder="Contoh: Jawab formal, selalu beri contoh nyata, dan akhiri dengan ringkasan tiga poin."
+                className={`${inputClass} resize-y`}
+              />
+            </Field>
+          )}
+
 
           <label className="flex items-center gap-2 text-sm">
             <input
