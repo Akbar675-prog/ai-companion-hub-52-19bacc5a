@@ -122,8 +122,11 @@ export const Route = createFileRoute("/api/ai-chat")({
         const apps = (body.apps ?? []).slice(0, 200).filter((a) => a?.ID && a?.App_name);
         const origin = String(body.origin ?? "").replace(/\/$/, "");
         if (apps.length > 0) {
+          const appsHeader = realModelId
+            ? "\n\nBERIKUT DAFTAR APLIKASI YANG TERSEDIA (sumber: /apps/index/applist.json):\n"
+            : "\n\nDAFTAR APLIKASI DI SITUS GALILEO MOD APK (sumber: /apps/index/applist.json):\n";
           extra +=
-            "\n\nDAFTAR APLIKASI DI SITUS GALILEO MOD APK (sumber: /apps/index/applist.json):\n" +
+            appsHeader +
             apps
               .map(
                 (a) =>
