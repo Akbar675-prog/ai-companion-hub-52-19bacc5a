@@ -117,13 +117,18 @@ export const Route = createFileRoute("/api/ai-chat")({
           `\n\nWaktu sekarang: ${nowLabel} WIB (UTC: ${now.toISOString()}). ` +
           "Gunakan ini bila pengguna bertanya tanggal, hari, jam, umur, atau hal yang bergantung waktu.";
 
+        const realModelId = String(body.realModelId ?? "").trim();
+
         // Katalog aplikasi situs dikirim klien (hasil fetch /apps/index/applist.json),
         // jadi tidak ada query database yang menahan awal streaming.
         const apps = (body.apps ?? []).slice(0, 200).filter((a) => a?.ID && a?.App_name);
         const origin = String(body.origin ?? "").replace(/\/$/, "");
         if (apps.length > 0) {
+          const appsHeader = realModelId
+            ? "\n\nBERIKUT DAFTAR APLIKASI YANG TERSEDIA (sumber: /apps/index/applist.json):\n"
+            : "\n\nDAFTAR APLIKASI DI SITUS GALILEO MOD APK (sumber: /apps/index/applist.json):\n";
           extra +=
-            "\n\nDAFTAR APLIKASI DI SITUS GALILEO MOD APK (sumber: /apps/index/applist.json):\n" +
+            appsHeader +
             apps
               .map(
                 (a) =>
@@ -134,8 +139,6 @@ export const Route = createFileRoute("/api/ai-chat")({
               .join("\n") +
             "\nBila pengguna bertanya soal aplikasi atau minta rekomendasi, gunakan daftar ini: sebutkan nama aplikasi, ringkas deskripsinya, dan sertakan tautan halamannya (gabungan alamat situs + /apps/ + ID). Jangan mengarang aplikasi yang tidak ada di daftar.";
         }
-
-        const realModelId = String(body.realModelId ?? "").trim();
 
         // Gaya jawaban sesuai model yang dipilih pengguna di kotak chat.
         // Kalau pakai model real, lewati seluruh custom prompt/persona — pakai bawaan model itu sendiri.
@@ -153,7 +156,10 @@ export const Route = createFileRoute("/api/ai-chat")({
 
 
         // Instruksi admin + fakta resmi (dibatasi waktu, tidak boleh menahan jawaban).
-        extra += await getAiExtraContext();
+        // Untuk model real, lewati instruksi khusus admin supaya model pakai bawaannya sendiri.
+        if (!realModelId) {
+          extra += await getAiExtraContext();
+        }
 
         // Batas waktu keras: kalau upstream diam, jangan tunggu selamanya.
         const upstreamAbort = new AbortController();
@@ -179,7 +185,7 @@ export const Route = createFileRoute("/api/ai-chat")({
                 {
                   role: "system",
                   content: realModelId
-                    ? "Kamu adalah asisten yang membantu pengguna di situs Galileo Mod APK." +
+                    ? "Kamu adalah asisten AI yang siap membantu pengguna. Jawab dengan jelas, akurat, dan dalam bahasa yang sama dengan pengguna." +
                       (userName ? ` Nama pengguna: ${userName}.` : "") +
                       profileBlock +
                       extra
