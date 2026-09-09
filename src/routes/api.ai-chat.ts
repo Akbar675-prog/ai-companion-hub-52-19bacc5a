@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAiExtraContext } from "@/lib/ai-context.server";
 
-const CHAT_MODEL = "deepseek/deepseek-v4-flash";
+const CHAT_MODEL = "nex-agi/nex-n2.5-pro:free";
 const REASONING_MODEL = "deepseek/deepseek-v4-pro";
 // Batas keras total (jawaban panjang butuh waktu) + batas diam antar chunk.
 const ANSWER_TIMEOUT_MS = 280_000;
