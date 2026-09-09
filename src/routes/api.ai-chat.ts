@@ -21,7 +21,9 @@ type Body = {
   reasoning?: boolean;
   persona?: string;
   modelLabel?: string;
+  realModelId?: string;
   vision?: string;
+
   apps?: { ID?: string; App_name?: string; Description?: string }[];
   origin?: string;
   search?: {
