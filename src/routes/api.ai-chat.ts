@@ -166,9 +166,14 @@ export const Route = createFileRoute("/api/ai-chat")({
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
             signal: upstreamAbort.signal,
             body: JSON.stringify({
-              model: body.reasoning ? REASONING_MODEL : CHAT_MODEL,
+              model: realModelId
+                ? realModelId
+                : body.reasoning
+                  ? REASONING_MODEL
+                  : CHAT_MODEL,
               stream: true,
               max_tokens: body.reasoning ? 6000 : 4000,
+
               messages: [
                 {
                   role: "system",
