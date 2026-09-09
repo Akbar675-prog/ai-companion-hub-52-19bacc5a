@@ -156,7 +156,10 @@ export const Route = createFileRoute("/api/ai-chat")({
 
 
         // Instruksi admin + fakta resmi (dibatasi waktu, tidak boleh menahan jawaban).
-        extra += await getAiExtraContext();
+        // Untuk model real, lewati instruksi khusus admin supaya model pakai bawaannya sendiri.
+        if (!realModelId) {
+          extra += await getAiExtraContext();
+        }
 
         // Batas waktu keras: kalau upstream diam, jangan tunggu selamanya.
         const upstreamAbort = new AbortController();
