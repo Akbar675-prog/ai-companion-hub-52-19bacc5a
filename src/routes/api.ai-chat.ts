@@ -117,6 +117,8 @@ export const Route = createFileRoute("/api/ai-chat")({
           `\n\nWaktu sekarang: ${nowLabel} WIB (UTC: ${now.toISOString()}). ` +
           "Gunakan ini bila pengguna bertanya tanggal, hari, jam, umur, atau hal yang bergantung waktu.";
 
+        const realModelId = String(body.realModelId ?? "").trim();
+
         // Katalog aplikasi situs dikirim klien (hasil fetch /apps/index/applist.json),
         // jadi tidak ada query database yang menahan awal streaming.
         const apps = (body.apps ?? []).slice(0, 200).filter((a) => a?.ID && a?.App_name);
@@ -137,8 +139,6 @@ export const Route = createFileRoute("/api/ai-chat")({
               .join("\n") +
             "\nBila pengguna bertanya soal aplikasi atau minta rekomendasi, gunakan daftar ini: sebutkan nama aplikasi, ringkas deskripsinya, dan sertakan tautan halamannya (gabungan alamat situs + /apps/ + ID). Jangan mengarang aplikasi yang tidak ada di daftar.";
         }
-
-        const realModelId = String(body.realModelId ?? "").trim();
 
         // Gaya jawaban sesuai model yang dipilih pengguna di kotak chat.
         // Kalau pakai model real, lewati seluruh custom prompt/persona — pakai bawaan model itu sendiri.
