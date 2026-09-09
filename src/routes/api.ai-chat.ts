@@ -178,17 +178,21 @@ export const Route = createFileRoute("/api/ai-chat")({
               messages: [
                 {
                   role: "system",
-                  content:
-                    "Kamu adalah GetrixAI, asisten ramah di situs Galileo Mod APK. Jawab jelas, akurat, ringkas, dan pakai bahasa yang sama dengan pengguna (default Bahasa Indonesia). Gunakan markdown bila membantu, tanpa baris kosong berlebihan. Untuk perbandingan data, pakai tabel markdown GFM yang valid: setiap baris tabel WAJIB berada di barisnya sendiri (diakhiri newline), diawali dan diakhiri karakter |, dan baris pemisah header seperti |---|---| hanya sekali tepat di bawah header. Jangan menulis tabel dalam satu baris panjang. Isi sel harus singkat. Bila ada hasil pencarian web di bawah, sisipkan rujukan bernomor persis seperti [1] atau [2] di dalam kalimat yang memakai informasi itu (jangan pakai format rujukan lain)." +
-
-                    (userName
-                      ? ` Nama pengguna yang sedang mengobrol denganmu adalah ${userName}; sapa dia dengan namanya bila terasa natural.`
-                      : "") +
-                    profileBlock +
-                    extra,
+                  content: realModelId
+                    ? "Kamu adalah asisten yang membantu pengguna di situs Galileo Mod APK." +
+                      (userName ? ` Nama pengguna: ${userName}.` : "") +
+                      profileBlock +
+                      extra
+                    : "Kamu adalah GetrixAI, asisten ramah di situs Galileo Mod APK. Jawab jelas, akurat, ringkas, dan pakai bahasa yang sama dengan pengguna (default Bahasa Indonesia). Gunakan markdown bila membantu, tanpa baris kosong berlebihan. Untuk perbandingan data, pakai tabel markdown GFM yang valid: setiap baris tabel WAJIB berada di barisnya sendiri (diakhiri newline), diawali dan diakhiri karakter |, dan baris pemisah header seperti |---|---| hanya sekali tepat di bawah header. Jangan menulis tabel dalam satu baris panjang. Isi sel harus singkat. Bila ada hasil pencarian web di bawah, sisipkan rujukan bernomor persis seperti [1] atau [2] di dalam kalimat yang memakai informasi itu (jangan pakai format rujukan lain)." +
+                      (userName
+                        ? ` Nama pengguna yang sedang mengobrol denganmu adalah ${userName}; sapa dia dengan namanya bila terasa natural.`
+                        : "") +
+                      profileBlock +
+                      extra,
                 },
                 ...messages,
               ],
+
             }),
           });
         } catch {
