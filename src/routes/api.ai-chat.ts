@@ -185,7 +185,7 @@ export const Route = createFileRoute("/api/ai-chat")({
                 {
                   role: "system",
                   content: realModelId
-                    ? "Kamu adalah asisten yang membantu pengguna di situs Galileo Mod APK." +
+                    ? "Kamu adalah asisten AI yang siap membantu pengguna. Jawab dengan jelas, akurat, dan dalam bahasa yang sama dengan pengguna." +
                       (userName ? ` Nama pengguna: ${userName}.` : "") +
                       profileBlock +
                       extra
