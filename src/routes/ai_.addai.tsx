@@ -211,6 +211,21 @@ function AddAiPage() {
             </span>
           </label>
 
+          <Field label="Kemampuan khusus (pisahkan dengan koma)">
+            <input
+              value={abilities}
+              onChange={(e) => setAbilities(e.target.value)}
+              placeholder="-CODE-AGENT, -DEEP-THINKING"
+              className={inputClass}
+              autoCapitalize="characters"
+              spellCheck={false}
+            />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Contoh yang tersedia: {ABILITIES.map((a) => a.tag).join(", ")}. Kemampuan lain boleh
+              kamu tulis sendiri.
+            </span>
+          </Field>
+
           {realModel ? (
             <Field label="Model type">
               <input

@@ -477,6 +477,7 @@ function AiChatPage() {
             realModelId: modelById(modelId, models).realModel
               ? modelById(modelId, models).modelType
               : undefined,
+            abilities: modelById(modelId, models).abilities,
 
 
           }),
