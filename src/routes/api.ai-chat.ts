@@ -175,6 +175,10 @@ export const Route = createFileRoute("/api/ai-chat")({
         }
 
         const deepMode = Boolean(body.reasoning) || ability.reasoning;
+        if (deepMode) {
+          extra +=
+            "\n\nMODE PENALARAN MENDALAM AKTIF. Pikirkan dulu secara menyeluruh sebelum menjawab: uraikan masalah jadi bagian kecil, bandingkan beberapa pendekatan, cek angka dan logika dua kali, cari lubang pada jawabanmu sendiri lalu perbaiki. Jawaban akhir harus rapi, beralasan, menyebut asumsi penting, dan bebas dari tebakan yang tidak ditandai.";
+        }
 
         // Batas waktu keras: kalau upstream diam, jangan tunggu selamanya.
         const upstreamAbort = new AbortController();
