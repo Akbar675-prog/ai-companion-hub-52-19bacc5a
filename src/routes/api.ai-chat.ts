@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getAiExtraContext } from "@/lib/ai-context.server";
 
 const CHAT_MODEL = "nex-agi/nex-n2.5-pro:free";
-const REASONING_MODEL = "deepseek/deepseek-v4-pro";
+const REASONING_MODEL = "nex-agi/nex-n2.5-pro:free";
 // Batas keras total (jawaban panjang butuh waktu) + batas diam antar chunk.
 const ANSWER_TIMEOUT_MS = 280_000;
 const IDLE_TIMEOUT_MS = 45_000;
@@ -22,6 +22,7 @@ type Body = {
   persona?: string;
   modelLabel?: string;
   realModelId?: string;
+  abilities?: string;
   vision?: string;
 
   apps?: { ID?: string; App_name?: string; Description?: string }[];
