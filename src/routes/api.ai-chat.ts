@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAiExtraContext } from "@/lib/ai-context.server";
+import { abilityPrompts, parseAbilities } from "@/lib/ai-abilities";
 
 const CHAT_MODEL = "nex-agi/nex-n2.5-pro:free";
-const REASONING_MODEL = "deepseek/deepseek-v4-pro";
+const REASONING_MODEL = "nex-agi/nex-n2.5-pro:free";
 // Batas keras total (jawaban panjang butuh waktu) + batas diam antar chunk.
 const ANSWER_TIMEOUT_MS = 280_000;
 const IDLE_TIMEOUT_MS = 45_000;
@@ -22,6 +23,7 @@ type Body = {
   persona?: string;
   modelLabel?: string;
   realModelId?: string;
+  abilities?: string;
   vision?: string;
 
   apps?: { ID?: string; App_name?: string; Description?: string }[];
@@ -155,10 +157,27 @@ export const Route = createFileRoute("/api/ai-chat")({
 
 
 
+        // Kemampuan khusus model (misal "-CODE-AGENT, -DEEP-THINKING").
+        // Ini berlaku juga untuk model real karena diminta pengguna secara eksplisit.
+        const abilityTags = parseAbilities(body.abilities);
+        const ability = abilityPrompts(abilityTags);
+        if (ability.prompt) {
+          extra +=
+            "\n\nKEMAMPUAN AKTIF (WAJIB DITERAPKAN PADA SETIAP JAWABAN):" +
+            ability.prompt +
+            "\nJangan pernah menyebut nama mode/kemampuan ini kepada pengguna; cukup tunjukkan hasilnya.";
+        }
+
         // Instruksi admin + fakta resmi (dibatasi waktu, tidak boleh menahan jawaban).
         // Untuk model real, lewati instruksi khusus admin supaya model pakai bawaannya sendiri.
         if (!realModelId) {
           extra += await getAiExtraContext();
+        }
+
+        const deepMode = Boolean(body.reasoning) || ability.reasoning;
+        if (deepMode) {
+          extra +=
+            "\n\nMODE PENALARAN MENDALAM AKTIF. Pikirkan dulu secara menyeluruh sebelum menjawab: uraikan masalah jadi bagian kecil, bandingkan beberapa pendekatan, cek angka dan logika dua kali, cari lubang pada jawabanmu sendiri lalu perbaiki. Jawaban akhir harus rapi, beralasan, menyebut asumsi penting, dan bebas dari tebakan yang tidak ditandai.";
         }
 
         // Batas waktu keras: kalau upstream diam, jangan tunggu selamanya.
@@ -173,13 +192,13 @@ export const Route = createFileRoute("/api/ai-chat")({
             headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
             signal: upstreamAbort.signal,
             body: JSON.stringify({
-              model: realModelId
-                ? realModelId
-                : body.reasoning
-                  ? REASONING_MODEL
-                  : CHAT_MODEL,
+              model: realModelId ? realModelId : deepMode ? REASONING_MODEL : CHAT_MODEL,
               stream: true,
-              max_tokens: body.reasoning ? 6000 : 4000,
+              max_tokens: deepMode ? 32000 : 8000,
+              ...(deepMode
+                ? { reasoning: { effort: "high", enabled: true }, temperature: 0.3 }
+                : {}),
+
 
               messages: [
                 {

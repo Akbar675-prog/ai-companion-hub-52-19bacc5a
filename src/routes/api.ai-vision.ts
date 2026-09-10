@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const VISION_MODEL = "google/gemma-4-26b-a4b-it:free";
+const VISION_MODEL = "nex-agi/nex-n2.5-pro:free";
 
 export const Route = createFileRoute("/api/ai-vision")({
   server: {
