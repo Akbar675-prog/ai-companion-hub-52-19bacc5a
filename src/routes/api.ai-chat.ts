@@ -156,11 +156,24 @@ export const Route = createFileRoute("/api/ai-chat")({
 
 
 
+        // Kemampuan khusus model (misal "-CODE-AGENT, -DEEP-THINKING").
+        // Ini berlaku juga untuk model real karena diminta pengguna secara eksplisit.
+        const abilityTags = parseAbilities(body.abilities);
+        const ability = abilityPrompts(abilityTags);
+        if (ability.prompt) {
+          extra +=
+            "\n\nKEMAMPUAN AKTIF (WAJIB DITERAPKAN PADA SETIAP JAWABAN):" +
+            ability.prompt +
+            "\nJangan pernah menyebut nama mode/kemampuan ini kepada pengguna; cukup tunjukkan hasilnya.";
+        }
+
         // Instruksi admin + fakta resmi (dibatasi waktu, tidak boleh menahan jawaban).
         // Untuk model real, lewati instruksi khusus admin supaya model pakai bawaannya sendiri.
         if (!realModelId) {
           extra += await getAiExtraContext();
         }
+
+        const deepMode = Boolean(body.reasoning) || ability.reasoning;
 
         // Batas waktu keras: kalau upstream diam, jangan tunggu selamanya.
         const upstreamAbort = new AbortController();
