@@ -18,6 +18,8 @@ export type AiModel = {
   realModel?: boolean;
   /** ID model resmi, contoh: nvidia/nemotron-3.5-lightning:free */
   modelType?: string;
+  /** Kemampuan khusus, contoh: "-CODE-AGENT, -DEEP-THINKING" */
+  abilities?: string;
 };
 
 
@@ -63,7 +65,10 @@ const OVERRIDE_KEY = "gma:ai:model-overrides";
 const HIDDEN_KEY = "gma:ai:hidden-models";
 
 type Override = Partial<
-  Pick<AiModel, "name" | "tagline" | "persona" | "logo" | "isNew" | "realModel" | "modelType">
+  Pick<
+    AiModel,
+    "name" | "tagline" | "persona" | "logo" | "isNew" | "realModel" | "modelType" | "abilities"
+  >
 >;
 
 
