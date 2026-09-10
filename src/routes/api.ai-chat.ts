@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAiExtraContext } from "@/lib/ai-context.server";
+import { abilityPrompts, parseAbilities } from "@/lib/ai-abilities";
 
 const CHAT_MODEL = "nex-agi/nex-n2.5-pro:free";
 const REASONING_MODEL = "nex-agi/nex-n2.5-pro:free";
