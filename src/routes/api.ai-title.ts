@@ -13,7 +13,7 @@ export const Route = createFileRoute("/api/ai-title")({
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
           body: JSON.stringify({
-            model: "deepseek/deepseek-v4-flash",
+            model: "stealth/space-bunny-alpha",
             messages: [
               {
                 role: "system",
