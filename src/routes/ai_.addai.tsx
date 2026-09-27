@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Check, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { NewBadge } from "@/components/NewBadge";
+import { ABILITIES, parseAbilities } from "@/lib/ai-abilities";
 import {
   allModels,
   deleteModel,
