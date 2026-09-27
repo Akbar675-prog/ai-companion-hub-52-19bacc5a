@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const VISION_MODEL = "nex-agi/nex-n2.5-pro:free";
+const VISION_MODEL = "stealth/space-bunny-alpha";
 
 export const Route = createFileRoute("/api/ai-vision")({
   server: {
