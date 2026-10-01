@@ -54,6 +54,9 @@ function AddAiPage() {
   const [markNew, setMarkNew] = useState(true);
   const [realModel, setRealModel] = useState(false);
   const [modelType, setModelType] = useState("");
+  const [abilities, setAbilities] = useState("");
+  const [endpointUrl, setEndpointUrl] = useState("");
+  const [endpointKey, setEndpointKey] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +74,9 @@ function AddAiPage() {
     setMarkNew(true);
     setRealModel(false);
     setModelType("");
+    setAbilities("");
+    setEndpointUrl("");
+    setEndpointKey("");
   }
 
   function startEdit(m: AiModel) {
@@ -82,6 +88,9 @@ function AddAiPage() {
     setMarkNew(Boolean(m.isNew));
     setRealModel(Boolean(m.realModel));
     setModelType(m.modelType ?? "");
+    setAbilities(m.abilities ?? "");
+    setEndpointUrl(m.endpointUrl ?? "");
+    setEndpointKey(m.endpointKey ?? "");
     setError(null);
     setSaved(null);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
@@ -94,9 +103,17 @@ function AddAiPage() {
       setError("Nama AI minimal 2 karakter.");
       return;
     }
+    const ep = endpointUrl.trim();
     if (realModel) {
-      if (!/^[\w.-]+\/[\w.:-]+$/.test(modelType.trim())) {
+      const okModel = ep
+        ? /^[\w.:\/-]+$/.test(modelType.trim())
+        : /^[\w.-]+\/[\w.:-]+$/.test(modelType.trim());
+      if (!okModel) {
         setError("Model type harus seperti: nvidia/nemotron-3.5-lightning:free");
+        return;
+      }
+      if (ep && !/^https:\/\/\S+$/i.test(ep)) {
+        setError("Endpoint harus berupa URL https://");
         return;
       }
     } else if (persona.trim().length < 10) {
@@ -111,6 +128,9 @@ function AddAiPage() {
       isNew: markNew,
       realModel,
       modelType: realModel ? modelType.trim().slice(0, 120) : undefined,
+      abilities: parseAbilities(abilities).join(", ") || undefined,
+      endpointUrl: realModel && ep ? ep.slice(0, 300) : undefined,
+      endpointKey: realModel && ep ? endpointKey.trim().slice(0, 400) || undefined : undefined,
     };
 
     if (editingId) {
@@ -228,16 +248,44 @@ function AddAiPage() {
           </Field>
 
           {realModel ? (
-            <Field label="Model type">
-              <input
-                value={modelType}
-                onChange={(e) => setModelType(e.target.value)}
-                placeholder="nvidia/nemotron-3.5-lightning:free"
-                className={inputClass}
-                autoCapitalize="none"
-                spellCheck={false}
-              />
-            </Field>
+            <>
+              <Field label="Model type">
+                <input
+                  value={modelType}
+                  onChange={(e) => setModelType(e.target.value)}
+                  placeholder="nvidia/nemotron-3.5-lightning:free"
+                  className={inputClass}
+                  autoCapitalize="none"
+                  spellCheck={false}
+                />
+              </Field>
+              <Field label="Endpoint API (opsional, kosong = OpenRouter)">
+                <input
+                  value={endpointUrl}
+                  onChange={(e) => setEndpointUrl(e.target.value)}
+                  placeholder="https://api.openai.com/v1"
+                  className={inputClass}
+                  autoCapitalize="none"
+                  spellCheck={false}
+                />
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  Endpoint apa pun yang kompatibel format OpenAI (OpenAI, Groq, Together, DeepSeek, Ollama publik, dll).
+                </span>
+              </Field>
+              {endpointUrl.trim() && (
+                <Field label="API key endpoint">
+                  <input
+                    type="password"
+                    value={endpointKey}
+                    onChange={(e) => setEndpointKey(e.target.value)}
+                    placeholder="sk-..."
+                    className={inputClass}
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </Field>
+              )}
+            </>
           ) : (
             <Field label="Prompting AI (gaya & aturan menjawab)">
               <textarea
