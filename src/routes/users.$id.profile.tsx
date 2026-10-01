@@ -40,7 +40,7 @@ export const Route = createFileRoute("/users/$id/profile")({
   },
   component: UserProfilePage,
   errorComponent: ({ error }) => (
-    <div className="p-8 text-destructive">Gagal memuat: {error.message}</div>
+    <div className="p-8 text-destructive">Gagal memuat: {error instanceof Error ? error.message : String(error)}</div>
   ),
   notFoundComponent: () => <div className="p-8 text-muted-foreground">Akun tidak ditemukan.</div>,
 });

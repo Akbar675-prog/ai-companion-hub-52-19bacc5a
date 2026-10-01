@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
   loader: ({ context }) => context.queryClient.ensureQueryData(appsQuery),
   component: Home,
   errorComponent: ({ error }) => (
-    <div className="p-8 text-destructive">Gagal memuat: {error.message}</div>
+    <div className="p-8 text-destructive">Gagal memuat: {error instanceof Error ? error.message : String(error)}</div>
   ),
 });
 
