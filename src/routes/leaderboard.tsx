@@ -42,7 +42,7 @@ export const Route = createFileRoute("/leaderboard")({
   loader: ({ context }) => context.queryClient.ensureQueryData(appsQuery),
   component: LeaderboardPage,
   errorComponent: ({ error }) => (
-    <div className="p-8 text-destructive">Gagal memuat: {error.message}</div>
+    <div className="p-8 text-destructive">Gagal memuat: {error instanceof Error ? error.message : String(error)}</div>
   ),
 });
 

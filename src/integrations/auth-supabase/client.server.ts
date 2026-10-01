@@ -2,7 +2,9 @@ import { createAuthClient } from "./shared";
 
 function createAccountAdminClient() {
   const AUTH_SUPABASE_URL = process.env.AUTH_SUPABASE_URL;
-  const AUTH_SUPABASE_SERVICE_ROLE_KEY = process.env.AUTH_SUPABASE_SERVICE_ROLE_KEY;
+  // Prefer the freshly rotated key; the old one was revoked.
+  const AUTH_SUPABASE_SERVICE_ROLE_KEY =
+    process.env.ACCOUNT_SUPABASE_SERVICE_ROLE_KEY || process.env.AUTH_SUPABASE_SERVICE_ROLE_KEY;
 
   if (!AUTH_SUPABASE_URL || !AUTH_SUPABASE_SERVICE_ROLE_KEY) {
     const missing = [

@@ -31,7 +31,8 @@ function createSupabaseFetch(supabaseKey: string): typeof fetch {
 
 function createSupabaseAdminClient() {
   const SUPABASE_URL = process.env['SUPABASE_URL'] || process.env['DATA_SUPABASE_URL'] || process.env['MAIN_SUPABASE_URL'];
-  const SUPABASE_SERVICE_ROLE_KEY = process.env['SUPABASE_SERVICE_ROLE_KEY'] || process.env['DATA_SUPABASE_SERVICE_ROLE_KEY'] || process.env['MAIN_SUPABASE_SERVICE_ROLE_KEY'];
+  // Prefer the freshly rotated key; older names may hold a revoked key.
+  const SUPABASE_SERVICE_ROLE_KEY = process.env['MAIN_DATA_SERVICE_ROLE_KEY'] || process.env['SUPABASE_SERVICE_ROLE_KEY'] || process.env['DATA_SUPABASE_SERVICE_ROLE_KEY'] || process.env['MAIN_SUPABASE_SERVICE_ROLE_KEY'];
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     const missing = [

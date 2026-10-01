@@ -20,6 +20,10 @@ export type AiModel = {
   modelType?: string;
   /** Kemampuan khusus, contoh: "-CODE-AGENT, -DEEP-THINKING" */
   abilities?: string;
+  /** Endpoint OpenAI-compatible kustom (kosong = OpenRouter). */
+  endpointUrl?: string;
+  /** API key untuk endpoint kustom (disimpan di perangkat ini saja). */
+  endpointKey?: string;
 };
 
 
@@ -67,7 +71,8 @@ const HIDDEN_KEY = "gma:ai:hidden-models";
 type Override = Partial<
   Pick<
     AiModel,
-    "name" | "tagline" | "persona" | "logo" | "isNew" | "realModel" | "modelType" | "abilities"
+    | "name" | "tagline" | "persona" | "logo" | "isNew" | "realModel" | "modelType" | "abilities"
+    | "endpointUrl" | "endpointKey"
   >
 >;
 

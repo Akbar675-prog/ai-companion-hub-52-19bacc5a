@@ -478,6 +478,12 @@ function AiChatPage() {
               ? modelById(modelId, models).modelType
               : undefined,
             abilities: modelById(modelId, models).abilities,
+            endpointUrl: modelById(modelId, models).realModel
+              ? modelById(modelId, models).endpointUrl
+              : undefined,
+            endpointKey: modelById(modelId, models).realModel
+              ? modelById(modelId, models).endpointKey
+              : undefined,
 
 
           }),
