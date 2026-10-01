@@ -23,6 +23,8 @@ type Body = {
   persona?: string;
   modelLabel?: string;
   realModelId?: string;
+  endpointUrl?: string;
+  endpointKey?: string;
   abilities?: string;
   vision?: string;
 
@@ -185,11 +187,28 @@ export const Route = createFileRoute("/api/ai-chat")({
         const hardStop = setTimeout(() => upstreamAbort.abort(), ANSWER_TIMEOUT_MS);
         request.signal.addEventListener("abort", () => upstreamAbort.abort());
 
+        // Endpoint kustom (OpenAI-compatible) untuk real model; default OpenRouter.
+        const rawEndpoint = realModelId ? String(body.endpointUrl ?? "").trim() : "";
+        let endpoint = "https://openrouter.ai/api/v1/chat/completions";
+        let endpointKey = key;
+        if (rawEndpoint) {
+          if (!/^https:\/\//i.test(rawEndpoint)) {
+            clearTimeout(hardStop);
+            return Response.json({ error: "Endpoint harus diawali https://" }, { status: 400 });
+          }
+          const base = rawEndpoint.replace(/\/+$/, "");
+          endpoint = /\/chat\/completions$/i.test(base) ? base : `${base}/chat/completions`;
+          endpointKey = String(body.endpointKey ?? "").trim();
+        }
+
         let upstream: Response;
         try {
-          upstream = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          upstream = await fetch(endpoint, {
             method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+            headers: {
+              "Content-Type": "application/json",
+              ...(endpointKey ? { Authorization: `Bearer ${endpointKey}` } : {}),
+            },
             signal: upstreamAbort.signal,
             body: JSON.stringify({
               model: realModelId ? realModelId : deepMode ? REASONING_MODEL : CHAT_MODEL,
