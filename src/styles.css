@@ -182,6 +182,12 @@
 }
 
 /* Material 3 expressive loading indicator sizes. */
+m3e-loading-indicator {
+  --m3e-loading-indicator-active-indicator-color: var(--primary);
+  --m3e-loading-indicator-contained-active-indicator-color: var(--primary-foreground);
+  --m3e-loading-indicator-contained-container-color: var(--primary);
+}
+
 m3e-loading-indicator.m3-loading-sm {
   --m3e-loading-indicator-size: 16px;
   --m3e-loading-indicator-container-size: 24px;
