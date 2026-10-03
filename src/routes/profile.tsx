@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { Loader2, LogOut, AtSign, User, Image as ImageIcon, Upload, BadgeCheck, ExternalLink } from "lucide-react";
+import { LogOut, AtSign, User, Image as ImageIcon, Upload, BadgeCheck, ExternalLink } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -44,7 +44,7 @@ function ProfilePage() {
       <div className="min-h-screen bg-background">
         <AppHeader />
         <div className="mt-20 flex justify-center">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat profil" />
         </div>
       </div>
     );
@@ -189,7 +189,7 @@ function EditName({ current, remaining, onDone }: { current: string; remaining: 
           }}
           className={btnCls}
         >
-          {busy ? <Loader2 className="size-4 animate-spin" /> : null} {t("Simpan")}
+          {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Memproses" /> : null} {t("Simpan")}
         </button>
       </div>
       <Msg error={error} ok={ok} />
@@ -233,7 +233,7 @@ function EditUsername({ current, cooldownLeft, onDone }: { current: string; cool
           }}
           className={btnCls}
         >
-          {busy ? <Loader2 className="size-4 animate-spin" /> : null} {t("Simpan")}
+          {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Memproses" /> : null} {t("Simpan")}
         </button>
       </div>
       <Msg error={error} ok={ok} />
@@ -309,7 +309,7 @@ function EditAvatar({ onDone }: { onDone: () => void }) {
         onClick={() => fileRef.current?.click()}
         className="mt-3 inline-flex items-center gap-2 rounded-full border border-input bg-background px-5 py-2.5 text-sm font-medium hover:bg-accent disabled:opacity-60"
       >
-        {busy ? <Loader2 className="size-4 animate-spin" /> : <Upload className="size-4" />}
+        {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Memproses" /> : <Upload className="size-4" />}
         {t("Upload dari perangkat")}
       </button>
       <Msg error={error} ok={ok} />

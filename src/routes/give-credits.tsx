@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Loader2, Search, Send } from "lucide-react";
+import { ArrowLeft, Search, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { adminCreditDashboardFn, adminSetCreditsFn } from "@/lib/ai-credits.functions";
 
@@ -104,7 +104,7 @@ function GiveCreditsPage() {
           <label className="block text-sm font-medium">Token chat per hari<input type="number" min={0} max={1_000_000_000} value={chatLimit} onChange={(event) => setChatLimit(Number(event.target.value))} className="mt-2 h-12 w-full rounded-2xl border border-input bg-background px-4 outline-none focus:ring-2 focus:ring-ring" /></label>
           <label className="block text-sm font-medium">Gambar per hari<input type="number" min={0} max={1_000_000} value={imageLimit} onChange={(event) => setImageLimit(Number(event.target.value))} className="mt-2 h-12 w-full rounded-2xl border border-input bg-background px-4 outline-none focus:ring-2 focus:ring-ring" /></label>
           <button type="button" disabled={loading} onClick={() => void save()} className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary font-medium text-primary-foreground disabled:opacity-60">
-            {loading ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5" />} Simpan kredit
+            {loading ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyimpan" /> : <Send className="size-5" />} Simpan kredit
           </button>
           {message && <p className="text-center text-sm text-muted-foreground">{message}</p>}
         </section>

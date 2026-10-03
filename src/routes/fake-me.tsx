@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Search, Sparkles } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { adminSearchUsersFn, adminUpdateUserFn } from "@/lib/account.functions";
@@ -47,7 +47,7 @@ function FakeMePage() {
         </p>
 
         {loading ? (
-          <Loader2 className="mt-8 size-6 animate-spin text-muted-foreground" />
+          <m3e-loading-indicator className="m3-loading-md mt-8" aria-label="Memuat" />
         ) : !userId ? (
           <p className="mt-6 text-sm text-muted-foreground">Kamu harus masuk sebagai owner.</p>
         ) : !isAdmin ? (
@@ -65,7 +65,7 @@ function FakeMePage() {
             </label>
 
             {isLoading ? (
-              <Loader2 className="mt-8 size-6 animate-spin text-muted-foreground" />
+              <m3e-loading-indicator className="m3-loading-md mt-8" aria-label="Memuat" />
             ) : (
               <div className="mt-4 space-y-3">
                 {(data ?? [])
@@ -153,7 +153,7 @@ function UserRow({ user, onSaved }: { user: Row; onSaved: () => void }) {
           onClick={() => save({ fake_followers: Math.min(1e15, Number(followers || 0)) })}
           className="shrink-0 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
         >
-          {busy ? <Loader2 className="size-4 animate-spin" /> : "Simpan"}
+          {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyimpan" /> : "Simpan"}
         </button>
       </div>
     </article>

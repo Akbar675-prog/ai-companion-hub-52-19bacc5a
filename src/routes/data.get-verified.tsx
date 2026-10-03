@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Check, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { listVerificationRequestsFn, decideVerificationFn } from "@/lib/account.functions";
@@ -40,13 +40,13 @@ function VerificationAdminPage() {
         <h1 className="font-display text-3xl">Permintaan Verifikasi</h1>
 
         {loading ? (
-          <Loader2 className="mt-8 size-6 animate-spin text-muted-foreground" />
+          <m3e-loading-indicator className="m3-loading-md mt-8" aria-label="Memuat" />
         ) : !userId ? (
           <p className="mt-6 text-sm text-muted-foreground">Kamu harus masuk sebagai owner.</p>
         ) : !isAdmin ? (
           <p className="mt-6 text-sm text-destructive">Halaman ini khusus owner.</p>
         ) : isLoading ? (
-          <Loader2 className="mt-8 size-6 animate-spin text-muted-foreground" />
+          <m3e-loading-indicator className="m3-loading-md mt-8" aria-label="Memuat" />
         ) : (data ?? []).length === 0 ? (
           <p className="mt-6 text-sm text-muted-foreground">Belum ada permintaan.</p>
         ) : (

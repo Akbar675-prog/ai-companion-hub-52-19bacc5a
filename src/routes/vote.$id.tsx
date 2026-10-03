@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Check, Clock, Loader2, Share2 } from "lucide-react";
+import { ArrowLeft, Check, Clock, Share2 } from "lucide-react";
 import { castVoteFn, getVoteFn, type Vote } from "@/lib/votes.functions";
 import { AppHeader } from "@/components/AppHeader";
 
@@ -75,7 +75,7 @@ function VotePage() {
       <>
         <AppHeader />
         <main className="mx-auto flex max-w-2xl items-center justify-center px-4 py-24">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat vote" />
         </main>
       </>
     );

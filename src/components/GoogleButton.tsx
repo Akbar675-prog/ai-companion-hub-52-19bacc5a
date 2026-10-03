@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { authSupabase } from "@/integrations/auth-supabase/client";
 
 export function GoogleButton({
@@ -33,7 +32,7 @@ export function GoogleButton({
       className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-input bg-background px-5 py-3 text-sm font-medium transition active:scale-95 disabled:opacity-60"
     >
       {busy ? (
-        <Loader2 className="size-4 animate-spin" />
+        <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Memuat" />
       ) : (
         <svg viewBox="0 0 48 48" className="size-4" aria-hidden="true">
           <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.5 13.2l7.8 6.1C12.2 13.3 17.6 9.5 24 9.5z" />

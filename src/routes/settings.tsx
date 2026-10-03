@@ -11,7 +11,6 @@ import {
   Languages,
   Search,
   Check,
-  Loader2,
 } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { useSettings, type ThemeMode } from "@/lib/settings";
@@ -112,7 +111,7 @@ function SettingsPage() {
           <div className="flex items-center gap-2">
             <Languages className="size-5 text-primary" />
             <h2 className="font-display text-xl">{t("Bahasa")}</h2>
-            {loading && <Loader2 className="size-4 animate-spin text-primary" />}
+            {loading && <m3e-loading-indicator className="m3-loading-sm" aria-label="Memuat bahasa" />}
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
             {t(
@@ -128,7 +127,7 @@ function SettingsPage() {
           </p>
           {loading && (
             <p className="mt-1 flex items-center gap-1.5 text-xs text-primary">
-              <Loader2 className="size-3.5 animate-spin" />
+              <m3e-loading-indicator className="m3-loading-sm" aria-label="Menerjemahkan" />
               {t("Menerjemahkan halaman…")}
             </p>
           )}
@@ -170,7 +169,7 @@ function SettingsPage() {
                     </span>
                     {active &&
                       (loading ? (
-                        <Loader2 className="size-4 shrink-0 animate-spin" />
+                        <m3e-loading-indicator className="m3-loading-sm shrink-0" aria-label="Menerjemahkan" />
                       ) : (
                         <Check className="size-4 shrink-0" />
                       ))}

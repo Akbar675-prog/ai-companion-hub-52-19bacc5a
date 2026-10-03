@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, Upload, Link as LinkIcon, Loader2, Trash2, Send, Bell } from "lucide-react";
+import { ArrowLeft, Upload, Link as LinkIcon, Trash2, Send, Bell } from "lucide-react";
 import {
   createBroadcastFn,
   deleteBroadcastFn,
@@ -232,7 +232,7 @@ function BroadcastPage() {
             disabled={submitting}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 text-base font-semibold text-primary-foreground disabled:opacity-60"
           >
-            {submitting ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5" />}
+            {submitting ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Mengirim" /> : <Send className="size-5" />}
             {submitting ? "Mengirim..." : "Kirim notifikasi"}
           </PressButton>
         </form>
@@ -310,7 +310,7 @@ function HistorySection() {
                 aria-label="Hapus"
                 className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:opacity-60"
               >
-                {deletingId === b.id ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                {deletingId === b.id ? <m3e-loading-indicator className="m3-loading-sm" aria-label="Menghapus" /> : <Trash2 className="size-4" />}
               </button>
             </li>
           ))}

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ImageIcon, Loader2, MessageSquare } from "lucide-react";
+import { ArrowLeft, ImageIcon, MessageSquare } from "lucide-react";
 import { UsageGraph } from "@/components/UsageGraph";
 import { useAccount } from "@/lib/use-account";
 import { aiUsageFn } from "@/lib/ai-credits.functions";
@@ -83,7 +83,7 @@ function AiCreditsPage() {
           </div>
         ) : loading || accountLoading ? (
           <div className="mt-8 flex justify-center">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat kredit" />
           </div>
         ) : usage ? (
           <div className="mt-6 space-y-5">

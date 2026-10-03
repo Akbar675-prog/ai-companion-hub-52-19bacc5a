@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Loader2, UserPlus, UserCheck } from "lucide-react";
+import { UserPlus, UserCheck } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { VerifiedBadgeButton } from "@/components/VerifiedBadge";
 import { userProfileFn, followStateFn, toggleFollowFn } from "@/lib/account.functions";
@@ -126,7 +126,7 @@ function FollowBox({ userNo, signedIn }: { userNo: number; signedIn: boolean }) 
   if (isLoading) {
     return (
       <div className="mt-4 flex justify-center">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+        <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat" />
       </div>
     );
   }
@@ -160,7 +160,7 @@ function FollowBox({ userNo, signedIn }: { userNo: number; signedIn: boolean }) 
         }`}
       >
         {busy ? (
-          <Loader2 className="size-4 animate-spin" />
+          <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Memproses" />
         ) : following ? (
           <UserCheck className="size-4" />
         ) : (

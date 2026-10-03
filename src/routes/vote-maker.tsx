@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, Loader2, Plus, Trash2, Vote as VoteIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Vote as VoteIcon } from "lucide-react";
 import { createVoteFn } from "@/lib/votes.functions";
 import { AppHeader } from "@/components/AppHeader";
 
@@ -212,7 +212,7 @@ function VoteMakerPage() {
             disabled={submitting}
             className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            {submitting ? <Loader2 className="size-4 animate-spin" /> : <VoteIcon className="size-4" />}
+            {submitting ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Membuat vote" /> : <VoteIcon className="size-4" />}
             Buat
           </button>
         </form>
