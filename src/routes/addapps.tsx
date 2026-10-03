@@ -3,7 +3,7 @@ import { useQueryClient, useSuspenseQuery, queryOptions } from "@tanstack/react-
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft, Upload, Link as LinkIcon, Loader2, Trash2, Package, Lock, X,
+  ArrowLeft, Upload, Link as LinkIcon, Trash2, Package, Lock, X,
   Pencil, Save, Image as ImageIcon, Plus, Clock,
 } from "lucide-react";
 import {
@@ -911,7 +911,7 @@ function AppForm({
           disabled={submitting}
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 text-base font-semibold text-primary-foreground disabled:opacity-60"
         >
-          {submitting && <Loader2 className="size-5 animate-spin" />}
+          {submitting && <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyimpan" />}
           {submitting ? (
             "Menyimpan..."
           ) : mode === "edit" ? (
@@ -1013,7 +1013,7 @@ function ManageAppsSection() {
                   className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground"
                 >
                   {deletingId === app.ID ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <m3e-loading-indicator className="m3-loading-sm" aria-label="Memproses" />
                   ) : (
                     <Trash2 className="size-4" />
                   )}
@@ -1030,7 +1030,7 @@ function ManageAppsSection() {
                     />
                   ) : (
                     <div className="flex items-center gap-2 py-4 text-sm text-muted-foreground">
-                      <Loader2 className="size-4 animate-spin" /> Memuat detail…
+                      <m3e-loading-indicator className="m3-loading-sm" aria-label="Memproses" /> Memuat detail…
                     </div>
                   )}
                 </div>

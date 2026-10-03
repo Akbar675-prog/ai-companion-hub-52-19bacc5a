@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, Download, CalendarDays, Users, Lock, Loader2, Gem, Cpu, Tag, Sparkles, Images, Clock, HardDrive, Play, ExternalLink, FileText } from "lucide-react";
+import { ArrowLeft, Download, CalendarDays, Users, Lock, Gem, Cpu, Tag, Sparkles, Images, Clock, HardDrive, Play, ExternalLink, FileText } from "lucide-react";
 import {
   getAppFn,
   incrementDownloadFn,
@@ -290,7 +290,7 @@ function AppDetail() {
                 className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground hover:scale-[1.02] disabled:opacity-70"
               >
                 {downloading ? (
-                  <Loader2 className="size-5 animate-spin" />
+                  <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyiapkan unduhan" />
                 ) : app.Coming_soon ? (
                   <Clock className="size-5" />
                 ) : app.Is_exclusive && !userId ? (
@@ -587,7 +587,7 @@ function PasswordGate({
               disabled={loading}
               className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
             >
-              {loading && <Loader2 className="size-4 animate-spin" />}
+              {loading && <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Memasang" />}
               Instal
             </PressButton>
           </div>

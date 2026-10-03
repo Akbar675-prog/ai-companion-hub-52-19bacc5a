@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, Trash2, Loader2, Send, Inbox } from "lucide-react";
+import { ArrowLeft, Trash2, Send, Inbox } from "lucide-react";
 import { listRequestsFn, deleteRequestFn, type AppRequest } from "@/lib/requests.functions";
 import { AppHeader } from "@/components/AppHeader";
 
@@ -115,7 +115,7 @@ function RequestDataPage() {
                     className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive hover:bg-destructive hover:text-destructive-foreground disabled:opacity-60"
                   >
                     {busy === r.id ? (
-                      <Loader2 className="size-4 animate-spin" />
+                      <m3e-loading-indicator className="m3-loading-sm" aria-label="Menghapus" />
                     ) : (
                       <Trash2 className="size-4" />
                     )}

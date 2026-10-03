@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, Send, Loader2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle2 } from "lucide-react";
 import { createRequestFn } from "@/lib/requests.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { PressButton } from "@/components/Pressable";
@@ -161,7 +161,7 @@ function RequestPage() {
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 text-base font-semibold text-primary-foreground disabled:opacity-60"
           >
             {submitting ? (
-              <Loader2 className="size-5 animate-spin" />
+              <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Mengirim" />
             ) : (
               <Send className="size-5" />
             )}

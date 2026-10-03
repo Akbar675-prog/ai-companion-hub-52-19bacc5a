@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, Loader2, Send } from "lucide-react";
+import { BadgeCheck, Send } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { myVerificationFn, submitVerificationFn } from "@/lib/account.functions";
@@ -116,7 +116,7 @@ function GetVerifiedPage() {
               disabled={busy}
               className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition active:scale-95 disabled:opacity-60"
             >
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />}
+              {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Mengirim" /> : <Send className="size-4" />}
               {t("Kirim permintaan")}
             </button>
           </form>

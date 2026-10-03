@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { BrainCircuit, Info, Loader2, Lock, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { BrainCircuit, Info, Lock, Pencil, Plus, Save, Trash2, X } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PressButton } from "@/components/Pressable";
 import { useAccount } from "@/lib/use-account";
@@ -105,7 +105,7 @@ function FactsSection() {
             }
             className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
           >
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+            {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyimpan" /> : <Plus className="size-4" />}
             Tambah info
           </PressButton>
         </div>
@@ -113,7 +113,7 @@ function FactsSection() {
       </div>
 
       <div className="mt-4 space-y-3">
-        {isLoading && <Loader2 className="size-5 animate-spin text-muted-foreground" />}
+        {isLoading && <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat" />}
         {facts?.length === 0 && <p className="text-sm text-muted-foreground">Belum ada info.</p>}
         {(facts ?? []).map((f) => (
           <div key={f.id} className="rounded-3xl border border-border/70 bg-card p-4">
@@ -251,7 +251,7 @@ function TrainingAi() {
       <div className="min-h-screen bg-background">
         <AppHeader />
         <div className="flex justify-center py-24">
-          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat" />
         </div>
       </div>
     );
@@ -305,7 +305,7 @@ function TrainingAi() {
               }
               className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm text-primary-foreground disabled:opacity-50"
             >
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+              {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyimpan" /> : <Plus className="size-4" />}
               Tambah instruksi
             </PressButton>
           </div>
@@ -313,7 +313,7 @@ function TrainingAi() {
         </div>
 
         <div className="mt-6 space-y-3">
-          {isLoading && <Loader2 className="size-5 animate-spin text-muted-foreground" />}
+          {isLoading && <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat" />}
           {list?.length === 0 && (
             <p className="text-sm text-muted-foreground">Belum ada instruksi.</p>
           )}

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { ArrowLeft, Plus, Trash2, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { addStatusFn, deleteStatusFn, listStatusFn, type StatusLevel, type StatusService } from "@/lib/status.functions";
 import { AppHeader } from "@/components/AppHeader";
 
@@ -116,7 +116,7 @@ function SetStatusPage() {
             disabled={addMut.isPending || !message.trim()}
             className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
-            {addMut.isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+            {addMut.isPending ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyimpan" /> : <Plus className="size-4" />}
             Simpan status
           </button>
         </form>

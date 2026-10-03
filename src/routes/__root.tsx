@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { NotificationBridge } from "../components/NotificationBridge";
 import { applySettings, loadSettings } from "../lib/settings";
 import { I18nProvider } from "../lib/i18n";
+import "@m3e/web/loading-indicator";
 
 
 function NotFoundComponent() {

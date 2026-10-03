@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { Check, ChevronDown, Copy, Download, Globe, Loader2, RefreshCw, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { Check, ChevronDown, Copy, Download, Globe, RefreshCw, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { AiAvatar } from "@/components/ui/plasma-shader";
 import { CodeBlock } from "@/components/CodeBlock";
 
@@ -328,7 +328,7 @@ function GeneratedImage({ url, prompt }: { url: string; prompt?: string }) {
     <div className="relative aspect-square w-full max-w-[320px] overflow-hidden rounded-[28px] bg-surface-variant">
       {!loaded && (
         <div className="absolute inset-0 flex items-center justify-center" aria-label="Memuat gambar">
-          <Loader2 className="size-7 animate-spin text-muted-foreground" />
+          <m3e-loading-indicator className="m3-loading-lg" aria-label="Memuat gambar" />
         </div>
       )}
       <img
@@ -345,7 +345,7 @@ function GeneratedImage({ url, prompt }: { url: string; prompt?: string }) {
         aria-label="Unduh gambar"
         className={`absolute bottom-3 right-3 inline-flex size-10 items-center justify-center rounded-full bg-foreground/70 text-background backdrop-blur-sm transition hover:bg-foreground/85 active:scale-95 disabled:opacity-60 ${loaded ? "opacity-100" : "pointer-events-none opacity-0"}`}
       >
-        {busy ? <Loader2 className="size-5 animate-spin" /> : <Download className="size-5" />}
+        {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyiapkan unduhan" /> : <Download className="size-5" />}
       </button>
     </div>
   );

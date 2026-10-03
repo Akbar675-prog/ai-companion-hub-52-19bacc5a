@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, Check } from "lucide-react";
 import { AiAvatar } from "@/components/ui/plasma-shader";
 import { useAccount } from "@/lib/use-account";
 import { getAiProfileFn, saveAiProfileFn } from "@/lib/ai-profile.functions";
@@ -118,7 +118,7 @@ function AiProfilePage() {
           </div>
         ) : loading || accountLoading ? (
           <div className="mt-8 flex justify-center">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+            <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat profil" />
           </div>
         ) : (
           <div className="mt-6 space-y-4">
@@ -175,7 +175,7 @@ function AiProfilePage() {
               className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground disabled:opacity-60"
             >
               {saving ? (
-                <Loader2 className="size-4 animate-spin" />
+                <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyimpan" />
               ) : saved ? (
                 <Check className="size-4" />
               ) : null}

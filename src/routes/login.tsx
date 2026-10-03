@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { LogIn, Loader2 } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 import { PasswordInput } from "@/components/PasswordInput";
 import { GoogleButton } from "@/components/GoogleButton";
@@ -84,7 +84,7 @@ function LoginPage() {
             disabled={busy}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition active:scale-95 disabled:opacity-60"
           >
-            {busy ? <Loader2 className="size-4 animate-spin" /> : <LogIn className="size-4" />}
+            {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Masuk" /> : <LogIn className="size-4" />}
             {t("Masuk")}
           </button>
 
