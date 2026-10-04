@@ -6,6 +6,7 @@ export type PublicProfile = {
   name: string;
   username: string;
   avatar_url: string | null;
+  banner_url: string | null;
   verified: boolean;
   followers: number;
   following: number;
@@ -37,17 +38,29 @@ async function followerCounts(db: any, id: string, fake: number) {
   return { followers: (followers ?? 0) + Number(fake ?? 0), following: following ?? 0 };
 }
 
-function toPublic(row: any, counts: { followers: number; following: number }): PublicProfile {
+function toPublic(
+  row: any,
+  counts: { followers: number; following: number },
+  bannerUrl: string | null = null,
+): PublicProfile {
   return {
     id: row.id,
     user_no: Number(row.user_no),
     name: row.name,
     username: row.username,
     avatar_url: row.avatar_url ?? null,
+    banner_url: bannerUrl,
     verified: !!row.verified,
     created_at: row.created_at,
     ...counts,
   };
+}
+
+/** Banner disimpan di user_metadata auth (tanpa mengubah skema tabel). */
+async function bannerFor(db: any, userId: string): Promise<string | null> {
+  const { data } = await db.auth.admin.getUserById(userId);
+  const b = (data?.user?.user_metadata as any)?.banner_url;
+  return typeof b === "string" && b.startsWith("http") ? b : null;
 }
 
 export async function registerAccount(input: {
