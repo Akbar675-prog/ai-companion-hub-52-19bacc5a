@@ -6,6 +6,7 @@ export type PublicProfile = {
   name: string;
   username: string;
   avatar_url: string | null;
+  banner_url: string | null;
   verified: boolean;
   followers: number;
   following: number;
@@ -37,17 +38,29 @@ async function followerCounts(db: any, id: string, fake: number) {
   return { followers: (followers ?? 0) + Number(fake ?? 0), following: following ?? 0 };
 }
 
-function toPublic(row: any, counts: { followers: number; following: number }): PublicProfile {
+function toPublic(
+  row: any,
+  counts: { followers: number; following: number },
+  bannerUrl: string | null = null,
+): PublicProfile {
   return {
     id: row.id,
     user_no: Number(row.user_no),
     name: row.name,
     username: row.username,
     avatar_url: row.avatar_url ?? null,
+    banner_url: bannerUrl,
     verified: !!row.verified,
     created_at: row.created_at,
     ...counts,
   };
+}
+
+/** Banner disimpan di user_metadata auth (tanpa mengubah skema tabel). */
+async function bannerFor(db: any, userId: string): Promise<string | null> {
+  const { data } = await db.auth.admin.getUserById(userId);
+  const b = (data?.user?.user_metadata as any)?.banner_url;
+  return typeof b === "string" && b.startsWith("http") ? b : null;
 }
 
 export async function registerAccount(input: {
@@ -165,6 +178,7 @@ export async function getMyProfile(userId: string) {
   if (!data) data = await ensureProfile(userId);
   if (!data) return null;
   const counts = await followerCounts(db, userId, data.fake_followers);
+  const banner = await bannerFor(db, userId);
   const { count: nameChanges } = await db
     .from("name_changes")
     .select("*", { count: "exact", head: true })
@@ -172,7 +186,7 @@ export async function getMyProfile(userId: string) {
     .gte("changed_at", new Date(Date.now() - 86400000).toISOString());
   const { data: roles } = await db.from("user_roles").select("role").eq("user_id", userId);
   return {
-    ...toPublic(data, counts),
+    ...toPublic(data, counts, banner),
     username_changed_at: data.username_changed_at as string | null,
     name_changes_today: nameChanges ?? 0,
     is_admin: (roles ?? []).some((r: any) => r.role === "admin"),
@@ -184,6 +198,7 @@ export async function getProfileByUserNo(userNo: number, viewerId?: string) {
   const { data } = await db.from("profiles").select("*").eq("user_no", userNo).maybeSingle();
   if (!data) return null;
   const counts = await followerCounts(db, data.id, data.fake_followers);
+  const banner = await bannerFor(db, data.id);
   let isFollowing = false;
   if (viewerId && viewerId !== data.id) {
     const { data: f } = await db
@@ -194,7 +209,7 @@ export async function getProfileByUserNo(userNo: number, viewerId?: string) {
       .maybeSingle();
     isFollowing = !!f;
   }
-  return { ...toPublic(data, counts), is_self: viewerId === data.id, is_following: isFollowing };
+  return { ...toPublic(data, counts, banner), is_self: viewerId === data.id, is_following: isFollowing };
 }
 
 export async function changeUsername(userId: string, next: string) {
@@ -242,19 +257,48 @@ export async function changeName(userId: string, name: string) {
   return { ok: true, remaining: 4 - (count ?? 0) };
 }
 
-export async function setAvatarFromBytes(userId: string, bytes: Uint8Array, contentType: string) {
+async function uploadImage(userId: string, bytes: Uint8Array, contentType: string, prefix: string) {
   if (bytes.byteLength > 4 * 1024 * 1024) throw new Error("Gambar maksimal 4MB.");
   if (!/^image\//.test(contentType)) throw new Error("File harus berupa gambar.");
   const db = await admin();
   const ext = contentType.split("/")[1]?.replace(/[^a-z0-9]/gi, "") || "png";
-  const path = `${userId}/${Date.now()}.${ext}`;
+  const path = `${userId}/${prefix}-${Date.now()}.${ext}`;
   const { error } = await db.storage
     .from(AVATAR_BUCKET)
     .upload(path, bytes, { contentType, upsert: true });
   if (error) throw new Error(`Gagal upload: ${error.message}`);
-  const url = avatarUrlFor(path);
+  return { db, url: avatarUrlFor(path) };
+}
+
+export async function setAvatarFromBytes(userId: string, bytes: Uint8Array, contentType: string) {
+  const { db, url } = await uploadImage(userId, bytes, contentType, "avatar");
   await db.from("profiles").update({ avatar_url: url }).eq("id", userId);
   return { avatar_url: url };
+}
+
+export async function setBannerFromBytes(userId: string, bytes: Uint8Array, contentType: string) {
+  const { db, url } = await uploadImage(userId, bytes, contentType, "banner");
+  const { error } = await db.auth.admin.updateUserById(userId, {
+    user_metadata: { banner_url: url },
+  });
+  if (error) throw new Error(`Gagal menyimpan banner: ${error.message}`);
+  return { banner_url: url };
+}
+
+export async function setBannerFromUrl(userId: string, url: string) {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error("URL gambar tidak valid.");
+  }
+  if (parsed.protocol !== "https:") throw new Error("URL gambar harus https.");
+  const res = await fetch(parsed.toString());
+  if (!res.ok) throw new Error("Gambar tidak bisa diambil dari URL itu.");
+  const type = (res.headers.get("content-type") ?? "image/png").split(";")[0];
+  if (!/^image\//.test(type)) throw new Error("URL itu bukan gambar.");
+  const buf = new Uint8Array(await res.arrayBuffer());
+  return setBannerFromBytes(userId, buf, type);
 }
 
 export async function setAvatarFromUrl(userId: string, url: string) {

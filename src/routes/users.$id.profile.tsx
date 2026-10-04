@@ -59,7 +59,15 @@ function UserProfilePage() {
       <AppHeader />
       <main className="mx-auto mt-6 w-full max-w-2xl px-4">
         <section className="m3-shadow-1 overflow-hidden rounded-3xl bg-card">
-          <div className="h-24 bg-gradient-to-r from-primary/80 via-primary/40 to-surface-variant" />
+          {profile.banner_url ? (
+            <img
+              src={profile.banner_url}
+              alt={`Banner ${profile.name}`}
+              className="h-24 w-full object-cover"
+            />
+          ) : (
+            <div className="h-24 bg-gradient-to-r from-primary/80 via-primary/40 to-surface-variant" />
+          )}
           <div className="px-5 pb-5">
             <img
               src={profile.avatar_url || DEFAULT_AVATAR}
