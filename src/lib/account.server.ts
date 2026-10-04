@@ -178,6 +178,7 @@ export async function getMyProfile(userId: string) {
   if (!data) data = await ensureProfile(userId);
   if (!data) return null;
   const counts = await followerCounts(db, userId, data.fake_followers);
+  const banner = await bannerFor(db, userId);
   const { count: nameChanges } = await db
     .from("name_changes")
     .select("*", { count: "exact", head: true })
