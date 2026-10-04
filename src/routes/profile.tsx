@@ -11,6 +11,8 @@ import {
   changeUsernameFn,
   setAvatarUrlFn,
   uploadAvatarFn,
+  setBannerUrlFn,
+  uploadBannerFn,
 } from "@/lib/account.functions";
 import { useT } from "@/lib/i18n";
 
@@ -69,7 +71,15 @@ function ProfilePage() {
       <AppHeader />
       <main className="mx-auto mt-6 w-full max-w-2xl px-4">
         <section className="m3-shadow-1 overflow-hidden rounded-3xl bg-card">
-          <div className="h-24 bg-gradient-to-r from-primary/80 via-primary/40 to-surface-variant" />
+          {profile.banner_url ? (
+            <img
+              src={profile.banner_url}
+              alt={`Banner ${profile.name}`}
+              className="h-24 w-full object-cover"
+            />
+          ) : (
+            <div className="h-24 bg-gradient-to-r from-primary/80 via-primary/40 to-surface-variant" />
+          )}
           <div className="px-5 pb-5">
             <img
               src={profile.avatar_url || DEFAULT_AVATAR}
@@ -108,6 +118,7 @@ function ProfilePage() {
         <EditName current={profile.name} remaining={5 - profile.name_changes_today} onDone={refetch} />
         <EditUsername current={profile.username} cooldownLeft={cooldownLeft} onDone={refetch} />
         <EditAvatar onDone={refetch} />
+        <EditBanner current={profile.banner_url} onDone={refetch} />
 
         <section className="m3-shadow-1 mt-4 rounded-3xl bg-card p-5">
           <h2 className="flex items-center gap-2 font-display text-lg">
