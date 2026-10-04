@@ -209,7 +209,7 @@ export async function getProfileByUserNo(userNo: number, viewerId?: string) {
       .maybeSingle();
     isFollowing = !!f;
   }
-  return { ...toPublic(data, counts), is_self: viewerId === data.id, is_following: isFollowing };
+  return { ...toPublic(data, counts, banner), is_self: viewerId === data.id, is_following: isFollowing };
 }
 
 export async function changeUsername(userId: string, next: string) {
@@ -257,19 +257,48 @@ export async function changeName(userId: string, name: string) {
   return { ok: true, remaining: 4 - (count ?? 0) };
 }
 
-export async function setAvatarFromBytes(userId: string, bytes: Uint8Array, contentType: string) {
+async function uploadImage(userId: string, bytes: Uint8Array, contentType: string, prefix: string) {
   if (bytes.byteLength > 4 * 1024 * 1024) throw new Error("Gambar maksimal 4MB.");
   if (!/^image\//.test(contentType)) throw new Error("File harus berupa gambar.");
   const db = await admin();
   const ext = contentType.split("/")[1]?.replace(/[^a-z0-9]/gi, "") || "png";
-  const path = `${userId}/${Date.now()}.${ext}`;
+  const path = `${userId}/${prefix}-${Date.now()}.${ext}`;
   const { error } = await db.storage
     .from(AVATAR_BUCKET)
     .upload(path, bytes, { contentType, upsert: true });
   if (error) throw new Error(`Gagal upload: ${error.message}`);
-  const url = avatarUrlFor(path);
+  return { db, url: avatarUrlFor(path) };
+}
+
+export async function setAvatarFromBytes(userId: string, bytes: Uint8Array, contentType: string) {
+  const { db, url } = await uploadImage(userId, bytes, contentType, "avatar");
   await db.from("profiles").update({ avatar_url: url }).eq("id", userId);
   return { avatar_url: url };
+}
+
+export async function setBannerFromBytes(userId: string, bytes: Uint8Array, contentType: string) {
+  const { db, url } = await uploadImage(userId, bytes, contentType, "banner");
+  const { error } = await db.auth.admin.updateUserById(userId, {
+    user_metadata: { banner_url: url },
+  });
+  if (error) throw new Error(`Gagal menyimpan banner: ${error.message}`);
+  return { banner_url: url };
+}
+
+export async function setBannerFromUrl(userId: string, url: string) {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error("URL gambar tidak valid.");
+  }
+  if (parsed.protocol !== "https:") throw new Error("URL gambar harus https.");
+  const res = await fetch(parsed.toString());
+  if (!res.ok) throw new Error("Gambar tidak bisa diambil dari URL itu.");
+  const type = (res.headers.get("content-type") ?? "image/png").split(";")[0];
+  if (!/^image\//.test(type)) throw new Error("URL itu bukan gambar.");
+  const buf = new Uint8Array(await res.arrayBuffer());
+  return setBannerFromBytes(userId, buf, type);
 }
 
 export async function setAvatarFromUrl(userId: string, url: string) {
