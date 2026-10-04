@@ -327,3 +327,86 @@ function EditAvatar({ onDone }: { onDone: () => void }) {
     </Card>
   );
 }
+
+function EditBanner({ current, onDone }: { current: string | null; onDone: () => void }) {
+  const t = useT();
+  const [url, setUrl] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleFile(file: File) {
+    setBusy(true); setError(null); setOk(null);
+    try {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      let bin = "";
+      for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
+      await uploadBannerFn({ data: { base64: btoa(bin), contentType: file.type || "image/png" } });
+      setOk(t("Banner diperbarui."));
+      onDone();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal upload.");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Card title={t("Banner profil")} icon={<ImageIcon className="size-5" />}>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {t("Gambar latar di bagian atas profil publik kamu. Upload gambar atau tempel URL gambar.")}
+      </p>
+      {current && (
+        <img
+          src={current}
+          alt={t("Banner saat ini")}
+          className="mt-3 h-24 w-full rounded-2xl object-cover"
+        />
+      )}
+      <div className="mt-3 flex gap-2">
+        <input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://..."
+          className={inputCls}
+        />
+        <button
+          disabled={busy || !url}
+          onClick={async () => {
+            setBusy(true); setError(null); setOk(null);
+            try {
+              await setBannerUrlFn({ data: { url } });
+              setOk(t("Banner diperbarui."));
+              setUrl("");
+              onDone();
+            } catch (e) {
+              setError(e instanceof Error ? e.message : "Gagal.");
+            } finally { setBusy(false); }
+          }}
+          className={btnCls}
+        >
+          {t("Pakai URL")}
+        </button>
+      </div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        hidden
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void handleFile(f);
+          e.target.value = "";
+        }}
+      />
+      <button
+        disabled={busy}
+        onClick={() => fileRef.current?.click()}
+        className="mt-3 inline-flex items-center gap-2 rounded-full border border-input bg-background px-5 py-2.5 text-sm font-medium hover:bg-accent disabled:opacity-60"
+      >
+        {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Memproses" /> : <Upload className="size-4" />}
+        {t("Upload dari perangkat")}
+      </button>
+      <Msg error={error} ok={ok} />
+    </Card>
+  );
+}
