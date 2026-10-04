@@ -10,6 +10,8 @@ import {
   changeName,
   setAvatarFromBytes,
   setAvatarFromUrl,
+  setBannerFromBytes,
+  setBannerFromUrl,
   toggleFollow,
   submitVerification,
   myVerificationStatus,
@@ -89,6 +91,28 @@ export const uploadAvatarFn = createServerFn({ method: "POST" })
     const bytes = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     return setAvatarFromBytes(context.userId, bytes, data.contentType);
+  });
+
+export const setBannerUrlFn = createServerFn({ method: "POST" })
+  .middleware([requireAccountAuth])
+  .inputValidator((d: unknown) => z.object({ url: z.string().trim().url().max(2000) }).parse(d))
+  .handler(async ({ data, context }) => setBannerFromUrl(context.userId, data.url));
+
+export const uploadBannerFn = createServerFn({ method: "POST" })
+  .middleware([requireAccountAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        base64: z.string().min(10).max(7_000_000),
+        contentType: z.string().min(3).max(80),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const bin = atob(data.base64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return setBannerFromBytes(context.userId, bytes, data.contentType);
   });
 
 export const submitVerificationFn = createServerFn({ method: "POST" })
