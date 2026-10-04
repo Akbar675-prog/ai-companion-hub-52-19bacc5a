@@ -186,7 +186,7 @@ export async function getMyProfile(userId: string) {
     .gte("changed_at", new Date(Date.now() - 86400000).toISOString());
   const { data: roles } = await db.from("user_roles").select("role").eq("user_id", userId);
   return {
-    ...toPublic(data, counts),
+    ...toPublic(data, counts, banner),
     username_changed_at: data.username_changed_at as string | null,
     name_changes_today: nameChanges ?? 0,
     is_admin: (roles ?? []).some((r: any) => r.role === "admin"),
@@ -198,6 +198,7 @@ export async function getProfileByUserNo(userNo: number, viewerId?: string) {
   const { data } = await db.from("profiles").select("*").eq("user_no", userNo).maybeSingle();
   if (!data) return null;
   const counts = await followerCounts(db, data.id, data.fake_followers);
+  const banner = await bannerFor(db, data.id);
   let isFollowing = false;
   if (viewerId && viewerId !== data.id) {
     const { data: f } = await db
