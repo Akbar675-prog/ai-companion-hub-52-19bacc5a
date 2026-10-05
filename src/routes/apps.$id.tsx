@@ -420,6 +420,33 @@ function AppDetail() {
               {app.Description || "Tidak ada deskripsi."}
             </p>
           </section>
+
+          {(app.Changelog?.length ?? 0) > 0 && (
+            <section className="m3-hairline mt-6 rounded-3xl bg-surface-variant/40 p-5 md:p-6">
+              <h2 className="flex items-center gap-2 font-display text-xl">
+                <FileText className="size-5 text-primary" /> Changelog
+              </h2>
+              <ol className="mt-4 space-y-4 border-l border-primary/30 pl-4">
+                {app.Changelog!.map((c, i) => (
+                  <li key={i} className="relative">
+                    <span className="absolute -left-[21px] top-1.5 size-2.5 rounded-full bg-primary" />
+                    <div className="flex flex-wrap items-center gap-2">
+                      {c.Version && (
+                        <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">
+                          v{c.Version.replace(/^v/i, "")}
+                        </span>
+                      )}
+                      {c.Title && <span className="font-medium">{c.Title}</span>}
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(c.Released_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
+                      </span>
+                    </div>
+                    <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-foreground/85">{c.Notes}</p>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
         </div>
       </main>
 
