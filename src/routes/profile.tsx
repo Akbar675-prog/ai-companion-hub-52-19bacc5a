@@ -86,7 +86,7 @@ function ProfilePage() {
               className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-b from-transparent via-card/40 to-card"
             />
           </div>
-          <div className="px-5 pb-5">
+          <div className="relative z-10 px-5 pb-5">
             <img
               src={profile.avatar_url || DEFAULT_AVATAR}
               alt={`Foto profil ${profile.name}`}
