@@ -35,9 +35,41 @@ export type AppListItem = {
   Banner_url?: string | null;
   Package_name?: string | null;
   Previews?: PreviewItem[]; // list of preview media (image or video)
+  Changelog?: ChangelogItem[];
 };
 
 export type PreviewItem = { url: string; contentType: string };
+export type ChangelogItem = { Version: string | null; Title: string | null; Notes: string; Released_at: string };
+
+type ChangelogRow = { app_id: string; version: string | null; title: string | null; notes: string; released_at: string };
+
+// Reads app_changelogs; returns an empty map if the table doesn't exist yet.
+async function readChangelogs(
+  db: { from: (t: string) => any },
+  appId?: string,
+): Promise<Record<string, ChangelogItem[]>> {
+  try {
+    let q = db
+      .from("app_changelogs")
+      .select("app_id, version, title, notes, released_at")
+      .order("released_at", { ascending: false });
+    if (appId) q = q.eq("app_id", appId);
+    const { data, error } = await q;
+    if (error || !data) return {};
+    const out: Record<string, ChangelogItem[]> = {};
+    for (const r of data as ChangelogRow[]) {
+      (out[r.app_id] ??= []).push({
+        Version: r.version,
+        Title: r.title,
+        Notes: r.notes,
+        Released_at: r.released_at,
+      });
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
 
 function toBase64Url(input: string): string {
   const b64 = btoa(input);
@@ -139,7 +171,7 @@ export const listAppsFn = createServerFn({ method: "GET" }).handler(
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"
     );
-    const [{ data, error }, exclusiveIds, metaIndex] = await Promise.all([
+    const [{ data, error }, exclusiveIds, metaIndex, changelogs] = await Promise.all([
       supabaseAdmin
         .from("apps")
         .select(
@@ -148,6 +180,7 @@ export const listAppsFn = createServerFn({ method: "GET" }).handler(
         .order("created_at", { ascending: false }),
       listExclusiveIds(),
       readIndex(),
+      readChangelogs(supabaseAdmin as never),
     ]);
     if (error) throw new Error(error.message);
     return (data ?? []).map((r) => {
@@ -175,6 +208,7 @@ export const listAppsFn = createServerFn({ method: "GET" }).handler(
         Banner_url: meta?.banner?.id ? `/apps/preview/${meta.banner.id}` : null,
         Package_name: meta?.packageName ?? null,
         Previews: previewUrls(meta?.previews),
+        Changelog: changelogs[r.id] ?? [],
       };
     });
   },
@@ -186,7 +220,7 @@ export const getAppFn = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import(
       "@/integrations/supabase/client.server"
     );
-    const [{ data: row, error }, metaIndex] = await Promise.all([
+    const [{ data: row, error }, metaIndex, changelogs] = await Promise.all([
       supabaseAdmin
         .from("apps")
         .select(
@@ -195,6 +229,7 @@ export const getAppFn = createServerFn({ method: "GET" })
         .eq("id", data.id)
         .maybeSingle(),
       readIndex(),
+      readChangelogs(supabaseAdmin as never, data.id),
     ]);
     if (error) throw new Error(error.message);
     if (!row) return null;
@@ -221,6 +256,7 @@ export const getAppFn = createServerFn({ method: "GET" })
       Banner_url: meta?.banner?.id ? `/apps/preview/${meta.banner.id}` : null,
       Package_name: meta?.packageName ?? null,
       Previews: previewUrls(meta?.previews),
+      Changelog: changelogs[row.id] ?? [],
     };
   });
 
