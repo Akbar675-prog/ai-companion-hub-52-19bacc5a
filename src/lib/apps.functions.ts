@@ -36,6 +36,7 @@ export type AppListItem = {
   Package_name?: string | null;
   Previews?: PreviewItem[]; // list of preview media (image or video)
   Changelog?: ChangelogItem[];
+  Is_new?: boolean; // true when the app got a fresh changelog recently
 };
 
 export type PreviewItem = { url: string; contentType: string };
@@ -71,6 +72,24 @@ async function readChangelogs(
   } catch {
     return {};
   }
+}
+
+// An app counts as "new" when its latest changelog is at most this old.
+const NEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+function latestChangelogAt(items: ChangelogItem[] | undefined): number {
+  if (!items || items.length === 0) return 0;
+  let latest = 0;
+  for (const c of items) {
+    const t = Date.parse(c.Released_at);
+    if (!Number.isNaN(t) && t > latest) latest = t;
+  }
+  return latest;
+}
+
+function isNewApp(items: ChangelogItem[] | undefined): boolean {
+  const latest = latestChangelogAt(items);
+  return latest > 0 && Date.now() - latest <= NEW_WINDOW_MS;
 }
 
 function toBase64Url(input: string): string {
