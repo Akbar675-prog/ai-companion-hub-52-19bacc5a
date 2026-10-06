@@ -326,3 +326,9 @@ body.no-ripple [data-ripple] {
 @utility animate-float-soft {
   animation: float-soft 6s ease-in-out infinite;
 }
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.animate-sheet-up { animation: sheet-up 320ms cubic-bezier(0.2, 0, 0, 1) both; }

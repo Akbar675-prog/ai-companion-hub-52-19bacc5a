@@ -12,6 +12,8 @@ import {
   getAppFn,
   incrementDownloadFn,
   getApkDownloadUrlFn,
+  listChangelogsFn,
+  type ChangelogItem,
 } from "@/lib/apps.functions";
 import { archLabel, versionLabel } from "@/lib/metadata.functions";
 import { verifyExclusiveFn, exclusiveBypassFn } from "@/lib/exclusive.functions";
@@ -143,6 +145,8 @@ function AppDetail() {
   const [downloading, setDownloading] = useState(false);
   const { userId } = useAccount();
   const bypass = useServerFn(exclusiveBypassFn);
+  const fetchChangelogs = useServerFn(listChangelogsFn);
+  const [sheet, setSheet] = useState<ChangelogItem[] | null>(null);
 
   const previews = app.Previews ?? [];
   const banner = app.Banner_url ?? null;
@@ -169,6 +173,21 @@ function AppDetail() {
 
   async function onDownloadClick() {
     if (app.Coming_soon) return;
+    if (!app.Is_exclusive) {
+      setDownloading(true);
+      try {
+        const logs = await fetchChangelogs({ data: { id } });
+        const withLinks = logs.filter((c) => !!c.Download_url);
+        if (withLinks.length > 0) {
+          setSheet(withLinks);
+          return;
+        }
+      } catch {
+        /* fall back to the normal download */
+      } finally {
+        setDownloading(false);
+      }
+    }
     if (app.Is_exclusive) {
       // Pengguna yang sudah login: langsung unduh tanpa memasukkan password.
       if (userId) {
@@ -477,6 +496,18 @@ function AppDetail() {
         </div>
       )}
 
+      {sheet && (
+        <ChangelogSheet
+          items={sheet}
+          onClose={() => setSheet(null)}
+          onPick={(c) => {
+            setSheet(null);
+            increment.mutate();
+            window.location.href = c.Download_url!;
+          }}
+        />
+      )}
+
       {gateOpen && (
         <PasswordGate
           appId={id}
@@ -619,6 +650,53 @@ function PasswordGate({
             </PressButton>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function ChangelogSheet({
+  items,
+  onClose,
+  onPick,
+}: {
+  items: ChangelogItem[];
+  onClose: () => void;
+  onPick: (c: ChangelogItem) => void;
+}) {
+  return (
+    <div role="dialog" aria-modal="true" aria-label="Pilih versi" className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-fade-in" onClick={onClose}>
+      <div
+        className="m3-shadow-2 flex max-h-[85vh] w-full max-w-2xl flex-col rounded-t-4xl bg-card pb-[env(safe-area-inset-bottom)] animate-sheet-up"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mx-auto mt-3 h-1.5 w-10 rounded-full bg-muted-foreground/40" />
+        <div className="flex items-center justify-between px-6 pb-2 pt-4">
+          <h3 className="font-display text-xl">Pilih versi</h3>
+          <button type="button" onClick={onClose} className="rounded-full px-3 py-1.5 text-sm text-muted-foreground hover:bg-surface-variant">Tutup</button>
+        </div>
+        <ul className="space-y-2 overflow-y-auto px-4 pb-6">
+          {items.map((c, i) => (
+            <li key={c.Id}>
+              <button
+                type="button"
+                onClick={() => onPick(c)}
+                className="m3-hairline flex w-full items-start gap-3 rounded-3xl bg-surface-variant/50 p-4 text-left transition-colors hover:bg-primary-container"
+              >
+                <Download className="mt-0.5 size-5 shrink-0 text-primary" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-semibold">v{(c.Version ?? "").replace(/^v/i, "")}</span>
+                    {i === 0 && <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase text-primary-foreground">Terbaru</span>}
+                    {c.Title && <span className="text-sm">{c.Title}</span>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{new Date(c.Released_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</p>
+                  {c.Notes && <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground/85">{c.Notes}</p>}
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

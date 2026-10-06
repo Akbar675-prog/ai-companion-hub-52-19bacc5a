@@ -9,6 +9,7 @@ import {
 import {
   createAppFn, updateAppFn, deleteAppFn, listAppsFn, getAppFn,
   createUploadUrlFn, removePreviewFileFn,
+  listChangelogsFn, addChangelogFn, deleteChangelogFn,
   type AppListItem,
 } from "@/lib/apps.functions";
 import { AppHeader } from "@/components/AppHeader";
@@ -559,6 +560,8 @@ function AppForm({
         </div>
       </Card>
 
+      {mode === "edit" && existing && <ChangelogEditor appId={existing.ID} />}
+
       <Card>
         <Label>
           <span className="inline-flex items-center gap-2">
@@ -1076,5 +1079,114 @@ function TabBtn({
       {icon}
       {label}
     </button>
+  );
+}
+
+function ChangelogEditor({ appId }: { appId: string }) {
+  const qc = useQueryClient();
+  const list = useServerFn(listChangelogsFn);
+  const add = useServerFn(addChangelogFn);
+  const del = useServerFn(deleteChangelogFn);
+  const [items, setItems] = useState<NonNullable<AppListItem["Changelog"]>>([]);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [ver, setVer] = useState("");
+  const [url, setUrl] = useState("");
+  const [title, setTitle] = useState("");
+  const [notes, setNotes] = useState("");
+
+  async function refresh() {
+    setLoading(true);
+    try {
+      setItems(await list({ data: { id: appId } }));
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => {
+    void refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appId]);
+
+  async function onAdd() {
+    setErr("");
+    if (!ver.trim()) return setErr("Versi wajib diisi.");
+    if (!/^https?:\/\//i.test(url.trim())) return setErr("Download link harus URL valid (https://...).");
+    setBusy(true);
+    try {
+      await add({ data: { app_id: appId, version: ver.trim(), download_url: url.trim(), title: title.trim() || null, notes: notes.trim() } });
+      setVer(""); setUrl(""); setTitle(""); setNotes("");
+      await refresh();
+      void qc.invalidateQueries({ queryKey: ["app", appId] });
+      void qc.invalidateQueries({ queryKey: ["apps"] });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Gagal menyimpan changelog.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onDelete(id: string) {
+    if (!confirm("Hapus changelog ini?")) return;
+    setBusy(true);
+    try {
+      await del({ data: { id } });
+      await refresh();
+      void qc.invalidateQueries({ queryKey: ["app", appId] });
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Gagal menghapus.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card>
+      <Label>Changelog</Label>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Versi yang ditambahkan terakhir otomatis jadi versi terbaru aplikasi. Pengguna memilih versi saat menekan Download.
+      </p>
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <input value={ver} onChange={(e) => setVer(e.target.value)} placeholder="Versi, contoh: 1.2.0" maxLength={40} className="input" />
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Download link (https://...)" maxLength={2000} className="input" />
+      </div>
+      <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Judul (opsional)" maxLength={120} className="input mt-3" />
+      <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Catatan perubahan (opsional)" rows={3} maxLength={5000} className="input mt-3" />
+      {err && <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{err}</p>}
+      <PressButton
+        type="button"
+        onClick={() => void onAdd()}
+        disabled={busy}
+        className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+      >
+        {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyimpan" /> : <Plus className="size-4" />}
+        Tambah changelog
+      </PressButton>
+
+      <div className="mt-5 space-y-2">
+        {loading ? (
+          <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat" />
+        ) : items.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Belum ada changelog.</p>
+        ) : (
+          items.map((c, i) => (
+            <div key={c.Id} className="flex items-start gap-3 rounded-2xl bg-surface-variant/60 p-3">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">v{(c.Version ?? "").replace(/^v/i, "")}</span>
+                  {i === 0 && <span className="text-xs font-semibold text-primary">Terbaru</span>}
+                  {c.Title && <span className="text-sm font-medium">{c.Title}</span>}
+                </div>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{c.Download_url}</p>
+              </div>
+              <button type="button" onClick={() => void onDelete(c.Id)} disabled={busy} aria-label="Hapus changelog" className="rounded-full p-2 text-destructive hover:bg-destructive/10">
+                <Trash2 className="size-4" />
+              </button>
+            </div>
+          ))
+        )}
+      </div>
+    </Card>
   );
 }
