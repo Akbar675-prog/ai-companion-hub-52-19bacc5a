@@ -39,9 +39,9 @@ export type AppListItem = {
 };
 
 export type PreviewItem = { url: string; contentType: string };
-export type ChangelogItem = { Version: string | null; Title: string | null; Notes: string; Released_at: string };
+export type ChangelogItem = { Id: string; Version: string | null; Title: string | null; Notes: string; Download_url: string | null; Released_at: string };
 
-type ChangelogRow = { app_id: string; version: string | null; title: string | null; notes: string; released_at: string };
+type ChangelogRow = { id: string; app_id: string; version: string | null; title: string | null; notes: string; download_url: string | null; released_at: string };
 
 // Reads app_changelogs; returns an empty map if the table doesn't exist yet.
 async function readChangelogs(
@@ -51,7 +51,7 @@ async function readChangelogs(
   try {
     let q = db
       .from("app_changelogs")
-      .select("app_id, version, title, notes, released_at")
+      .select("id, app_id, version, title, notes, download_url, released_at")
       .order("released_at", { ascending: false });
     if (appId) q = q.eq("app_id", appId);
     const { data, error } = await q;
@@ -59,6 +59,8 @@ async function readChangelogs(
     const out: Record<string, ChangelogItem[]> = {};
     for (const r of data as ChangelogRow[]) {
       (out[r.app_id] ??= []).push({
+        Id: r.id,
+        Download_url: r.download_url,
         Version: r.version,
         Title: r.title,
         Notes: r.notes,
@@ -649,6 +651,52 @@ export const deleteAppFn = createServerFn({ method: "POST" })
     await supabaseAdmin.storage.from("app-exclusive").remove([`${data.id}.json`]);
     await removeAppMeta(data.id);
     const { error } = await supabaseAdmin.from("apps").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const listChangelogsFn = createServerFn({ method: "GET" })
+  .inputValidator((d: { id: string }) => z.object({ id: z.string().min(1).max(40) }).parse(d))
+  .handler(async ({ data }): Promise<ChangelogItem[]> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const map = await readChangelogs(supabaseAdmin as never, data.id);
+    return map[data.id] ?? [];
+  });
+
+export const addChangelogFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        app_id: z.string().min(1).max(40),
+        version: z.string().trim().min(1).max(40),
+        download_url: z.string().trim().url().max(2000),
+        title: z.string().trim().max(120).optional().nullable(),
+        notes: z.string().trim().max(5000).default(""),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as unknown as { from: (t: string) => any };
+    const { error } = await db.from("app_changelogs").insert({
+      app_id: data.app_id,
+      version: data.version,
+      download_url: data.download_url,
+      title: data.title || null,
+      notes: data.notes,
+    });
+    if (error) throw new Error(error.message);
+    // The newest changelog entry becomes the app's current version.
+    await updateAppMeta(data.app_id, { version: data.version });
+    return { ok: true };
+  });
+
+export const deleteChangelogFn = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }): Promise<{ ok: true }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as unknown as { from: (t: string) => any };
+    const { error } = await db.from("app_changelogs").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
