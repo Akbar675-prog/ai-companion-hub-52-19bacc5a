@@ -230,8 +230,9 @@ export const listAppsFn = createServerFn({ method: "GET" }).handler(
         Package_name: meta?.packageName ?? null,
         Previews: previewUrls(meta?.previews),
         Changelog: changelogs[r.id] ?? [],
+        Is_new: isNewApp(changelogs[r.id]),
       };
-    });
+    }).sort((a, b) => Number(!!b.Is_new) - Number(!!a.Is_new) || (a.Is_new && b.Is_new ? latestChangelogAt(b.Changelog) - latestChangelogAt(a.Changelog) : 0));
   },
 );
 
@@ -278,6 +279,7 @@ export const getAppFn = createServerFn({ method: "GET" })
       Package_name: meta?.packageName ?? null,
       Previews: previewUrls(meta?.previews),
       Changelog: changelogs[row.id] ?? [],
+      Is_new: isNewApp(changelogs[row.id]),
     };
   });
 

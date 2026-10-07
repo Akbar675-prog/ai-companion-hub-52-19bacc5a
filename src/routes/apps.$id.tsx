@@ -460,7 +460,6 @@ function AppDetail() {
                         {new Date(c.Released_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
                       </span>
                     </div>
-                    <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-foreground/85">{c.Notes}</p>
                   </li>
                 ))}
               </ol>
@@ -691,7 +690,6 @@ function ChangelogSheet({
                     {c.Title && <span className="text-sm">{c.Title}</span>}
                   </div>
                   <p className="text-xs text-muted-foreground">{new Date(c.Released_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}</p>
-                  {c.Notes && <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground/85">{c.Notes}</p>}
                 </div>
               </button>
             </li>
