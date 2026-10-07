@@ -1152,7 +1152,6 @@ function ChangelogEditor({ appId }: { appId: string }) {
         <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Download link (https://...)" maxLength={2000} className="input" />
       </div>
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Judul (opsional)" maxLength={120} className="input mt-3" />
-      <textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Catatan perubahan (opsional)" rows={3} maxLength={5000} className="input mt-3" />
       {err && <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{err}</p>}
       <PressButton
         type="button"

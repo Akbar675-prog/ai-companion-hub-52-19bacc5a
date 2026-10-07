@@ -154,7 +154,7 @@ function StatChip({ icon, label }: { icon: React.ReactNode; label: string }) {
 
 function AppCard({ app, index }: { app: AppListItem; index: number }) {
   const t = useT();
-  const fresh = isNew(app.Created_at);
+  const fresh = !!app.Is_new || isNew(app.Created_at);
   return (
     <Link
       to="/apps/$id"

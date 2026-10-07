@@ -232,7 +232,7 @@ export const listAppsFn = createServerFn({ method: "GET" }).handler(
         Changelog: changelogs[r.id] ?? [],
         Is_new: isNewApp(changelogs[r.id]),
       };
-    }).sort((a, b) => Number(!!b.Is_new) - Number(!!a.Is_new) || latestChangelogAt(b.Changelog) - latestChangelogAt(a.Changelog));
+    }).sort((a, b) => Number(!!b.Is_new) - Number(!!a.Is_new) || (a.Is_new && b.Is_new ? latestChangelogAt(b.Changelog) - latestChangelogAt(a.Changelog) : 0));
   },
 );
 
