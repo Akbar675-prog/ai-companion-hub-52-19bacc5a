@@ -460,7 +460,6 @@ function AppDetail() {
                         {new Date(c.Released_at).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })}
                       </span>
                     </div>
-                    <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-foreground/85">{c.Notes}</p>
                   </li>
                 ))}
               </ol>
