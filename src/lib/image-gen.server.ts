@@ -1,4 +1,4 @@
-// Generate gambar via Pollinations AI + kuota harian per pengguna.
+// Generate gambar via Cloudflare Workers AI (flux-1-schnell) + kuota harian per pengguna.
 // Hasil gambar disimpan permanen di storage (bucket app-metadata) pada path
 // create/ai-image/<id 32 karakter> dan disajikan lewat host user content.
 // Kuota disimpan di storage juga (tanpa tabel baru), reset otomatis setiap
@@ -10,6 +10,15 @@ import { limitsFor } from "./ai-credits.server";
 const BUCKET = "app-metadata";
 export const DAILY_IMAGE_LIMIT = 5;
 export const AI_IMAGE_PREFIX = "create/ai-image";
+
+// ---- Konfigurasi Cloudflare Workers AI -----------------------------------
+const CF_ACCOUNT_ID =
+  process.env.CLOUDFLARE_ACCOUNT_ID ?? "7ee52fb74ed02144340db4a18ef8d77a";
+const CF_API_TOKEN =
+  process.env.CLOUDFLARE_AI_TOKEN ??
+  "cfut_6VO9rp5Ne8tpnsLihGyQWLo8OFHiCukEiTbaP0cF1a60be09";
+const CF_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+// --------------------------------------------------------------------------
 
 function todayUtc() {
   return new Date().toISOString().slice(0, 10);
@@ -85,95 +94,69 @@ function newImageId(): string {
   return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "").slice(0, 32);
 }
 
-
-const UAS = [
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
-  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Safari/605.1.15",
-  "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Mobile Safari/537.36",
-];
-
-/**
- * Selalu coba URL langsung dulu (ini yang paling stabil). Proxy publik hanya
- * dipakai sebagai cadangan terakhir — beberapa di antaranya justru membalas 403
- * dan itulah penyebab error 403 yang muncul sebelumnya.
- */
-function routesFor(target: string): string[] {
-  const enc = encodeURIComponent(target);
-  return [
-    target,
-    target,
-    `https://wsrv.nl/?url=${enc}&output=jpg&q=90`,
-    `https://api.codetabs.com/v1/proxy/?quest=${enc}`,
-  ];
-}
-
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-async function tryFetchImage(target: string): Promise<
-  { ok: true; bytes: ArrayBuffer; type: string } | { ok: false; error: string; forbidden: boolean }
-> {
+/**
+ * Panggil Cloudflare Workers AI (flux-1-schnell) dan decode base64 menjadi
+ * byte gambar. Coba beberapa kali dengan jeda bila gagal sesaat.
+ */
+async function fetchImageBytes(
+  prompt: string,
+  seed: number,
+): Promise<{ bytes: ArrayBuffer; type: string }> {
+  const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${CF_MODEL}`;
+  const body = JSON.stringify({
+    prompt,
+    seed,
+    steps: 4, // flux-1-schnell mendukung 1–8 langkah, 4 sudah cukup cepat & bagus
+  });
+
   let lastError = "";
-  let forbidden = false;
-  const routes = routesFor(target);
-  for (let i = 0; i < routes.length; i++) {
-    const url = routes[i];
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      // Header seminimal mungkin & wajar seperti browser. Jangan memalsukan
-      // Origin/Referer/X-Forwarded-For: Cloudflare di depan Pollinations
-      // menolak (403) request dengan header asal yang tidak konsisten.
       const res = await fetch(url, {
+        method: "POST",
         headers: {
-          Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.9",
-          "User-Agent": UAS[Math.floor(Math.random() * UAS.length)],
+          Authorization: `Bearer ${CF_API_TOKEN}`,
+          "Content-Type": "application/json",
         },
+        body,
         signal: AbortSignal.timeout(90_000),
       });
       if (!res.ok) {
-        if (res.status === 403 || res.status === 429) forbidden = true;
         lastError = `HTTP ${res.status}`;
-        await sleep(1200 * (i + 1));
+        await sleep(800 * (attempt + 1));
         continue;
       }
-      const type = res.headers.get("content-type") ?? "image/jpeg";
-      if (!type.startsWith("image/")) {
-        lastError = `tipe tidak valid (${type})`;
+      const json = (await res.json()) as {
+        result?: { image?: string };
+        errors?: { message?: string }[];
+        success?: boolean;
+      };
+      const b64 = json?.result?.image;
+      if (!b64) {
+        lastError =
+          json?.errors?.[0]?.message ?? "response tidak berisi gambar";
+        await sleep(800 * (attempt + 1));
         continue;
       }
-      const bytes = await res.arrayBuffer();
+      // Decode base64 -> Uint8Array
+      const bin = atob(b64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
       if (bytes.byteLength < 1024) {
         lastError = "gambar kosong";
+        await sleep(800 * (attempt + 1));
         continue;
       }
-      return { ok: true, bytes, type };
+      return { bytes: bytes.buffer, type: "image/jpeg" };
     } catch (e) {
       lastError = e instanceof Error ? e.message : "gagal";
-    }
-  }
-  return { ok: false, error: lastError, forbidden };
-}
-
-
-/**
- * Coba beberapa varian URL Pollinations (model & parameter berbeda) dengan
- * jeda singkat. Ini yang membuat error 403 sesekali tidak langsung gagal.
- */
-async function fetchImageBytes(targets: string[]): Promise<{ bytes: ArrayBuffer; type: string }> {
-  let lastError = "";
-  let sawForbidden = false;
-  for (let pass = 0; pass < 2; pass++) {
-    for (const target of targets) {
-      const r = await tryFetchImage(target);
-      if (r.ok) return { bytes: r.bytes, type: r.type };
-      lastError = r.error;
-      if (r.forbidden) sawForbidden = true;
-      await sleep(600);
+      await sleep(800 * (attempt + 1));
     }
   }
   throw new Error(
-    sawForbidden
-      ? "Layanan gambar lagi membatasi permintaan (403). Tunggu sebentar lalu coba lagi ya."
-      : `Gagal membuat gambar (${lastError}). Coba lagi sebentar lagi.`,
+    `Gagal membuat gambar (${lastError}). Coba lagi sebentar lagi.`,
   );
 }
 
@@ -190,16 +173,7 @@ export async function generateImage(userId: string, prompt: string) {
   if (!clean) throw new Error("Deskripsi gambar tidak boleh kosong.");
 
   const seed = Math.floor(Math.random() * 1_000_000);
-  const base = `https://image.pollinations.ai/prompt/${encodeURIComponent(clean)}`;
-  const common = `width=1024&height=1024&seed=${seed}&nologo=true`;
-  const targets = [
-    `${base}?${common}`,
-    `${base}?${common}&model=flux`,
-    `${base}?width=768&height=768&seed=${seed + 1}&nologo=true`,
-  ];
-
-  const { bytes, type } = await fetchImageBytes(targets);
-
+  const { bytes, type } = await fetchImageBytes(clean, seed);
 
   const id = newImageId();
   const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
