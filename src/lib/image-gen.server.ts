@@ -6,7 +6,7 @@
 //
 // ENV yang dibutuhkan (set di Vercel → Project Settings → Environment Variables):
 //   CLOUDFLARE_ACCOUNT_ID
-//   CLOUDFLARE_AI_TOKEN      (jangan pakai prefix VITE_ / NEXT_PUBLIC_)
+//   CLOUDFLARE_AI_TOKEN
 
 import { USER_CONTENT_ORIGIN } from "./user-content";
 import { limitsFor } from "./ai-credits.server";
@@ -108,15 +108,16 @@ function newImageId(): string {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Panggil Cloudflare Workers AI (flux-1-schnell) dan decode base64 menjadi
- * byte gambar. Coba beberapa kali dengan jeda bila gagal sesaat.
+ * Panggil Cloudflare Workers AI (flux-1-schnell).
+ * Menghapus parameter 'seed' karena sering memicu HTTP 400 di Cloudflare.
  */
 async function fetchImageBytes(
   prompt: string,
-  seed: number,
 ): Promise<{ bytes: ArrayBuffer; type: string }> {
   const { url, token } = cfConfig();
-  const body = JSON.stringify({ prompt, seed, steps: 4 });
+  
+  // Hanya kirim prompt. Biarkan Cloudflare menggunakan default untuk steps dll.
+  const body = JSON.stringify({ prompt });
 
   let lastError = "";
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -130,37 +131,50 @@ async function fetchImageBytes(
         body,
         signal: AbortSignal.timeout(90_000),
       });
+      
       if (!res.ok) {
+        // Tangkap pesan error asli dari Cloudflare agar muncul di Vercel Logs
+        const errText = await res.text().catch(() => "");
+        console.error(`[Cloudflare AI Error] Status ${res.status}:`, errText);
+        
         lastError = `HTTP ${res.status}`;
         await sleep(800 * (attempt + 1));
         continue;
       }
+      
       const json = (await res.json()) as {
         result?: { image?: string };
         errors?: { message?: string }[];
         success?: boolean;
       };
+      
       const b64 = json?.result?.image;
       if (!b64) {
         lastError = json?.errors?.[0]?.message ?? "response tidak berisi gambar";
         await sleep(800 * (attempt + 1));
         continue;
       }
+      
       const bin = atob(b64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      
       if (bytes.byteLength < 1024) {
         lastError = "gambar kosong";
         await sleep(800 * (attempt + 1));
         continue;
       }
+      
       return { bytes: bytes.buffer, type: "image/jpeg" };
     } catch (e) {
       lastError = e instanceof Error ? e.message : "gagal";
       await sleep(800 * (attempt + 1));
     }
   }
-  throw new Error(`Gagal membuat gambar (${lastError}). Coba lagi sebentar lagi.`);
+  
+  throw new Error(
+    `Gagal membuat gambar (${lastError}). Coba lagi sebentar lagi.`,
+  );
 }
 
 export async function generateImage(userId: string, prompt: string) {
@@ -175,8 +189,7 @@ export async function generateImage(userId: string, prompt: string) {
   const clean = prompt.replace(/\s+/g, " ").trim().slice(0, 500);
   if (!clean) throw new Error("Deskripsi gambar tidak boleh kosong.");
 
-  const seed = Math.floor(Math.random() * 1_000_000);
-  const { bytes, type } = await fetchImageBytes(clean, seed);
+  const { bytes, type } = await fetchImageBytes(clean);
 
   const id = newImageId();
   const ext = type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg";
@@ -209,4 +222,4 @@ export async function readAiImage(id: string) {
     .download(`${AI_IMAGE_PREFIX}/${id}`);
   if (error || !data) return null;
   return { bytes: await data.arrayBuffer(), type: data.type || "image/jpeg" };
-    }
+}
