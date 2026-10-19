@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { getAiExtraContext } from "@/lib/ai-context.server";
 import { abilityPrompts, parseAbilities } from "@/lib/ai-abilities";
 
-const CHAT_MODEL = "stealth/space-bunny-alpha";
-const REASONING_MODEL = "stealth/space-bunny-alpha";
+const CHAT_MODEL = "nvidia/nemotron-3.5-super-vl:free";
+const REASONING_MODEL = "nvidia/nemotron-3.5-super-vl:free";
 // Batas keras total (jawaban panjang butuh waktu) + batas diam antar chunk.
 const ANSWER_TIMEOUT_MS = 280_000;
 const IDLE_TIMEOUT_MS = 45_000;
