@@ -1,4 +1,4 @@
-// Generate gambar via Cloudflare Workers AI (FLUX.2 [dev]) + kuota harian per pengguna.
+// Generate gambar via Cloudflare Workers AI (Stable Diffusion XL) + kuota harian per pengguna.
 // Hasil gambar disimpan permanen di storage (bucket app-metadata) pada path
 // create/ai-image/<id 32 karakter> dan disajikan lewat host user content.
 //
@@ -13,14 +13,15 @@ const BUCKET = "app-metadata";
 export const DAILY_IMAGE_LIMIT = 5;
 export const AI_IMAGE_PREFIX = "create/ai-image";
 
-// Menggunakan FLUX.2 [dev] untuk kontrol prompt yang paling presisi
-const CF_MODEL = "@cf/black-forest-labs/flux-2-dev";
+const CF_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
 
 function cfConfig() {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
-  const token = process.env.CLOUDFLARE_AI_TOKEN?.trim();
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const token = process.env.CLOUDFLARE_AI_TOKEN;
   if (!accountId || !token) {
-    throw new Error("Konfigurasi Cloudflare AI belum di-set (CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_AI_TOKEN).");
+    throw new Error(
+      "Konfigurasi Cloudflare AI belum di-set (CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_AI_TOKEN).",
+    );
   }
   return {
     url: `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${CF_MODEL}`,
@@ -104,23 +105,19 @@ function newImageId(): string {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Panggil Cloudflare Workers AI (FLUX.2 [dev]).
- * FLUX.2 menggunakan multipart form-data dan mengembalikan data binary.
+ * Panggil Cloudflare Workers AI (SDXL) dengan Penanganan Error 429 yang Cerdas.
  */
 async function fetchImageBytes(
   prompt: string,
 ): Promise<{ bytes: ArrayBuffer; type: string }> {
   const { url, token } = cfConfig();
   
-  // Siapkan FormData sesuai dokumentasi Cloudflare
-  const form = new FormData();
-  form.append("prompt", prompt);
-  form.append("width", "1024");
-  form.append("height", "1024");
-  
-  // Guidance tinggi (7.5) memaksa model untuk sangat patuh pada prompt
-  form.append("guidance", "7.5"); 
-  form.append("steps", "20"); 
+  const body = JSON.stringify({ 
+    prompt,
+    negative_prompt: "blurry, low quality, deformed, bad anatomy, ugly, bad proportions, text, watermark, signature",
+    num_steps: 15, // Diturunkan ke 15 agar hemat neuron & lebih cepat
+    rejectIfBusy: true, // Langsung tolak jika server penuh (mencegah antrean lama)
+  });
 
   let lastError = "";
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -129,9 +126,9 @@ async function fetchImageBytes(
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          // JANGAN set Content-Type manual. Fetch akan mengatur boundary FormData.
+          "Content-Type": "application/json",
         },
-        body: form,
+        body,
         signal: AbortSignal.timeout(90_000),
       });
       
@@ -139,51 +136,79 @@ async function fetchImageBytes(
         const errBody = await res.text().catch(() => "");
         let cfCode = 0;
         try {
-          cfCode = JSON.parse(errBody)?.errors?.[0]?.code || 0;
+          // Ekstrak kode error internal Cloudflare (3036 atau 3040)
+          const parsed = JSON.parse(errBody);
+          cfCode = parsed?.errors?.[0]?.code || 0;
         } catch { /* abaikan */ }
 
+        // JIKA 3036: Kuota harian habis. Berhenti total.
         if (cfCode === 3036 || errBody.includes("daily free allocation")) {
-          throw new Error("Kuota harian Cloudflare AI habis. Silakan coba besok.");
+          throw new Error("Kuota harian Cloudflare AI habis. Silakan upgrade ke Workers Paid atau coba besok.");
         }
+
+        // JIKA 3040: Kapasitas penuh. Wajib Retry.
         if (cfCode === 3040 || res.status === 429) {
           lastError = "Server Cloudflare sedang sibuk (Kapasitas Penuh)";
-          await sleep(1500 * (attempt + 1) + Math.floor(Math.random() * 500));
+          console.warn(`[Cloudflare 3040] Attempt ${attempt + 1} gagal. Mencoba lagi...`);
+          // Exponential backoff + Jitter (acak) agar tidak menabrak server bersamaan
+          const waitMs = 1500 * (attempt + 1) + Math.floor(Math.random() * 500);
+          await sleep(waitMs);
           continue;
         }
-        console.error(`[Cloudflare FLUX.2 Error] Status ${res.status}:`, errBody);
+
+        // Error lainnya (400, 401, dll)
+        console.error(`[Cloudflare Error] Status ${res.status}:`, errBody);
         lastError = `HTTP ${res.status}`;
         break; 
       }
       
-      // FLUX.2 mengembalikan data binary
-      const contentType = res.headers.get("content-type") || "image/jpeg";
-      const bytes = await res.arrayBuffer();
+      const contentType = res.headers.get("content-type") || "";
+
+      if (contentType.includes("application/json")) {
+        const json = (await res.json()) as { result?: { image?: string }; };
+        const b64 = json?.result?.image;
+        if (!b64) {
+          lastError = "Response tidak berisi gambar";
+          break;
+        }
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return { bytes: bytes.buffer, type: "image/jpeg" };
+      } 
       
+      const bytes = await res.arrayBuffer();
       if (bytes.byteLength < 1024) {
         lastError = "Gambar kosong / terlalu kecil";
         break;
       }
-      
       return { bytes, type: contentType.includes("image/") ? contentType : "image/jpeg" };
 
     } catch (e) {
-      if (e instanceof Error && e.message.includes("Kuota harian")) throw e;
+      // Jika error dilempar dari blok 3036 di atas, langsung gagalkan proses
+      if (e instanceof Error && e.message.includes("Kuota harian")) {
+        throw e;
+      }
       lastError = e instanceof Error ? e.message : "Gagal terhubung";
       await sleep(1500 * (attempt + 1));
     }
   }
   
-  throw new Error(`Gagal membuat gambar: ${lastError}. Coba lagi beberapa saat lagi.`);
+  throw new Error(
+    `Gagal membuat gambar: ${lastError}. Coba lagi beberapa saat lagi.`,
+  );
 }
 
 export async function generateImage(userId: string, prompt: string) {
   const quota = await readQuota(userId);
   const limit = (await limitsFor(userId)).image;
   if (quota.used >= limit) {
-    throw new Error(`Limit membuat gambar hari ini sudah habis (${limit}/hari). Coba lagi setelah pukul 07:00 WIB.`);
+    throw new Error(
+      `Limit membuat gambar hari ini sudah habis (${limit}/hari). Coba lagi setelah pukul 07:00 WIB.`,
+    );
   }
 
-  const clean = prompt.replace(/\s+/g, " ").trim().slice(0, 1000); // FLUX.2 mendukung prompt lebih panjang
+  const clean = prompt.replace(/\s+/g, " ").trim().slice(0, 500);
   if (!clean) throw new Error("Deskripsi gambar tidak boleh kosong.");
 
   const { bytes, type } = await fetchImageBytes(clean);
