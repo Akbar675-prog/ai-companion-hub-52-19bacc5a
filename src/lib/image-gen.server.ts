@@ -3,6 +3,10 @@
 // create/ai-image/<id 32 karakter> dan disajikan lewat host user content.
 // Kuota disimpan di storage juga (tanpa tabel baru), reset otomatis setiap
 // tengah malam UTC karena kunci kuota memakai tanggal UTC.
+//
+// ENV yang dibutuhkan (set di Vercel → Project Settings → Environment Variables):
+//   CLOUDFLARE_ACCOUNT_ID
+//   CLOUDFLARE_AI_TOKEN      (jangan pakai prefix VITE_ / NEXT_PUBLIC_)
 
 import { USER_CONTENT_ORIGIN } from "./user-content";
 import { limitsFor } from "./ai-credits.server";
@@ -11,14 +15,21 @@ const BUCKET = "app-metadata";
 export const DAILY_IMAGE_LIMIT = 5;
 export const AI_IMAGE_PREFIX = "create/ai-image";
 
-// ---- Konfigurasi Cloudflare Workers AI -----------------------------------
-const CF_ACCOUNT_ID =
-  process.env.CLOUDFLARE_ACCOUNT_ID ?? "7ee52fb74ed02144340db4a18ef8d77a";
-const CF_API_TOKEN =
-  process.env.CLOUDFLARE_AI_TOKEN ??
-  "cfut_6VO9rp5Ne8tpnsLihGyQWLo8OFHiCukEiTbaP0cF1a60be09";
 const CF_MODEL = "@cf/black-forest-labs/flux-1-schnell";
-// --------------------------------------------------------------------------
+
+function cfConfig() {
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const token = process.env.CLOUDFLARE_AI_TOKEN;
+  if (!accountId || !token) {
+    throw new Error(
+      "Konfigurasi Cloudflare AI belum di-set (CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_AI_TOKEN).",
+    );
+  }
+  return {
+    url: `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${CF_MODEL}`,
+    token,
+  };
+}
 
 function todayUtc() {
   return new Date().toISOString().slice(0, 10);
@@ -104,12 +115,8 @@ async function fetchImageBytes(
   prompt: string,
   seed: number,
 ): Promise<{ bytes: ArrayBuffer; type: string }> {
-  const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/${CF_MODEL}`;
-  const body = JSON.stringify({
-    prompt,
-    seed,
-    steps: 4, // flux-1-schnell mendukung 1–8 langkah, 4 sudah cukup cepat & bagus
-  });
+  const { url, token } = cfConfig();
+  const body = JSON.stringify({ prompt, seed, steps: 4 });
 
   let lastError = "";
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -117,7 +124,7 @@ async function fetchImageBytes(
       const res = await fetch(url, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${CF_API_TOKEN}`,
+          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body,
@@ -135,12 +142,10 @@ async function fetchImageBytes(
       };
       const b64 = json?.result?.image;
       if (!b64) {
-        lastError =
-          json?.errors?.[0]?.message ?? "response tidak berisi gambar";
+        lastError = json?.errors?.[0]?.message ?? "response tidak berisi gambar";
         await sleep(800 * (attempt + 1));
         continue;
       }
-      // Decode base64 -> Uint8Array
       const bin = atob(b64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
@@ -155,9 +160,7 @@ async function fetchImageBytes(
       await sleep(800 * (attempt + 1));
     }
   }
-  throw new Error(
-    `Gagal membuat gambar (${lastError}). Coba lagi sebentar lagi.`,
-  );
+  throw new Error(`Gagal membuat gambar (${lastError}). Coba lagi sebentar lagi.`);
 }
 
 export async function generateImage(userId: string, prompt: string) {
@@ -206,4 +209,4 @@ export async function readAiImage(id: string) {
     .download(`${AI_IMAGE_PREFIX}/${id}`);
   if (error || !data) return null;
   return { bytes: await data.arrayBuffer(), type: data.type || "image/jpeg" };
-}
+    }
