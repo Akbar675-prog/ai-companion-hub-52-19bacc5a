@@ -17,7 +17,7 @@ export const Route = createFileRoute("/api/ai-query")({
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
           body: JSON.stringify({
-            model: "stealth/space-bunny-alpha",
+            model: "nvidia/nemotron-3.5-super-vl:free",
             messages: [
               {
                 role: "system",
