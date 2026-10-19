@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-const VISION_MODEL = "stealth/space-bunny-alpha";
+const VISION_MODEL = "nvidia/nemotron-3.5-super-vl:free";
 
 export const Route = createFileRoute("/api/ai-vision")({
   server: {
