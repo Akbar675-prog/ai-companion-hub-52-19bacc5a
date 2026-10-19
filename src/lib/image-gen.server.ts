@@ -1,8 +1,6 @@
-// Generate gambar via Cloudflare Workers AI (Leonardo Phoenix) + kuota harian per pengguna.
+// Generate gambar via Cloudflare Workers AI (Stable Diffusion XL) + kuota harian per pengguna.
 // Hasil gambar disimpan permanen di storage (bucket app-metadata) pada path
 // create/ai-image/<id 32 karakter> dan disajikan lewat host user content.
-// Kuota disimpan di storage juga (tanpa tabel baru), reset otomatis setiap
-// tengah malam UTC karena kunci kuota memakai tanggal UTC.
 //
 // ENV yang dibutuhkan (set di Vercel → Project Settings → Environment Variables):
 //   CLOUDFLARE_ACCOUNT_ID
@@ -15,8 +13,8 @@ const BUCKET = "app-metadata";
 export const DAILY_IMAGE_LIMIT = 5;
 export const AI_IMAGE_PREFIX = "create/ai-image";
 
-// Menggunakan Leonardo Phoenix yang jauh lebih bagus untuk prompt adherence
-const CF_MODEL = "@cf/leonardo/phoenix-1.0";
+// Menggunakan SDXL Base yang jauh lebih patuh pada instruksi prompt
+const CF_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
 
 function cfConfig() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -109,21 +107,19 @@ function newImageId(): string {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Panggil Cloudflare Workers AI.
- * Leonardo Phoenix mengembalikan gambar binary (ArrayBuffer), sedangkan model
- * lain seperti Flux mengembalikan JSON base64. Fungsi ini menangani keduanya.
+ * Panggil Cloudflare Workers AI (SDXL).
+ * SDXL mengembalikan gambar binary (ReadableStream/ArrayBuffer).
  */
 async function fetchImageBytes(
   prompt: string,
 ): Promise<{ bytes: ArrayBuffer; type: string }> {
   const { url, token } = cfConfig();
   
-  // Parameter untuk Leonardo Phoenix
+  // Parameter khusus SDXL
   const body = JSON.stringify({ 
     prompt,
-    negative_prompt: "blurry, low quality, deformed, bad anatomy, ugly, bad proportions",
-    width: 1024,
-    height: 1024
+    negative_prompt: "blurry, low quality, deformed, bad anatomy, ugly, bad proportions, text, watermark, signature",
+    num_steps: 20, // Steps maksimal untuk SDXL di Cloudflare
   });
 
   let lastError = "";
@@ -149,7 +145,7 @@ async function fetchImageBytes(
       
       const contentType = res.headers.get("content-type") || "";
 
-      // Jika response adalah JSON (seperti Flux), parse base64
+      // Menangani respons JSON (seperti Flux)
       if (contentType.includes("application/json")) {
         const json = (await res.json()) as {
           result?: { image?: string };
@@ -169,7 +165,7 @@ async function fetchImageBytes(
         return { bytes: bytes.buffer, type: "image/jpeg" };
       } 
       
-      // Jika response langsung berupa gambar (seperti Leonardo Phoenix)
+      // Menangani respons Binary/Image (seperti SDXL & Leonardo)
       const bytes = await res.arrayBuffer();
       if (bytes.byteLength < 1024) {
         lastError = "gambar kosong / terlalu kecil";
@@ -177,7 +173,6 @@ async function fetchImageBytes(
         continue;
       }
       
-      // Leonardo mengembalikan JPEG secara default
       return { bytes, type: contentType.includes("image/") ? contentType : "image/jpeg" };
 
     } catch (e) {
