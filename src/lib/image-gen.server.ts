@@ -15,7 +15,7 @@ const BUCKET = "app-metadata";
 export const DAILY_IMAGE_LIMIT = 5;
 export const AI_IMAGE_PREFIX = "create/ai-image";
 
-const CF_MODEL = "@cf/black-forest-labs/flux-1-schnell";
+const CF_MODEL = "@cf/leonardo/phoenix-1.0";
 
 function cfConfig() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -117,8 +117,14 @@ async function fetchImageBytes(
   const { url, token } = cfConfig();
   
   // Hanya kirim prompt. Biarkan Cloudflare menggunakan default untuk steps dll.
-  const body = JSON.stringify({ prompt });
-
+  const body = JSON.stringify({ 
+  prompt: prompt,
+  negative_prompt: "blurry, low quality, deformed, bad anatomy", // Membantu menghindari hasil jelek
+  width: 1024,
+  height: 1024,
+  // guidance: 7.5, // Opsional, sesuaikan dengan prompt
+});
+  
   let lastError = "";
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
