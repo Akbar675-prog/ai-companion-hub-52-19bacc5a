@@ -1,4 +1,4 @@
-// Generate gambar via Cloudflare Workers AI (Stable Diffusion XL) + kuota harian per pengguna.
+// Generate gambar via Cloudflare Workers AI (FLUX.2 [dev]) + kuota harian per pengguna.
 // Hasil gambar disimpan permanen di storage (bucket app-metadata) pada path
 // create/ai-image/<id 32 karakter> dan disajikan lewat host user content.
 //
@@ -13,16 +13,14 @@ const BUCKET = "app-metadata";
 export const DAILY_IMAGE_LIMIT = 5;
 export const AI_IMAGE_PREFIX = "create/ai-image";
 
-// Menggunakan SDXL Base yang jauh lebih patuh pada instruksi prompt
-const CF_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+// Menggunakan FLUX.2 [dev] untuk kontrol prompt yang paling presisi
+const CF_MODEL = "@cf/black-forest-labs/flux-2-dev";
 
 function cfConfig() {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-  const token = process.env.CLOUDFLARE_AI_TOKEN;
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID?.trim();
+  const token = process.env.CLOUDFLARE_AI_TOKEN?.trim();
   if (!accountId || !token) {
-    throw new Error(
-      "Konfigurasi Cloudflare AI belum di-set (CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_AI_TOKEN).",
-    );
+    throw new Error("Konfigurasi Cloudflare AI belum di-set (CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_AI_TOKEN).");
   }
   return {
     url: `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${CF_MODEL}`,
@@ -95,7 +93,6 @@ export async function imageQuotaFor(userId: string) {
   };
 }
 
-/** ID acak 32 karakter (base64url) untuk nama file gambar. */
 function newImageId(): string {
   const bytes = new Uint8Array(24);
   crypto.getRandomValues(bytes);
@@ -107,20 +104,23 @@ function newImageId(): string {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Panggil Cloudflare Workers AI (SDXL).
- * SDXL mengembalikan gambar binary (ReadableStream/ArrayBuffer).
+ * Panggil Cloudflare Workers AI (FLUX.2 [dev]).
+ * FLUX.2 menggunakan multipart form-data dan mengembalikan data binary.
  */
 async function fetchImageBytes(
   prompt: string,
 ): Promise<{ bytes: ArrayBuffer; type: string }> {
   const { url, token } = cfConfig();
   
-  // Parameter khusus SDXL
-  const body = JSON.stringify({ 
-    prompt,
-    negative_prompt: "blurry, low quality, deformed, bad anatomy, ugly, bad proportions, text, watermark, signature",
-    num_steps: 20, // Steps maksimal untuk SDXL di Cloudflare
-  });
+  // Siapkan FormData sesuai dokumentasi Cloudflare
+  const form = new FormData();
+  form.append("prompt", prompt);
+  form.append("width", "1024");
+  form.append("height", "1024");
+  
+  // Guidance tinggi (7.5) memaksa model untuk sangat patuh pada prompt
+  form.append("guidance", "7.5"); 
+  form.append("steps", "20"); 
 
   let lastError = "";
   for (let attempt = 0; attempt < 3; attempt++) {
@@ -129,73 +129,61 @@ async function fetchImageBytes(
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          // JANGAN set Content-Type manual. Fetch akan mengatur boundary FormData.
         },
-        body,
+        body: form,
         signal: AbortSignal.timeout(90_000),
       });
       
       if (!res.ok) {
-        const errText = await res.text().catch(() => "");
-        console.error(`[Cloudflare AI Error] Status ${res.status}:`, errText);
-        lastError = `HTTP ${res.status}`;
-        await sleep(800 * (attempt + 1));
-        continue;
-      }
-      
-      const contentType = res.headers.get("content-type") || "";
+        const errBody = await res.text().catch(() => "");
+        let cfCode = 0;
+        try {
+          cfCode = JSON.parse(errBody)?.errors?.[0]?.code || 0;
+        } catch { /* abaikan */ }
 
-      // Menangani respons JSON (seperti Flux)
-      if (contentType.includes("application/json")) {
-        const json = (await res.json()) as {
-          result?: { image?: string };
-          errors?: { message?: string }[];
-        };
-        
-        const b64 = json?.result?.image;
-        if (!b64) {
-          lastError = json?.errors?.[0]?.message ?? "response tidak berisi gambar";
-          await sleep(800 * (attempt + 1));
+        if (cfCode === 3036 || errBody.includes("daily free allocation")) {
+          throw new Error("Kuota harian Cloudflare AI habis. Silakan coba besok.");
+        }
+        if (cfCode === 3040 || res.status === 429) {
+          lastError = "Server Cloudflare sedang sibuk (Kapasitas Penuh)";
+          await sleep(1500 * (attempt + 1) + Math.floor(Math.random() * 500));
           continue;
         }
-        
-        const bin = atob(b64);
-        const bytes = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-        return { bytes: bytes.buffer, type: "image/jpeg" };
-      } 
+        console.error(`[Cloudflare FLUX.2 Error] Status ${res.status}:`, errBody);
+        lastError = `HTTP ${res.status}`;
+        break; 
+      }
       
-      // Menangani respons Binary/Image (seperti SDXL & Leonardo)
+      // FLUX.2 mengembalikan data binary
+      const contentType = res.headers.get("content-type") || "image/jpeg";
       const bytes = await res.arrayBuffer();
+      
       if (bytes.byteLength < 1024) {
-        lastError = "gambar kosong / terlalu kecil";
-        await sleep(800 * (attempt + 1));
-        continue;
+        lastError = "Gambar kosong / terlalu kecil";
+        break;
       }
       
       return { bytes, type: contentType.includes("image/") ? contentType : "image/jpeg" };
 
     } catch (e) {
-      lastError = e instanceof Error ? e.message : "gagal";
-      await sleep(800 * (attempt + 1));
+      if (e instanceof Error && e.message.includes("Kuota harian")) throw e;
+      lastError = e instanceof Error ? e.message : "Gagal terhubung";
+      await sleep(1500 * (attempt + 1));
     }
   }
   
-  throw new Error(
-    `Gagal membuat gambar (${lastError}). Coba lagi sebentar lagi.`,
-  );
+  throw new Error(`Gagal membuat gambar: ${lastError}. Coba lagi beberapa saat lagi.`);
 }
 
 export async function generateImage(userId: string, prompt: string) {
   const quota = await readQuota(userId);
   const limit = (await limitsFor(userId)).image;
   if (quota.used >= limit) {
-    throw new Error(
-      `Limit membuat gambar hari ini sudah habis (${limit}/hari). Coba lagi setelah pukul 07:00 WIB.`,
-    );
+    throw new Error(`Limit membuat gambar hari ini sudah habis (${limit}/hari). Coba lagi setelah pukul 07:00 WIB.`);
   }
 
-  const clean = prompt.replace(/\s+/g, " ").trim().slice(0, 500);
+  const clean = prompt.replace(/\s+/g, " ").trim().slice(0, 1000); // FLUX.2 mendukung prompt lebih panjang
   if (!clean) throw new Error("Deskripsi gambar tidak boleh kosong.");
 
   const { bytes, type } = await fetchImageBytes(clean);
