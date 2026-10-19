@@ -1,4 +1,4 @@
-// Generate gambar via Cloudflare Workers AI (flux-1-schnell) + kuota harian per pengguna.
+// Generate gambar via Cloudflare Workers AI (Leonardo Phoenix) + kuota harian per pengguna.
 // Hasil gambar disimpan permanen di storage (bucket app-metadata) pada path
 // create/ai-image/<id 32 karakter> dan disajikan lewat host user content.
 // Kuota disimpan di storage juga (tanpa tabel baru), reset otomatis setiap
@@ -15,6 +15,7 @@ const BUCKET = "app-metadata";
 export const DAILY_IMAGE_LIMIT = 5;
 export const AI_IMAGE_PREFIX = "create/ai-image";
 
+// Menggunakan Leonardo Phoenix yang jauh lebih bagus untuk prompt adherence
 const CF_MODEL = "@cf/leonardo/phoenix-1.0";
 
 function cfConfig() {
@@ -108,23 +109,23 @@ function newImageId(): string {
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 /**
- * Panggil Cloudflare Workers AI (flux-1-schnell).
- * Menghapus parameter 'seed' karena sering memicu HTTP 400 di Cloudflare.
+ * Panggil Cloudflare Workers AI.
+ * Leonardo Phoenix mengembalikan gambar binary (ArrayBuffer), sedangkan model
+ * lain seperti Flux mengembalikan JSON base64. Fungsi ini menangani keduanya.
  */
 async function fetchImageBytes(
   prompt: string,
 ): Promise<{ bytes: ArrayBuffer; type: string }> {
   const { url, token } = cfConfig();
   
-  // Hanya kirim prompt. Biarkan Cloudflare menggunakan default untuk steps dll.
+  // Parameter untuk Leonardo Phoenix
   const body = JSON.stringify({ 
-  prompt: prompt,
-  negative_prompt: "blurry, low quality, deformed, bad anatomy", // Membantu menghindari hasil jelek
-  width: 1024,
-  height: 1024,
-  // guidance: 7.5, // Opsional, sesuaikan dengan prompt
-});
-  
+    prompt,
+    negative_prompt: "blurry, low quality, deformed, bad anatomy, ugly, bad proportions",
+    width: 1024,
+    height: 1024
+  });
+
   let lastError = "";
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
@@ -139,39 +140,46 @@ async function fetchImageBytes(
       });
       
       if (!res.ok) {
-        // Tangkap pesan error asli dari Cloudflare agar muncul di Vercel Logs
         const errText = await res.text().catch(() => "");
         console.error(`[Cloudflare AI Error] Status ${res.status}:`, errText);
-        
         lastError = `HTTP ${res.status}`;
         await sleep(800 * (attempt + 1));
         continue;
       }
       
-      const json = (await res.json()) as {
-        result?: { image?: string };
-        errors?: { message?: string }[];
-        success?: boolean;
-      };
+      const contentType = res.headers.get("content-type") || "";
+
+      // Jika response adalah JSON (seperti Flux), parse base64
+      if (contentType.includes("application/json")) {
+        const json = (await res.json()) as {
+          result?: { image?: string };
+          errors?: { message?: string }[];
+        };
+        
+        const b64 = json?.result?.image;
+        if (!b64) {
+          lastError = json?.errors?.[0]?.message ?? "response tidak berisi gambar";
+          await sleep(800 * (attempt + 1));
+          continue;
+        }
+        
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return { bytes: bytes.buffer, type: "image/jpeg" };
+      } 
       
-      const b64 = json?.result?.image;
-      if (!b64) {
-        lastError = json?.errors?.[0]?.message ?? "response tidak berisi gambar";
-        await sleep(800 * (attempt + 1));
-        continue;
-      }
-      
-      const bin = atob(b64);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      
+      // Jika response langsung berupa gambar (seperti Leonardo Phoenix)
+      const bytes = await res.arrayBuffer();
       if (bytes.byteLength < 1024) {
-        lastError = "gambar kosong";
+        lastError = "gambar kosong / terlalu kecil";
         await sleep(800 * (attempt + 1));
         continue;
       }
       
-      return { bytes: bytes.buffer, type: "image/jpeg" };
+      // Leonardo mengembalikan JPEG secara default
+      return { bytes, type: contentType.includes("image/") ? contentType : "image/jpeg" };
+
     } catch (e) {
       lastError = e instanceof Error ? e.message : "gagal";
       await sleep(800 * (attempt + 1));
