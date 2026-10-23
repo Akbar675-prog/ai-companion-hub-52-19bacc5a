@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { User } from "lucide-react";
+import { User, Sparkles, Search, Code2, Lightbulb, ArrowUpRight } from "lucide-react";
 import { PromptBox } from "@/components/ui/chatgpt-prompt-input";
 import { ShiningText } from "@/components/ui/shining-text";
 import { AiAvatar } from "@/components/ui/plasma-shader";
@@ -745,24 +745,61 @@ function AiChatPage() {
 
         <div className="flex-1 space-y-6 pb-5 md:space-y-8 md:pb-8">
           {showEmpty && (
-            <div className="relative flex flex-col items-center justify-center gap-6 overflow-hidden rounded-[2rem] border border-border/60 bg-gradient-to-b from-surface-variant/50 via-background to-background px-4 py-12 text-center shadow-sm sm:px-8 md:gap-8 md:rounded-[2.5rem] md:py-20">
-              <div className="relative mb-1 grid place-items-center"><div className="absolute size-24 rounded-full bg-primary/15 blur-2xl md:size-32" /><AiAvatar className="relative size-[4.5rem] drop-shadow-[0_0_24px_rgba(139,92,246,0.28)] md:size-24" /></div>
-              <p className="max-w-2xl font-display text-3xl font-semibold tracking-tight leading-[1.12] md:text-5xl">
-                {userName ? `Halo ${userName}, ada yang bisa dibantu?` : "Ada yang bisa dibantu?"}
-              </p>
-              <div className="grid w-full max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-3 md:gap-3">
-                {SUGGESTIONS.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => void send(s)}
-                    className="group flex min-h-[76px] items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-left text-sm shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 md:min-h-[92px] md:px-4 md:py-4 md:text-sm"
-                  >
-                    {s}
-                  </button>
-                ))}
+            <section className="relative isolate flex min-h-[min(68vh,680px)] flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-border/70 bg-background px-4 py-10 text-center shadow-[0_24px_80px_-48px_rgba(80,70,180,0.35)] sm:px-8 md:rounded-[2.25rem] md:px-12 md:py-14">
+              <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
+                <div className="absolute left-1/2 top-[-10rem] h-80 w-[34rem] max-w-[120vw] -translate-x-1/2 rounded-full bg-primary/[0.10] blur-[90px]" />
+                <div className="absolute bottom-[-13rem] right-[-5rem] h-72 w-72 rounded-full bg-violet-500/[0.07] blur-[85px]" />
+                <div className="absolute inset-0 bg-[radial-gradient(var(--border)_0.7px,transparent_0.7px)] [background-size:22px_22px] opacity-30 [mask-image:linear-gradient(to_bottom,black,transparent_80%)]" />
               </div>
-            </div>
+
+              <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/[0.06] px-3.5 py-1.5 text-xs font-medium tracking-wide text-primary">
+                <Sparkles className="size-3.5" />
+                GETRIX AI <span className="text-muted-foreground/60">/</span> AI WORKSPACE
+              </div>
+
+              <div className="relative mb-6 grid place-items-center">
+                <div className="absolute size-28 rounded-full bg-primary/15 blur-2xl md:size-36" />
+                <div className="relative rounded-[1.8rem] border border-border/70 bg-background/80 p-3 shadow-xl shadow-primary/[0.08] backdrop-blur">
+                  <AiAvatar className="size-[4.25rem] md:size-[5.25rem]" />
+                </div>
+                <span className="absolute -bottom-1 -right-2 grid size-7 place-items-center rounded-full border-2 border-background bg-emerald-500 text-white shadow-sm">
+                  <span className="size-2 rounded-full bg-white" />
+                </span>
+              </div>
+
+              <h2 className="max-w-3xl text-balance font-display text-3xl font-semibold leading-[1.08] tracking-[-0.04em] sm:text-4xl md:text-5xl">
+                {userName ? `Halo, ${userName}.` : "Apa yang ingin kamu kerjakan?"}
+                <span className="mt-2 block bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent">
+                  {userName ? "Mulai dari sini." : "Mulai dengan sebuah pertanyaan."}
+                </span>
+              </h2>
+              <p className="mt-5 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
+                Tanyakan sesuatu, eksplorasi ide, atau pecahkan masalah. GetrixAI membantu kamu berpikir dan bekerja lebih efisien.
+              </p>
+
+              <div className="mt-9 grid w-full max-w-3xl grid-cols-1 gap-3 text-left sm:grid-cols-3">
+                {SUGGESTIONS.map((s, i) => {
+                  const SuggestionIcon = [Lightbulb, Code2, Search][i] ?? Sparkles;
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => void send(s)}
+                      className="group flex min-h-[112px] flex-col justify-between rounded-2xl border border-border/70 bg-background/75 p-4 text-left shadow-sm backdrop-blur-sm transition duration-200 hover:-translate-y-1 hover:border-primary/35 hover:bg-primary/[0.035] hover:shadow-lg hover:shadow-primary/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[128px] sm:p-5"
+                    >
+                      <span className="flex size-9 items-center justify-center rounded-xl border border-border/70 bg-surface-variant/70 text-primary transition-colors group-hover:border-primary/20 group-hover:bg-primary/10">
+                        <SuggestionIcon className="size-4" />
+                      </span>
+                      <span className="mt-4 flex w-full items-center justify-between gap-2 text-sm font-medium leading-5">
+                        {s}
+                        <ArrowUpRight className="size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-7 text-xs text-muted-foreground/70">Ketik pesan di bawah untuk memulai percakapan</p>
+            </section>
           )}
 
 
