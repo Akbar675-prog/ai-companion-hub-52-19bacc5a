@@ -720,7 +720,7 @@ function AiChatPage() {
   const showEmpty = messages.length === 0 && !draft && !imaging;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="relative flex min-h-screen flex-col overflow-x-clip bg-background">
       <AiHeader
         open={menuOpen}
         setOpen={setMenuOpen}
@@ -739,23 +739,24 @@ function AiChatPage() {
         userName={userName}
       />
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-6 md:px-8 md:pt-10 lg:max-w-4xl">
+      <main className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col px-3 pt-5 sm:px-5 md:px-8 md:pt-8 lg:max-w-4xl">
+        <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 -z-10 h-72 w-[min(90vw,42rem)] -translate-x-1/2 rounded-full bg-primary/[0.07] blur-3xl" />
         <h1 className="sr-only">AI Chats</h1>
 
-        <div className="flex-1 space-y-5 pb-4 md:space-y-8 md:pb-8">
+        <div className="flex-1 space-y-6 pb-5 md:space-y-8 md:pb-8">
           {showEmpty && (
-            <div className="flex flex-col items-center justify-center gap-6 py-14 text-center md:gap-8 md:py-24">
-              <AiAvatar className="size-16 md:size-20" />
-              <p className="font-display text-3xl leading-tight md:text-5xl">
+            <div className="relative flex flex-col items-center justify-center gap-6 overflow-hidden rounded-[2rem] border border-border/60 bg-gradient-to-b from-surface-variant/50 via-background to-background px-4 py-12 text-center shadow-sm sm:px-8 md:gap-8 md:rounded-[2.5rem] md:py-20">
+              <div className="relative mb-1 grid place-items-center"><div className="absolute size-24 rounded-full bg-primary/15 blur-2xl md:size-32" /><AiAvatar className="relative size-[4.5rem] drop-shadow-[0_0_24px_rgba(139,92,246,0.28)] md:size-24" /></div>
+              <p className="max-w-2xl font-display text-3xl font-semibold tracking-tight leading-[1.12] md:text-5xl">
                 {userName ? `Halo ${userName}, ada yang bisa dibantu?` : "Ada yang bisa dibantu?"}
               </p>
-              <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+              <div className="grid w-full max-w-2xl grid-cols-1 gap-2.5 sm:grid-cols-3 md:gap-3">
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
                     type="button"
                     onClick={() => void send(s)}
-                    className="rounded-full bg-surface-variant px-4 py-2 text-sm transition hover:bg-primary-container md:px-5 md:py-2.5 md:text-base"
+                    className="group flex min-h-[76px] items-center justify-between gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 py-3 text-left text-sm shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 md:min-h-[92px] md:px-4 md:py-4 md:text-sm"
                   >
                     {s}
                   </button>
@@ -767,20 +768,20 @@ function AiChatPage() {
 
           {messages.map((m, i) =>
             m.role === "user" ? (
-              <div key={i} className="flex justify-end gap-2 md:gap-3">
-                <div className="max-w-[85%] space-y-2 md:max-w-[75%]">
+              <div key={i} className="flex justify-end gap-2.5 md:gap-3">
+                <div className="max-w-[88%] space-y-2 md:max-w-[78%]">
                   {m.image && (
                     <img
                       src={m.image}
                       alt="Gambar dari pengguna"
-                      className="ml-auto max-h-64 rounded-3xl rounded-br-lg object-cover md:max-h-80"
+                      className="ml-auto max-h-72 rounded-2xl rounded-br-md border border-border/50 object-cover shadow-sm md:max-h-96"
                     />
                   )}
-                  <div className="rounded-3xl rounded-br-lg bg-primary px-4 py-2.5 text-sm text-primary-foreground md:px-5 md:py-3 md:text-[15px]">
+                  <div className="rounded-3xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-sm md:px-5 md:py-3.5 md:text-[15px]">
                     {m.content}
                   </div>
                 </div>
-                <span className="mt-1 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-variant md:size-8">
+                <span className="mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-surface-variant shadow-sm md:size-9">
                   <User className="size-3.5 md:size-4" />
                 </span>
               </div>
@@ -820,7 +821,7 @@ function AiChatPage() {
 
 
           {error && (
-            <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            <p className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3.5 text-sm leading-6 text-destructive shadow-sm">
               {error}
             </p>
           )}
@@ -833,7 +834,7 @@ function AiChatPage() {
             e.preventDefault();
             void send(input);
           }}
-          className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent pb-6 pt-3"
+          className="sticky bottom-0 z-10 -mx-3 bg-gradient-to-t from-background via-background/95 to-transparent px-3 pb-4 pt-5 sm:-mx-5 sm:px-5 md:-mx-8 md:px-8 md:pb-6"
         >
           <PromptBox
             ref={boxRef}
@@ -863,7 +864,7 @@ function AiChatPage() {
               }
             }}
           />
-          <p className="mt-2 text-center text-xs text-muted-foreground">
+          <p className="mt-3 text-center text-[11px] leading-5 text-muted-foreground/90">
             GetrixAI bisa keliru. Cek info penting lewat sumber yang tertera.
           </p>
         </form>
