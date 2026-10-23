@@ -5,8 +5,29 @@ import { abilityPrompts, parseAbilities } from "@/lib/ai-abilities";
 const CHAT_MODEL = "nvidia/nemotron-3.5-super-vl:free";
 const REASONING_MODEL = "nvidia/nemotron-3.5-super-vl:free";
 
+// Cadangan bila model utama error. Dicoba berurutan; bisa ditimpa lewat env OPENROUTER_FALLBACK_MODELS.
+const FALLBACK_MODELS = ["google/gemma-4-31b-it:free", "poolside/laguna-s-2.1:free"];
+
 const ANSWER_TIMEOUT_MS = 600_000; // 10 menit
 const IDLE_TIMEOUT_MS = 120_000; // 2 menit
+
+// Ketahanan terhadap provider yang sedang bermasalah
+const MAX_TOKENS = 32_000; // 80k terlalu besar untuk provider gratis dan mempersempit pilihan routing
+const RETRY_STATUS = new Set([429, 500, 502, 503, 504]);
+const RETRY_BASE_MS = 400; // jeda 0.4s, 0.8s ... antar model
+
+const sleep = (ms: number, signal: AbortSignal) =>
+  new Promise<void>((resolve) => {
+    const t = setTimeout(resolve, ms);
+    signal.addEventListener(
+      "abort",
+      () => {
+        clearTimeout(t);
+        resolve();
+      },
+      { once: true },
+    );
+  });
 
 // Pengatur laju stream (supaya teks keluar mulus, tidak patah-patah)
 const PACE_TICK_MS = 24; // jeda antar potongan yang dikirim ke klien
@@ -398,35 +419,67 @@ export const Route = createFileRoute("/api/ai-chat")({
             extra;
         }
 
-        let upstream: Response;
-        try {
-          upstream = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              ...(endpointKey ? { Authorization: `Bearer ${endpointKey}` } : {}),
-            },
-            signal: upstreamAbort.signal,
-            body: JSON.stringify({
-              model: realModelId ? realModelId : deepMode ? REASONING_MODEL : CHAT_MODEL,
-              stream: true,
-              max_tokens: 80000,
-              ...(deepMode
-                ? { reasoning: { effort: "high", enabled: true }, temperature: 0.3 }
-                : {}),
-              messages: [{ role: "system", content: systemContent }, ...messages],
-            }),
-          });
-        } catch {
-          clearTimeout(hardStop);
-          return Response.json({ error: "AI tidak merespons, coba lagi." }, { status: 504 });
+        // Urutan percobaan: model utama sekali, lalu cadangan satu per satu.
+        // Cadangan hanya untuk AI buatan prompt; model resmi pilihan user tidak diganti diam-diam.
+        const primaryModel = realModelId ? realModelId : deepMode ? REASONING_MODEL : CHAT_MODEL;
+        const envFallbacks = (process.env["OPENROUTER_FALLBACK_MODELS"] ?? "")
+          .split(",")
+          .map((m) => m.trim())
+          .filter(Boolean);
+        const fallbackModels = realModelId
+          ? []
+          : (envFallbacks.length ? envFallbacks : FALLBACK_MODELS).filter((m) => m !== primaryModel);
+        const candidates = [primaryModel, ...fallbackModels];
+
+        let upstream: Response | undefined;
+        let lastStatus = 0;
+        let lastErrText = "";
+        for (let i = 0; i < candidates.length; i++) {
+          if (upstreamAbort.signal.aborted) break;
+          try {
+            const res = await fetch(endpoint, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                ...(endpointKey ? { Authorization: `Bearer ${endpointKey}` } : {}),
+              },
+              signal: upstreamAbort.signal,
+              body: JSON.stringify({
+                model: candidates[i],
+                stream: true,
+                max_tokens: MAX_TOKENS,
+                ...(deepMode && candidates[i] === primaryModel
+                  ? { reasoning: { effort: "high", enabled: true }, temperature: 0.3 }
+                  : {}),
+                messages: [{ role: "system", content: systemContent }, ...messages],
+              }),
+            });
+            if (res.ok && res.body) {
+              upstream = res;
+              break;
+            }
+            lastStatus = res.status;
+            lastErrText = await res.text().catch(() => "");
+            if (res.status === 401 || res.status === 403) break; // kunci/izin salah: model lain tidak menolong
+          } catch {
+            lastStatus = 0; // gagal jaringan / timeout
+          }
+          if (i < candidates.length - 1) await sleep(RETRY_BASE_MS * (i + 1), upstreamAbort.signal);
         }
 
-        if (!upstream.ok || !upstream.body) {
+        if (!upstream || !upstream.body) {
           clearTimeout(hardStop);
-          const text = await upstream.text().catch(() => "");
+          if (!lastStatus) {
+            return Response.json({ error: "AI tidak merespons, coba lagi." }, { status: 504 });
+          }
+          console.error("[ai-chat] upstream gagal", lastStatus, lastErrText.slice(0, 500));
+          const busy = RETRY_STATUS.has(lastStatus);
           return Response.json(
-            { error: `AI error (${upstream.status}): ${text.slice(0, 200)}` },
+            {
+              error: busy
+                ? `Server AI sedang sibuk (${lastStatus}). Coba kirim ulang sebentar lagi.`
+                : `AI error (${lastStatus}): ${lastErrText.slice(0, 200)}`,
+            },
             { status: 502 },
           );
         }
