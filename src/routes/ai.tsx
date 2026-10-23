@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { User, Sparkles, Search, Code2, Lightbulb, ArrowUpRight } from "lucide-react";
+import { User } from "lucide-react";
 import { PromptBox } from "@/components/ui/chatgpt-prompt-input";
 import { ShiningText } from "@/components/ui/shining-text";
 import { AiAvatar } from "@/components/ui/plasma-shader";
@@ -720,7 +720,7 @@ function AiChatPage() {
   const showEmpty = messages.length === 0 && !draft && !imaging;
 
   return (
-    <div className="relative flex min-h-screen flex-col overflow-x-clip bg-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <AiHeader
         open={menuOpen}
         setOpen={setMenuOpen}
@@ -739,86 +739,48 @@ function AiChatPage() {
         userName={userName}
       />
 
-      <main className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col px-3 pt-5 sm:px-5 md:px-8 md:pt-8 lg:max-w-4xl">
-        <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 -z-10 h-72 w-[min(90vw,42rem)] -translate-x-1/2 rounded-full bg-primary/[0.07] blur-3xl" />
+      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-6 md:px-8 md:pt-10 lg:max-w-4xl">
         <h1 className="sr-only">AI Chats</h1>
 
-        <div className="flex-1 space-y-6 pb-5 md:space-y-8 md:pb-8">
+        <div className="flex-1 space-y-5 pb-4 md:space-y-8 md:pb-8">
           {showEmpty && (
-            <section className="relative isolate flex min-h-[min(68vh,680px)] flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-border/70 bg-background px-4 py-10 text-center shadow-[0_24px_80px_-48px_rgba(80,70,180,0.35)] sm:px-8 md:rounded-[2.25rem] md:px-12 md:py-14">
-              <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-hidden">
-                <div className="absolute left-1/2 top-[-10rem] h-80 w-[34rem] max-w-[120vw] -translate-x-1/2 rounded-full bg-primary/[0.10] blur-[90px]" />
-                <div className="absolute bottom-[-13rem] right-[-5rem] h-72 w-72 rounded-full bg-violet-500/[0.07] blur-[85px]" />
-                <div className="absolute inset-0 bg-[radial-gradient(var(--border)_0.7px,transparent_0.7px)] [background-size:22px_22px] opacity-30 [mask-image:linear-gradient(to_bottom,black,transparent_80%)]" />
-              </div>
-
-              <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/[0.06] px-3.5 py-1.5 text-xs font-medium tracking-wide text-primary">
-                <Sparkles className="size-3.5" />
-                GETRIX AI <span className="text-muted-foreground/60">/</span> AI WORKSPACE
-              </div>
-
-              <div className="relative mb-6 grid place-items-center">
-                <div className="absolute size-28 rounded-full bg-primary/15 blur-2xl md:size-36" />
-                <div className="relative rounded-[1.8rem] border border-border/70 bg-background/80 p-3 shadow-xl shadow-primary/[0.08] backdrop-blur">
-                  <AiAvatar className="size-[4.25rem] md:size-[5.25rem]" />
-                </div>
-                <span className="absolute -bottom-1 -right-2 grid size-7 place-items-center rounded-full border-2 border-background bg-emerald-500 text-white shadow-sm">
-                  <span className="size-2 rounded-full bg-white" />
-                </span>
-              </div>
-
-              <h2 className="max-w-3xl text-balance font-display text-3xl font-semibold leading-[1.08] tracking-[-0.04em] sm:text-4xl md:text-5xl">
-                {userName ? `Halo, ${userName}.` : "Apa yang ingin kamu kerjakan?"}
-                <span className="mt-2 block bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent">
-                  {userName ? "Mulai dari sini." : "Mulai dengan sebuah pertanyaan."}
-                </span>
-              </h2>
-              <p className="mt-5 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base sm:leading-7">
-                Tanyakan sesuatu, eksplorasi ide, atau pecahkan masalah. GetrixAI membantu kamu berpikir dan bekerja lebih efisien.
+            <div className="flex flex-col items-center justify-center gap-6 py-14 text-center md:gap-8 md:py-24">
+              <AiAvatar className="size-16 md:size-20" />
+              <p className="font-display text-3xl leading-tight md:text-5xl">
+                {userName ? `Halo ${userName}, ada yang bisa dibantu?` : "Ada yang bisa dibantu?"}
               </p>
-
-              <div className="mt-9 grid w-full max-w-3xl grid-cols-1 gap-3 text-left sm:grid-cols-3">
-                {SUGGESTIONS.map((s, i) => {
-                  const SuggestionIcon = [Lightbulb, Code2, Search][i] ?? Sparkles;
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => void send(s)}
-                      className="group flex min-h-[112px] flex-col justify-between rounded-2xl border border-border/70 bg-background/75 p-4 text-left shadow-sm backdrop-blur-sm transition duration-200 hover:-translate-y-1 hover:border-primary/35 hover:bg-primary/[0.035] hover:shadow-lg hover:shadow-primary/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:min-h-[128px] sm:p-5"
-                    >
-                      <span className="flex size-9 items-center justify-center rounded-xl border border-border/70 bg-surface-variant/70 text-primary transition-colors group-hover:border-primary/20 group-hover:bg-primary/10">
-                        <SuggestionIcon className="size-4" />
-                      </span>
-                      <span className="mt-4 flex w-full items-center justify-between gap-2 text-sm font-medium leading-5">
-                        {s}
-                        <ArrowUpRight className="size-4 shrink-0 text-muted-foreground/60 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
-                      </span>
-                    </button>
-                  );
-                })}
+              <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+                {SUGGESTIONS.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => void send(s)}
+                    className="rounded-full bg-surface-variant px-4 py-2 text-sm transition hover:bg-primary-container md:px-5 md:py-2.5 md:text-base"
+                  >
+                    {s}
+                  </button>
+                ))}
               </div>
-              <p className="mt-7 text-xs text-muted-foreground/70">Ketik pesan di bawah untuk memulai percakapan</p>
-            </section>
+            </div>
           )}
 
 
           {messages.map((m, i) =>
             m.role === "user" ? (
-              <div key={i} className="flex justify-end gap-2.5 md:gap-3">
-                <div className="max-w-[88%] space-y-2 md:max-w-[78%]">
+              <div key={i} className="flex justify-end gap-2 md:gap-3">
+                <div className="max-w-[85%] space-y-2 md:max-w-[75%]">
                   {m.image && (
                     <img
                       src={m.image}
                       alt="Gambar dari pengguna"
-                      className="ml-auto max-h-72 rounded-2xl rounded-br-md border border-border/50 object-cover shadow-sm md:max-h-96"
+                      className="ml-auto max-h-64 rounded-3xl rounded-br-lg object-cover md:max-h-80"
                     />
                   )}
-                  <div className="rounded-3xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-sm md:px-5 md:py-3.5 md:text-[15px]">
+                  <div className="rounded-3xl rounded-br-lg bg-primary px-4 py-2.5 text-sm text-primary-foreground md:px-5 md:py-3 md:text-[15px]">
                     {m.content}
                   </div>
                 </div>
-                <span className="mt-1 inline-flex size-8 shrink-0 items-center justify-center rounded-2xl border border-border/70 bg-surface-variant shadow-sm md:size-9">
+                <span className="mt-1 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-variant md:size-8">
                   <User className="size-3.5 md:size-4" />
                 </span>
               </div>
@@ -858,7 +820,7 @@ function AiChatPage() {
 
 
           {error && (
-            <p className="rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3.5 text-sm leading-6 text-destructive shadow-sm">
+            <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
               {error}
             </p>
           )}
@@ -871,7 +833,7 @@ function AiChatPage() {
             e.preventDefault();
             void send(input);
           }}
-          className="sticky bottom-0 z-10 -mx-3 bg-gradient-to-t from-background via-background/95 to-transparent px-3 pb-4 pt-5 sm:-mx-5 sm:px-5 md:-mx-8 md:px-8 md:pb-6"
+          className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent pb-6 pt-3"
         >
           <PromptBox
             ref={boxRef}
@@ -901,7 +863,7 @@ function AiChatPage() {
               }
             }}
           />
-          <p className="mt-3 text-center text-[11px] leading-5 text-muted-foreground/90">
+          <p className="mt-2 text-center text-xs text-muted-foreground">
             GetrixAI bisa keliru. Cek info penting lewat sumber yang tertera.
           </p>
         </form>
