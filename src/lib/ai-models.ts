@@ -1,228 +1,180 @@
+/** Daftar "model" yang bisa dipilih pengguna di halaman /ai.
+ *  Semua model ini memakai mesin AI yang sama (GetrixAI) — perbedaannya hanya
+ *  gaya jawaban (persona) supaya terasa seperti model premium. */
 
-import { supabase } from "@/integrations/supabase/client";
-
-// endpointKey hanya digunakan ketika admin mengirim perubahan.
-// Nilainya tidak pernah diambil dari tabel katalog.
 export type AiModel = {
   id: string;
   name: string;
   tagline: string;
+  /** Ditambahkan ke instruksi sistem supaya gaya jawabannya terasa berbeda. */
   persona: string;
-  isNew: boolean;
-  logo: string;
-  custom: boolean;
-  realModel: string;
-  modelType: string;
-  abilities: string[];
-  endpointUrl: string;
+  /** Menampilkan label "Baru" di samping nama model. */
+  isNew?: boolean;
+  /** URL logo untuk model buatan pengguna. */
+  logo?: string;
+  /** Model buatan pengguna dari halaman /ai/addai. */
+  custom?: boolean;
+  /** Bila true, pakai model resmi (modelType) alih-alih prompting/persona. */
+  realModel?: boolean;
+  /** ID model resmi, contoh: nvidia/nemotron-3.5-lightning:free */
+  modelType?: string;
+  /** Kemampuan khusus, contoh: "-CODE-AGENT, -DEEP-THINKING" */
+  abilities?: string;
+  /** Endpoint OpenAI-compatible kustom (kosong = OpenRouter). */
+  endpointUrl?: string;
+  /** API key untuk endpoint kustom (disimpan di perangkat ini saja). */
   endpointKey?: string;
 };
 
-type AiModelRow = {
-  id: string;
-  name: string;
-  tagline: string;
-  persona: string;
-  is_new: boolean;
-  logo: string;
-  custom: boolean;
-  real_model: string;
-  model_type: string;
-  abilities: string[];
-  endpoint_url: string;
-  is_active: boolean;
-  sort_order: number;
-};
 
-function fromRow(row: AiModelRow): AiModel {
-  return {
-    id: row.id,
-    name: row.name,
-    tagline: row.tagline,
-    persona: row.persona,
-    isNew: row.is_new,
-    logo: row.logo,
-    custom: row.custom,
-    realModel: row.real_model,
-    modelType: row.model_type,
-    abilities: row.abilities ?? [],
-    endpointUrl: row.endpoint_url,
-    // Jangan pernah mengembalikan endpointKey dari katalog.
-  };
-}
+export const BUILTIN_MODELS: AiModel[] = [
+  {
+    id: "getrix-core",
+    name: "GetrixAI Core",
+    tagline: "Cepat, seimbang, cocok untuk obrolan harian.",
+    persona:
+      "Jawab ringkas, hangat, dan langsung ke inti. Hindari basa-basi panjang.",
+  },
+  {
+    id: "claude-opus-5",
+    name: "Claude Opus 5",
+    tagline: "Penalaran mendalam dengan tulisan rapi dan terstruktur.",
+    isNew: true,
+    persona:
+      "Bergayalah seperti asisten kelas premium: jawaban terstruktur dengan poin atau sub-judul bila membantu, penalaran eksplisit namun padat, nada sopan dan tenang, serta selalu sebutkan asumsi penting dan batasan jawabanmu.",
+  },
+  {
+    id: "gpt-5-6-sol",
+    name: "GPT-5.6 Sol",
+    tagline: "Serba bisa, kuat untuk analisis dan koding.",
+    isNew: true,
+    persona:
+      "Bergayalah seperti model serba bisa kelas atas: analitis, presisi, sertakan contoh konkret atau potongan kode bila relevan, dan tutup dengan kesimpulan singkat yang bisa langsung dipakai.",
+  },
+  {
+    id: "gemini-3-7-flash",
+    name: "Gemini 3.7 Flash",
+    tagline: "Super cepat untuk jawaban singkat dan ide kilat.",
+    isNew: true,
+    persona:
+      "Bergayalah super cepat dan efisien: jawab dalam kalimat pendek atau poin singkat, fokus pada informasi paling berguna, tanpa pengulangan.",
+  },
+];
 
-function toRow(model: AiModel, sortOrder = 0) {
-  return {
-    id: model.id,
-    name: model.name,
-    tagline: model.tagline ?? "",
-    persona: model.persona ?? "",
-    is_new: model.isNew ?? false,
-    logo: model.logo ?? "",
-    custom: model.custom ?? true,
-    real_model: model.realModel ?? "",
-    model_type: model.modelType ?? "chat",
-    abilities: model.abilities ?? [],
-    endpoint_url: model.endpointUrl ?? "",
-    is_active: true,
-    sort_order: sortOrder,
-    updated_at: new Date().toISOString(),
-  };
-}
+export const DEFAULT_MODEL_ID = BUILTIN_MODELS[0]!.id;
 
-async function saveSecret(modelId: string, endpointKey?: string) {
-  // Kosong berarti jangan mengubah secret yang sudah tersimpan.
-  if (!endpointKey?.trim()) return;
+const CUSTOM_KEY = "gma:ai:custom-models";
+const SELECTED_KEY = "gma:ai:model";
+const OVERRIDE_KEY = "gma:ai:model-overrides";
+const HIDDEN_KEY = "gma:ai:hidden-models";
 
-  const { error } = await supabase.functions.invoke(
-    "manage-ai-model-secret",
-    {
-      body: {
-        action: "upsert",
-        modelId,
-        endpointKey: endpointKey.trim(),
-      },
-    },
-  );
+type Override = Partial<
+  Pick<
+    AiModel,
+    | "name" | "tagline" | "persona" | "logo" | "isNew" | "realModel" | "modelType" | "abilities"
+    | "endpointUrl" | "endpointKey"
+  >
+>;
 
-  if (error) {
-    throw new Error(`Gagal menyimpan API key: ${error.message}`);
+
+function readJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
   }
 }
 
-export async function allModels(): Promise<AiModel[]> {
-  const { data, error } = await supabase
-    .from("ai_models")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
-    .order("name", { ascending: true });
-
-  if (error) throw error;
-  return (data ?? []).map((row) => fromRow(row as AiModelRow));
-}
-
-export async function loadCustomModels(): Promise<AiModel[]> {
-  const models = await allModels();
-  return models.filter((model) => model.custom);
-}
-
-export async function saveCustomModels(
-  models: AiModel[],
-): Promise<void> {
-  for (const [index, model] of models.entries()) {
-    await updateModel(model.id, {
-      ...model,
-      custom: true,
-    });
-
-    // Gán sort order trong một lần cập nhật riêng.
-    const { error } = await supabase
-      .from("ai_models")
-      .update({ sort_order: index })
-      .eq("id", model.id);
-
-    if (error) throw error;
+function writeJson(key: string, value: unknown) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* storage penuh / diblokir */
   }
 }
 
-export async function updateModel(
-  id: string,
-  patch: Partial<AiModel>,
-): Promise<void> {
-  const endpointKey = patch.endpointKey;
-  const { endpointKey: _ignored, ...publicPatch } = patch;
-
-  const columnMap: Record<string, string> = {
-    isNew: "is_new",
-    realModel: "real_model",
-    modelType: "model_type",
-    endpointUrl: "endpoint_url",
-  };
-
-  const dbPatch: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(publicPatch)) {
-    if (value === undefined || key === "id") continue;
-    dbPatch[columnMap[key] ?? key] = value;
-  }
-
-  dbPatch.updated_at = new Date().toISOString();
-
-  if (Object.keys(dbPatch).length > 1) {
-    const { error } = await supabase
-      .from("ai_models")
-      .update(dbPatch)
-      .eq("id", id);
-
-    if (error) throw error;
-  }
-
-  await saveSecret(id, endpointKey);
+export function loadCustomModels(): AiModel[] {
+  const parsed = readJson<AiModel[]>(CUSTOM_KEY, []);
+  return Array.isArray(parsed)
+    ? parsed
+        .filter((m) => m && typeof m.id === "string" && typeof m.name === "string")
+        .map((m) => ({ ...m, custom: true }))
+    : [];
 }
 
-export async function deleteModel(id: string): Promise<void> {
-  const { data, error: readError } = await supabase
-    .from("ai_models")
-    .select("custom")
-    .eq("id", id)
-    .maybeSingle();
+export function saveCustomModels(list: AiModel[]) {
+  writeJson(CUSTOM_KEY, list);
+}
 
-  if (readError) throw readError;
-  if (!data) return;
+export function loadOverrides(): Record<string, Override> {
+  const o = readJson<Record<string, Override>>(OVERRIDE_KEY, {});
+  return o && typeof o === "object" ? o : {};
+}
 
-  if (data.custom) {
-    const { error } = await supabase
-      .from("ai_models")
-      .delete()
-      .eq("id", id);
+export function loadHiddenIds(): string[] {
+  const h = readJson<string[]>(HIDDEN_KEY, []);
+  return Array.isArray(h) ? h.filter((x) => typeof x === "string") : [];
+}
 
-    if (error) throw error;
+/** Simpan hasil edit sebuah model (bawaan maupun kustom). */
+export function updateModel(id: string, patch: Override) {
+  const customs = loadCustomModels();
+  const idx = customs.findIndex((c) => c.id === id);
+  if (idx >= 0) {
+    const next = [...customs];
+    next[idx] = { ...next[idx]!, ...patch };
+    if (!patch.logo) delete next[idx]!.logo;
+    saveCustomModels(next);
     return;
   }
-
-  // Built-in models are hidden, not permanently deleted.
-  const { error } = await supabase
-    .from("ai_models")
-    .update({
-      is_active: false,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
-
-  if (error) throw error;
+  const overrides = loadOverrides();
+  overrides[id] = { ...(overrides[id] ?? {}), ...patch };
+  writeJson(OVERRIDE_KEY, overrides);
 }
 
-export async function restoreBuiltins(): Promise<void> {
-  // BUILTIN_MODELS adalah array bawaan yang sudah ada di file lu.
-  const rows = BUILTIN_MODELS.map((model, index) => ({
-    ...toRow({ ...model, custom: false }, index),
-    is_active: true,
-    custom: false,
-  }));
-
-  const { error } = await supabase
-    .from("ai_models")
-    .upsert(rows, { onConflict: "id" });
-
-  if (error) throw error;
+/** Hapus model: kustom dibuang, bawaan disembunyikan. */
+export function deleteModel(id: string) {
+  const customs = loadCustomModels();
+  if (customs.some((c) => c.id === id)) {
+    saveCustomModels(customs.filter((c) => c.id !== id));
+    return;
+  }
+  const hidden = loadHiddenIds();
+  if (!hidden.includes(id)) writeJson(HIDDEN_KEY, [...hidden, id]);
 }
 
-const SELECTED_MODEL_KEY = "gma:ai:model";
-
-export function loadSelectedModelId(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(SELECTED_MODEL_KEY);
+/** Kembalikan model bawaan ke kondisi awal (batalkan edit & sembunyikan). */
+export function restoreBuiltins() {
+  writeJson(OVERRIDE_KEY, {});
+  writeJson(HIDDEN_KEY, []);
 }
 
-export function saveSelectedModelId(id: string): void {
+export function loadSelectedModelId(): string {
+  if (typeof window === "undefined") return DEFAULT_MODEL_ID;
+  return window.localStorage.getItem(SELECTED_KEY) || DEFAULT_MODEL_ID;
+}
+
+export function saveSelectedModelId(id: string) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(SELECTED_MODEL_KEY, id);
+  try {
+    window.localStorage.setItem(SELECTED_KEY, id);
+  } catch {
+    /* ignore */
+  }
 }
 
-export async function modelById(
-  id: string,
-): Promise<AiModel | undefined> {
-  const models = await allModels();
-  return models.find((model) => model.id === id);
+export function allModels(): AiModel[] {
+  const overrides = loadOverrides();
+  const hidden = new Set(loadHiddenIds());
+  const list = [...BUILTIN_MODELS, ...loadCustomModels()]
+    .filter((m) => !hidden.has(m.id))
+    .map((m) => ({ ...m, ...(overrides[m.id] ?? {}) }));
+  return list.length > 0 ? list : [BUILTIN_MODELS[0]!];
+}
+
+export function modelById(id: string | null | undefined, list: AiModel[]): AiModel {
+  return list.find((m) => m.id === id) ?? list[0] ?? BUILTIN_MODELS[0]!;
 }
