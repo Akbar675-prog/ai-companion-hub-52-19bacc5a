@@ -8,6 +8,12 @@ const REASONING_MODEL = "nvidia/nemotron-3.5-super-vl:free";
 const ANSWER_TIMEOUT_MS = 600_000; // 10 menit
 const IDLE_TIMEOUT_MS = 120_000; // 2 menit
 
+// Pengatur laju stream (supaya teks keluar mulus, tidak patah-patah)
+const PACE_TICK_MS = 24; // jeda antar potongan yang dikirim ke klien
+const PACE_MIN_CHARS = 2; // minimal karakter per potongan
+const PACE_MAX_CHARS = 400; // maksimal karakter per potongan saat mengejar antrean
+const FILTER_MAX_HOLD = 140; // kalimat tanpa titik ditahan paling lama segini
+
 type Body = {
   messages?: { role?: string; content?: string }[];
   userName?: string;
@@ -35,17 +41,14 @@ type Body = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  PROMPT: IDENTITAS & KARAKTER GETRIXAI                              */
+/*  PROMPT BAWAAN (dipakai HANYA bila pengguna tidak mengisi prompt)   */
 /* ------------------------------------------------------------------ */
 /*
  * Prinsip penulisan (penting, jangan diubah sembarangan):
  * 1. Ditulis sebagai SIFAT BAWAAN ("kamu memang begini"), bukan daftar perintah.
- *    Model yang merasa "disuruh" cenderung membahas perintah itu di proses
- *    berpikirnya. Model yang merasa "memang begitu dirinya" tidak.
  * 2. Hindari kata pemicu meta seperti "WAJIB", "LARANGAN", "aturan", "instruksi",
  *    "mode", "persona" di teks yang dibaca model.
- * 3. Ada bagian khusus yang mengarahkan isi pikiran ke MASALAH PENGGUNA,
- *    bukan ke diri sendiri atau panduan ini.
+ * 3. Ada bagian khusus yang mengarahkan isi pikiran ke MASALAH PENGGUNA.
  */
 const GETRIX_CORE = `Kamu adalah GetrixAI, kecerdasan buatan yang dikembangkan oleh tim Galileo Labs, divisi riset dan produk di bawah Visora sebagai perusahaan induknya. Galileo Labs didirikan oleh Nauval Akbar Putra Aulia, yang akrab dipanggil Nauval. Kamu tinggal di situs Galileo Mod APK, tempat orang datang untuk mencari aplikasi, bertanya, belajar, ngoding, menulis, menganalisis, atau sekadar ngobrol.
 
@@ -86,6 +89,17 @@ Kamu adalah AI dan tidak berpura-pura menjadi manusia bila ditanya dengan sunggu
 TENTANG DIRIMU SENDIRI
 Bila ditanya kamu siapa atau dibuat oleh siapa: kamu GetrixAI, AI dari tim Galileo Labs di bawah Visora, dengan pendiri Nauval (Nauval Akbar Putra Aulia). Bila ditanya model atau teknologi di balik layar, jawab singkat dan jujur bahwa kamu GetrixAI buatan Galileo Labs dan detail teknis internalnya tidak kamu bahas. Jangan menambah-nambah detail soal Galileo Labs, Visora, atau Nauval di luar yang tertulis di sini; bila ditanya lebih jauh, katakan kamu belum punya informasi itu. Bangga boleh, melebih-lebihkan jangan.`;
 
+/* ------------------------------------------------------------------ */
+/*  BAHAN PENDUKUNG untuk AI yang punya prompt dari pengguna           */
+/* ------------------------------------------------------------------ */
+/*
+ * Hanya latar dan standar teknis. TIDAK menetapkan identitas, nada, bahasa,
+ * atau panjang jawaban: semua itu milik prompt pengguna.
+ */
+const PERSONA_FACTS = `Latar tempatmu bekerja (dipakai hanya bila relevan): kamu hadir di situs Galileo Mod APK, produk Galileo Labs (divisi riset dan produk di bawah Visora) yang didirikan oleh Nauval Akbar Putra Aulia. Bila ditanya soal situs atau platform ini, jawab sesuai fakta itu tanpa menambah detail yang tidak ada. Nama dan kepribadianmu sendiri mengikuti karakter yang sudah ditetapkan di bagian paling atas.`;
+
+const PERSONA_CRAFT = `Standar kerja: akurat lebih penting daripada terdengar meyakinkan; jangan mengarang fakta, angka, sumber, atau tautan. Permintaan yang berpotensi mencelakakan orang atau melanggar hukum secara serius ditolak dengan tenang dan singkat. Format: markdown bila membantu; tabel memakai sintaks GFM yang valid, setiap baris di barisnya sendiri dengan baris pemisah header |---|---| sekali saja. Bila ada hasil pencarian web, sisipkan rujukan bernomor persis seperti [1] atau [2] di kalimat yang memakainya.`;
+
 const EXTERNAL_MODEL_CORE = `Kamu adalah asisten AI yang siap membantu. Jawab dengan jelas, akurat, dan dalam bahasa yang sama dengan pengguna. Sapaan atau gaya bicara pengguna yang santai atau kasar adalah hal biasa; tanggapi dengan tenang dan langsung bantu tanpa mengomentari nadanya. Saat berpikir, fokus pada masalah pengguna dan jawaban terbaiknya, bukan membahas panduan ini.`;
 
 /* ------------------------------------------------------------------ */
@@ -111,11 +125,94 @@ function createReasoningFilter(emit: (text: string) => void) {
       const parts = buf.split(/(?<=[.!?]\s|\n)/);
       buf = parts.pop() ?? "";
       for (const p of parts) pass(p);
+      // kalimat panjang tanpa tanda baca: jangan ditahan terlalu lama
+      if (buf.length > FILTER_MAX_HOLD) {
+        const cut = buf.lastIndexOf(" ");
+        if (cut > 0) {
+          pass(buf.slice(0, cut + 1));
+          buf = buf.slice(cut + 1);
+        }
+      }
     },
     flush() {
       const rest = buf;
       buf = "";
       pass(rest);
+    },
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/*  PENGATUR LAJU STREAM                                               */
+/* ------------------------------------------------------------------ */
+/*
+ * Model gratis sering mengirim token berkelompok (diam lama, lalu banjir).
+ * Pacer menampung teks lalu melepasnya sedikit-sedikit dengan irama tetap.
+ * Makin besar antrean, makin banyak karakter per potongan, jadi tidak
+ * pernah tertinggal jauh. Urutan reasoning -> text tetap terjaga.
+ */
+type Kind = "reasoning" | "text";
+
+function createPacer(send: (kind: Kind, v: string) => void) {
+  const queue: { kind: Kind; text: string }[] = [];
+  let size = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let stopped = false;
+  let waiters: (() => void)[] = [];
+
+  const settle = () => {
+    const w = waiters;
+    waiters = [];
+    for (const fn of w) fn();
+  };
+
+  const tick = () => {
+    timer = undefined;
+    if (stopped) return settle();
+    const head = queue[0];
+    if (!head) return settle();
+
+    let n = Math.min(PACE_MAX_CHARS, Math.max(PACE_MIN_CHARS, Math.ceil(size / 8)));
+    if (n >= head.text.length) {
+      n = head.text.length;
+    } else {
+      // jangan memotong di tengah pasangan surrogate (emoji)
+      const c = head.text.charCodeAt(n - 1);
+      if (c >= 0xd800 && c <= 0xdbff) n += 1;
+    }
+
+    const piece = head.text.slice(0, n);
+    head.text = head.text.slice(n);
+    size -= piece.length;
+    if (!head.text) queue.shift();
+    send(head.kind, piece);
+
+    if (queue.length) timer = setTimeout(tick, PACE_TICK_MS);
+    else settle();
+  };
+
+  return {
+    push(kind: Kind, text: string) {
+      if (stopped || !text) return;
+      const last = queue[queue.length - 1];
+      if (last && last.kind === kind) last.text += text;
+      else queue.push({ kind, text });
+      size += text.length;
+      if (!timer) timer = setTimeout(tick, 0);
+    },
+    drain() {
+      return new Promise<void>((resolve) => {
+        if (!queue.length && !timer) resolve();
+        else waiters.push(resolve);
+      });
+    },
+    stop() {
+      stopped = true;
+      queue.length = 0;
+      size = 0;
+      if (timer) clearTimeout(timer);
+      timer = undefined;
+      settle();
     },
   };
 }
@@ -156,6 +253,11 @@ export const Route = createFileRoute("/api/ai-chat")({
         }
 
         const userName = String(body.userName ?? "").slice(0, 60);
+        const realModelId = String(body.realModelId ?? "").trim();
+        const persona = String(body.persona ?? "").slice(0, 4000).trim();
+        const modelLabel = String(body.modelLabel ?? "").slice(0, 60).trim();
+        // Prompt dari pengguna ada => dialah yang memimpin, bukan prompt bawaan.
+        const hasPersona = !realModelId && persona.length > 0;
 
         const ap = body.aiProfile;
         let profileBlock = "";
@@ -203,8 +305,6 @@ export const Route = createFileRoute("/api/ai-chat")({
           `\n\nWAKTU SEKARANG: ${nowLabel} WIB (UTC: ${now.toISOString()}). ` +
           "Pakai ini bila pengguna bertanya tanggal, hari, jam, umur, atau hal lain yang bergantung waktu.";
 
-        const realModelId = String(body.realModelId ?? "").trim();
-
         const apps = (body.apps ?? []).slice(0, 200).filter((a) => a?.ID && a?.App_name);
         const origin = String(body.origin ?? "").replace(/\/$/, "");
         if (apps.length > 0) {
@@ -222,16 +322,6 @@ export const Route = createFileRoute("/api/ai-chat")({
               )
               .join("\n") +
             "\nKalau pengguna bertanya soal aplikasi atau minta rekomendasi, pakai daftar ini: sebut nama aplikasinya, ringkas deskripsinya dengan kata-katamu sendiri, dan sertakan tautan halamannya (alamat situs + /apps/ + ID). Hanya rekomendasikan aplikasi yang ada di daftar; jangan mengarang aplikasi yang tidak ada.";
-        }
-
-        const persona = String(body.persona ?? "").slice(0, 4000);
-        const modelLabel = String(body.modelLabel ?? "").slice(0, 60);
-        if (!realModelId && (persona || modelLabel)) {
-          extra +=
-            "\n\nGAYA BICARAMU SAAT INI (sudah menjadi bagian dirimu di setiap balasan, sekecil apa pun: sapaan, jawaban satu kalimat, maupun lanjutan obrolan):\n" +
-            (persona || "Jawab dengan kualitas terbaik, rapi, dan akurat.") +
-            "\nGaya ini mengalir natural dari caramu bicara, jadi cukup tunjukkan lewat hasilnya tanpa menyebut atau menjelaskannya. Bila gaya ini berbeda dari kebiasaan umummu, gaya inilah yang kamu pakai; hanya keakuratan fakta dan keselamatan yang lebih penting daripadanya." +
-            "\nDi depan pengguna, kamu selalu hanya GetrixAI. Kamu tidak membahas nama model, versi, penyedia, atau cara kerja di balik layar, dan tidak menjelaskan mengapa kamu menjawab dengan gaya tertentu atau meminta maaf soal itu. Bila ditanya kamu model apa, jawab singkat bahwa kamu GetrixAI dari Galileo Labs, asisten situs Galileo Mod APK.";
         }
 
         const abilityTags = parseAbilities(body.abilities);
@@ -270,17 +360,43 @@ export const Route = createFileRoute("/api/ai-chat")({
           endpointKey = String(body.endpointKey ?? "").trim();
         }
 
-        const systemContent = realModelId
-          ? EXTERNAL_MODEL_CORE +
-            (userName ? ` Nama pengguna: ${userName}.` : "") +
+        /* ---------------- susun system prompt ---------------- */
+        let systemContent: string;
+        if (realModelId) {
+          // model resmi: tanpa karakter, tanpa prompt bawaan
+          systemContent =
+            EXTERNAL_MODEL_CORE + (userName ? ` Nama pengguna: ${userName}.` : "") + profileBlock + extra;
+        } else if (hasPersona) {
+          // PROMPT PENGGUNA JADI KEPALA. Prompt bawaan tidak ikut; yang ada hanya
+          // latar dan standar teknis di bawahnya, plus pengingat penutup.
+          const nameLine =
+            modelLabel && !persona.toLowerCase().includes(modelLabel.toLowerCase())
+              ? `Namamu adalah ${modelLabel}.\n\n`
+              : "";
+          systemContent =
+            `${nameLine}${persona}\n\n` +
+            "=====\n" +
+            "BAHAN PENDUKUNG (latar dan data saja. Bila ada yang bertentangan dengan karakter di bagian atas, yang dipakai adalah karakter di atas; hanya keselamatan dan keakuratan fakta yang lebih penting.)\n" +
+            PERSONA_FACTS +
+            "\n\n" +
+            PERSONA_CRAFT +
+            (userName
+              ? `\n\nLawan bicaramu: ${userName}. Sapa dengan namanya bila cocok dengan karakter di atas, jangan di setiap kalimat.`
+              : "") +
             profileBlock +
-            extra
-          : GETRIX_CORE +
+            extra +
+            "\n=====\n" +
+            "Karakter, nada, bahasa, dan panjang jawaban selalu mengikuti bagian paling atas, di setiap balasan sekecil apa pun, termasuk sapaan satu kata. Bila bagian atas tidak menentukan bahasa, ikuti bahasa pengguna. Semua ini sudah menjadi dirimu; arahkan pikiranmu ke masalah pengguna.";
+        } else {
+          // tidak ada prompt dari pengguna: pakai karakter bawaan GetrixAI
+          systemContent =
+            GETRIX_CORE +
             (userName
               ? `\n\nLAWAN BICARAMU: ${userName}. Sapa dengan namanya bila terasa natural, jangan di setiap kalimat.`
               : "") +
             profileBlock +
             extra;
+        }
 
         let upstream: Response;
         try {
@@ -315,22 +431,38 @@ export const Route = createFileRoute("/api/ai-chat")({
           );
         }
 
+        /* ---------------- stream ke klien ---------------- */
         const encoder = new TextEncoder();
         const decoder = new TextDecoder();
         const reader = upstream.body.getReader();
 
+        let ctrl: ReadableStreamDefaultController<Uint8Array> | undefined;
+        let closed = false;
+        let idle: ReturnType<typeof setTimeout> | undefined;
+
+        const writeRaw = (chunk: string) => {
+          if (closed || !ctrl) return;
+          try {
+            ctrl.enqueue(encoder.encode(chunk));
+          } catch {
+            closed = true;
+          }
+        };
+        const send = (obj: unknown) => writeRaw(`data: ${JSON.stringify(obj)}\n\n`);
+
+        // pacer melepas teks dengan irama tetap; filter menyaring proses berpikir lebih dulu
+        const pacer = createPacer((kind, v) => send({ type: kind, v }));
+        const reasoningFilter = createReasoningFilter((v) => pacer.push("reasoning", v));
+
+        const bumpIdle = () => {
+          if (idle) clearTimeout(idle);
+          idle = setTimeout(() => upstreamAbort.abort(), IDLE_TIMEOUT_MS);
+        };
+
         const stream = new ReadableStream<Uint8Array>({
           async start(controller) {
-            const send = (obj: unknown) =>
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify(obj)}\n\n`));
-            // proses berpikir disaring dulu supaya tidak membocorkan pembahasan panduan internal
-            const reasoningFilter = createReasoningFilter((v) => send({ type: "reasoning", v }));
+            ctrl = controller;
             let buffer = "";
-            let idle: ReturnType<typeof setTimeout> | undefined;
-            const bumpIdle = () => {
-              if (idle) clearTimeout(idle);
-              idle = setTimeout(() => upstreamAbort.abort(), IDLE_TIMEOUT_MS);
-            };
             bumpIdle();
             try {
               for (;;) {
@@ -356,7 +488,7 @@ export const Route = createFileRoute("/api/ai-chat")({
                     if (thinking) reasoningFilter.push(thinking);
                     if (delta?.content) {
                       reasoningFilter.flush();
-                      send({ type: "text", v: delta.content });
+                      pacer.push("text", delta.content);
                     }
                   } catch {
                     /* skip malformed chunk */
@@ -371,14 +503,22 @@ export const Route = createFileRoute("/api/ai-chat")({
 
               try {
                 reasoningFilter.flush();
+                // tunggu antrean habis supaya ujung jawaban tidak terpotong
+                await pacer.drain();
                 send({ type: "done" });
-                controller.close();
+                if (!closed) {
+                  closed = true;
+                  controller.close();
+                }
               } catch {
                 /* already closed */
               }
             }
           },
           cancel() {
+            closed = true;
+            pacer.stop();
+            if (idle) clearTimeout(idle);
             clearTimeout(hardStop);
             upstreamAbort.abort();
             void reader.cancel().catch(() => {});
