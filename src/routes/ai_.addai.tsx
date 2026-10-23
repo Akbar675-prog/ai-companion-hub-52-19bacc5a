@@ -52,15 +52,12 @@ function AddAiPage() {
   const [tagline, setTagline] = useState("");
   const [persona, setPersona] = useState("");
   const [markNew, setMarkNew] = useState(true);
-  const [realModel, setRealModel] = useState(false);
-  const [modelType, setModelType] = useState("");
   const [abilities, setAbilities] = useState("");
   const [endpointUrl, setEndpointUrl] = useState("");
   const [endpointKey, setEndpointKey] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
 
   const refresh = () => setList(allModels());
   useEffect(refresh, []);
@@ -72,8 +69,6 @@ function AddAiPage() {
     setTagline("");
     setPersona("");
     setMarkNew(true);
-    setRealModel(false);
-    setModelType("");
     setAbilities("");
     setEndpointUrl("");
     setEndpointKey("");
@@ -86,8 +81,6 @@ function AddAiPage() {
     setTagline(m.tagline ?? "");
     setPersona(m.persona ?? "");
     setMarkNew(Boolean(m.isNew));
-    setRealModel(Boolean(m.realModel));
-    setModelType(m.modelType ?? "");
     setAbilities(m.abilities ?? "");
     setEndpointUrl(m.endpointUrl ?? "");
     setEndpointKey(m.endpointKey ?? "");
@@ -103,34 +96,30 @@ function AddAiPage() {
       setError("Nama AI minimal 2 karakter.");
       return;
     }
+    
     const ep = endpointUrl.trim();
-    if (realModel) {
-      const okModel = ep
-        ? /^[\w.:\/-]+$/.test(modelType.trim())
-        : /^[\w.-]+\/[\w.:-]+$/.test(modelType.trim());
-      if (!okModel) {
-        setError("Model type harus seperti: nvidia/nemotron-3.5-lightning:free");
-        return;
-      }
-      if (ep && !/^https:\/\/\S+$/i.test(ep)) {
-        setError("Endpoint harus berupa URL https://");
-        return;
-      }
-    } else if (persona.trim().length < 10) {
+
+    if (ep && !/^https:\/\/\S+$/i.test(ep)) {
+      setError("Endpoint harus berupa URL https://");
+      return;
+    }
+
+    if (persona.trim().length < 10) {
       setError("Prompting AI minimal 10 karakter supaya gayanya jelas.");
       return;
     }
+
     const patch = {
       name: name.trim().slice(0, 40),
       tagline: tagline.trim().slice(0, 120) || "AI kustom buatan kamu.",
-      persona: realModel ? "" : persona.trim().slice(0, 4000),
+      persona: persona.trim().slice(0, 4000),
       logo: logo.trim() || undefined,
       isNew: markNew,
-      realModel,
-      modelType: realModel ? modelType.trim().slice(0, 120) : undefined,
+      realModel: false, // Dipaksa false karena kita menggunakan API Proxy Anda
+      modelType: undefined,
       abilities: parseAbilities(abilities).join(", ") || undefined,
-      endpointUrl: realModel && ep ? ep.slice(0, 300) : undefined,
-      endpointKey: realModel && ep ? endpointKey.trim().slice(0, 400) || undefined : undefined,
+      endpointUrl: ep ? ep.slice(0, 300) : undefined,
+      endpointKey: ep ? endpointKey.trim().slice(0, 400) || undefined : undefined,
     };
 
     if (editingId) {
@@ -146,7 +135,6 @@ function AddAiPage() {
     resetForm();
     refresh();
   }
-
 
   function remove(m: AiModel) {
     deleteModel(m.id);
@@ -217,21 +205,6 @@ function AddAiPage() {
             />
           </Field>
 
-          <label className="flex items-start gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={realModel}
-              onChange={(e) => setRealModel(e.target.checked)}
-              className="mt-0.5 size-4 accent-primary"
-            />
-            <span>
-              Real model
-              <span className="block text-xs text-muted-foreground">
-                Pakai model resmi (bukan prompting). Isi model type di bawah.
-              </span>
-            </span>
-          </label>
-
           <Field label="Kemampuan khusus (pisahkan dengan koma)">
             <input
               value={abilities}
@@ -247,57 +220,43 @@ function AddAiPage() {
             </span>
           </Field>
 
-          {realModel ? (
-            <>
-              <Field label="Model type">
-                <input
-                  value={modelType}
-                  onChange={(e) => setModelType(e.target.value)}
-                  placeholder="nvidia/nemotron-3.5-lightning:free"
-                  className={inputClass}
-                  autoCapitalize="none"
-                  spellCheck={false}
-                />
-              </Field>
-              <Field label="Endpoint API (opsional, kosong = OpenRouter)">
-                <input
-                  value={endpointUrl}
-                  onChange={(e) => setEndpointUrl(e.target.value)}
-                  placeholder="https://api.openai.com/v1"
-                  className={inputClass}
-                  autoCapitalize="none"
-                  spellCheck={false}
-                />
-                <span className="mt-1 block text-xs text-muted-foreground">
-                  Endpoint apa pun yang kompatibel format OpenAI (OpenAI, Groq, Together, DeepSeek, Ollama publik, dll).
-                </span>
-              </Field>
-              {endpointUrl.trim() && (
-                <Field label="API key endpoint">
-                  <input
-                    type="password"
-                    value={endpointKey}
-                    onChange={(e) => setEndpointKey(e.target.value)}
-                    placeholder="sk-..."
-                    className={inputClass}
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </Field>
-              )}
-            </>
-          ) : (
-            <Field label="Prompting AI (gaya & aturan menjawab)">
-              <textarea
-                value={persona}
-                onChange={(e) => setPersona(e.target.value)}
-                rows={5}
-                placeholder="Contoh: Jawab formal, selalu beri contoh nyata, dan akhiri dengan ringkasan tiga poin."
-                className={`${inputClass} resize-y`}
+          <Field label="Prompting AI (gaya & aturan menjawab)">
+            <textarea
+              value={persona}
+              onChange={(e) => setPersona(e.target.value)}
+              rows={5}
+              placeholder="Contoh: Jawab formal, selalu beri contoh nyata, dan akhiri dengan ringkasan tiga poin."
+              className={`${inputClass} resize-y`}
+            />
+          </Field>
+
+          <Field label="Endpoint API (opsional, kosong = Proxy Utama)">
+            <input
+              value={endpointUrl}
+              onChange={(e) => setEndpointUrl(e.target.value)}
+              placeholder="https://proxy-ai.visora.my.id/api/model/@ga-claude_opus_5.5/chat/completions"
+              className={inputClass}
+              autoCapitalize="none"
+              spellCheck={false}
+            />
+            <span className="mt-1 block text-xs text-muted-foreground">
+              Biarkan kosong untuk menggunakan Proxy Claude Opus 5.5 bawaan. Isi jika ingin memakai API OpenAI/Groq/DeepSeek milikmu sendiri.
+            </span>
+          </Field>
+
+          {endpointUrl.trim() && (
+            <Field label="API key endpoint">
+              <input
+                type="password"
+                value={endpointKey}
+                onChange={(e) => setEndpointKey(e.target.value)}
+                placeholder="sk-..."
+                className={inputClass}
+                autoComplete="off"
+                spellCheck={false}
               />
             </Field>
           )}
-
 
           <label className="flex items-center gap-2 text-sm">
             <input
