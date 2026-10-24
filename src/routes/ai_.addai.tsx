@@ -129,10 +129,7 @@ function AddAiPage() {
     }
     const ep = endpointUrl.trim();
     if (realModel) {
-      const okModel = ep
-        ? /^[\w.:\/-]+$/.test(modelType.trim())
-        : /^[\w.-]+\/[\w.:-]+$/.test(modelType.trim());
-      if (!okModel) {
+      if (modelType.trim() && !/^[\w.:\/-]+$/.test(modelType.trim())) {
         setError("Model type harus seperti: nvidia/nemotron-3.5-lightning:free");
         return;
       }
@@ -151,7 +148,7 @@ function AddAiPage() {
       logo: logo.trim() || undefined,
       isNew: markNew,
       realModel,
-      modelType: realModel ? modelType.trim().slice(0, 120) : undefined,
+      modelType: realModel && modelType.trim() ? modelType.trim().slice(0, 120) : undefined,
       abilities: parseAbilities(abilities).join(", ") || undefined,
       endpointUrl: realModel && ep ? ep.slice(0, 300) : undefined,
       endpointKey: realModel && ep ? endpointKey.trim().slice(0, 400) || undefined : undefined,
@@ -274,9 +271,9 @@ function AddAiPage() {
               className="mt-0.5 size-4 accent-primary"
             />
             <span>
-              Real model
+              Real model (opsional)
               <span className="block text-xs text-muted-foreground">
-                Pakai model resmi (bukan prompting). Isi model type di bawah.
+                Centang hanya jika ingin memakai model resmi, bukan prompting.
               </span>
             </span>
           </label>
@@ -298,7 +295,7 @@ function AddAiPage() {
 
           {realModel ? (
             <>
-              <Field label="Model type">
+              <Field label="Model type (opsional)">
                 <input
                   value={modelType}
                   onChange={(e) => setModelType(e.target.value)}

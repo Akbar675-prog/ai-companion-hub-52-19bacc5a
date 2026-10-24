@@ -75,7 +75,6 @@ export async function saveStoredAiModel(model: AiModel): Promise<AiModel> {
     modelType: data.model_type,
     endpointUrl: data.endpoint_url,
     endpointKey: data.endpoint_key,
-    user_id: data.user_id,
   } as StoredAiModel);
 }
 
