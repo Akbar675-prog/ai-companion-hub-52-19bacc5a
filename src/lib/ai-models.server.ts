@@ -1,6 +1,6 @@
 import type { AiModel } from "./ai-models";
 
-export type StoredAiModel = AiModel & { user_id: string };
+export type StoredAiModel = AiModel;
 
 function toModel(row: StoredAiModel): AiModel {
   return {
@@ -24,7 +24,7 @@ export async function listStoredAiModels(): Promise<AiModel[]> {
   const { data, error } = await supabaseAdmin
     .from("ai_models")
     .select(
-      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, abilities, endpoint_url, endpoint_key, user_id",
+      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, abilities, endpoint_url, endpoint_key",
     )
     .order("created_at", { ascending: true });
 
@@ -37,19 +37,17 @@ export async function listStoredAiModels(): Promise<AiModel[]> {
       modelType: row.model_type,
       endpointUrl: row.endpoint_url,
       endpointKey: row.endpoint_key,
-      user_id: row.user_id,
     } as StoredAiModel),
   );
 }
 
-export async function saveStoredAiModel(ownerId: string, model: AiModel): Promise<AiModel> {
+export async function saveStoredAiModel(model: AiModel): Promise<AiModel> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
     .from("ai_models")
     .upsert(
       {
         id: model.id,
-        user_id: ownerId,
         name: model.name,
         tagline: model.tagline,
         persona: model.persona,
@@ -65,7 +63,7 @@ export async function saveStoredAiModel(ownerId: string, model: AiModel): Promis
       { onConflict: "id" },
     )
     .select(
-      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, abilities, endpoint_url, endpoint_key, user_id",
+      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, abilities, endpoint_url, endpoint_key",
     )
     .single();
 

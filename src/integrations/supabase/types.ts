@@ -30,7 +30,6 @@ export type Database = {
           real_model: boolean
           tagline: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           abilities?: string | null
@@ -47,7 +46,6 @@ export type Database = {
           real_model?: boolean
           tagline: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           abilities?: string | null
@@ -64,7 +62,6 @@ export type Database = {
           real_model?: boolean
           tagline?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }

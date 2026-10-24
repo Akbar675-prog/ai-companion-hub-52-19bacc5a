@@ -26,7 +26,7 @@ export const listAiModelsFn = createServerFn({ method: "POST" })
 export const saveAiModelFn = createServerFn({ method: "POST" })
   .middleware([requireAccountAuth])
   .inputValidator((data: unknown) => modelSchema.parse(data))
-  .handler(async ({ data, context }) => saveStoredAiModel(context.userId, data as AiModel));
+  .handler(async ({ data }) => saveStoredAiModel(data as AiModel));
 
 export const deleteAiModelFn = createServerFn({ method: "POST" })
   .middleware([requireAccountAuth])
