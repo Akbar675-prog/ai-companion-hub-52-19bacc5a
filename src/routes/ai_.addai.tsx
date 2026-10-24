@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Check, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 import { NewBadge } from "@/components/NewBadge";
 import { ABILITIES, parseAbilities } from "@/lib/ai-abilities";
+import { useAccount } from "@/lib/use-account";
+import { deleteAiModelFn, listAiModelsFn, saveAiModelFn } from "@/lib/ai-models.functions";
 import {
   allModels,
   deleteModel,
-  loadCustomModels,
   restoreBuiltins,
-  saveCustomModels,
   updateModel,
   type AiModel,
 } from "@/lib/ai-models";
@@ -46,7 +46,9 @@ const inputClass =
   "w-full rounded-2xl bg-background px-4 py-3 text-sm outline-none ring-1 ring-border focus:ring-2 focus:ring-primary";
 
 function AddAiPage() {
+  const { userId } = useAccount();
   const [list, setList] = useState<AiModel[]>([]);
+  const [cloudModels, setCloudModels] = useState<AiModel[]>([]);
   const [name, setName] = useState("");
   const [logo, setLogo] = useState("");
   const [tagline, setTagline] = useState("");
@@ -62,8 +64,26 @@ function AddAiPage() {
   const [error, setError] = useState<string | null>(null);
 
 
-  const refresh = () => setList(allModels());
-  useEffect(refresh, []);
+  const refresh = (customModels = cloudModels) => setList(allModels(userId ? customModels : []));
+
+  useEffect(() => {
+    let alive = true;
+    if (!userId) {
+      setCloudModels([]);
+      setList(allModels([]));
+      return;
+    }
+    void listAiModelsFn()
+      .then((models) => {
+        if (!alive) return;
+        setCloudModels(models);
+        setList(allModels(models));
+      })
+      .catch((e) => alive && setError(e instanceof Error ? e.message : "Gagal memuat AI."));
+    return () => {
+      alive = false;
+    };
+  }, [userId]);
 
   function resetForm() {
     setEditingId(null);
@@ -96,9 +116,13 @@ function AddAiPage() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function submit() {
+  async function submit() {
     setError(null);
     setSaved(null);
+    if (!userId) {
+      setError("Masuk dulu untuk menyimpan AI ke Supabase.");
+      return;
+    }
     if (name.trim().length < 2) {
       setError("Nama AI minimal 2 karakter.");
       return;
@@ -133,26 +157,51 @@ function AddAiPage() {
       endpointKey: realModel && ep ? endpointKey.trim().slice(0, 400) || undefined : undefined,
     };
 
-    if (editingId) {
-      updateModel(editingId, patch);
-      setSaved("Perubahan disimpan.");
-    } else {
-      saveCustomModels([
-        ...loadCustomModels(),
-        { id: slugId(name), ...patch, custom: true } as AiModel,
-      ]);
-      setSaved("AI berhasil ditambahkan.");
+    try {
+      if (editingId && !editingId.startsWith("custom-")) {
+        updateModel(editingId, patch);
+        setSaved("Perubahan disimpan di perangkat ini.");
+        resetForm();
+        refresh();
+        return;
+      }
+
+      const model = {
+        id: editingId ?? slugId(name),
+        ...patch,
+        custom: true as const,
+      } as AiModel;
+      const savedModel = await saveAiModelFn({ data: model });
+      const next = cloudModels.some((m) => m.id === savedModel.id)
+        ? cloudModels.map((m) => (m.id === savedModel.id ? savedModel : m))
+        : [...cloudModels, savedModel];
+      setCloudModels(next);
+      setList(allModels(next));
+      setSaved(editingId ? "Perubahan disimpan ke Supabase." : "AI berhasil ditambahkan ke Supabase.");
+      resetForm();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal menyimpan AI ke Supabase.");
     }
-    resetForm();
-    refresh();
   }
 
 
-  function remove(m: AiModel) {
-    deleteModel(m.id);
-    if (editingId === m.id) resetForm();
-    setSaved(`${m.name} dihapus.`);
-    refresh();
+  async function remove(m: AiModel) {
+    setError(null);
+    try {
+      if (m.custom && userId) {
+        await deleteAiModelFn({ data: { id: m.id } });
+        const next = cloudModels.filter((model) => model.id !== m.id);
+        setCloudModels(next);
+        setList(allModels(next));
+      } else {
+        deleteModel(m.id);
+        refresh();
+      }
+      if (editingId === m.id) resetForm();
+      setSaved(`${m.name} dihapus.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal menghapus AI dari Supabase.");
+    }
   }
 
   return (
@@ -170,8 +219,8 @@ function AddAiPage() {
 
       <main className="mx-auto w-full max-w-2xl space-y-8 px-4 pt-6">
         <p className="text-sm text-muted-foreground">
-          Bikin AI kamu sendiri, atau ubah dan hapus AI yang sudah ada. Semua perubahan langsung
-          terlihat di kotak pilihan model pada halaman chat.
+          AI di halaman ini adalah katalog global. Setelah disimpan, model langsung tersedia untuk
+          semua pengguna yang login.
         </p>
 
         <section className="space-y-4 rounded-3xl border border-border/60 bg-surface-variant/40 p-4 md:p-6">
@@ -319,7 +368,7 @@ function AddAiPage() {
 
           <button
             type="button"
-            onClick={submit}
+            onClick={() => void submit()}
             className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
           >
             {editingId ? (
@@ -387,7 +436,7 @@ function AddAiPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => remove(m)}
+                    onClick={() => void remove(m)}
                     aria-label={`Hapus ${m.name}`}
                     className="rounded-full p-2 text-muted-foreground transition hover:bg-accent hover:text-destructive"
                   >

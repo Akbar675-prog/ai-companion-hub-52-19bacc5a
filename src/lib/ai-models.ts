@@ -166,10 +166,10 @@ export function saveSelectedModelId(id: string) {
   }
 }
 
-export function allModels(): AiModel[] {
+export function allModels(customModels: AiModel[] = []): AiModel[] {
   const overrides = loadOverrides();
   const hidden = new Set(loadHiddenIds());
-  const list = [...BUILTIN_MODELS, ...loadCustomModels()]
+  const list = [...BUILTIN_MODELS, ...customModels]
     .filter((m) => !hidden.has(m.id))
     .map((m) => ({ ...m, ...(overrides[m.id] ?? {}) }));
   return list.length > 0 ? list : [BUILTIN_MODELS[0]!];

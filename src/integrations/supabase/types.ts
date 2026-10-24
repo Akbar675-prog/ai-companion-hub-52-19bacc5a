@@ -14,6 +14,60 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_models: {
+        Row: {
+          abilities: string | null
+          created_at: string
+          custom: boolean
+          endpoint_key: string | null
+          endpoint_url: string | null
+          id: string
+          is_new: boolean
+          logo: string | null
+          model_type: string | null
+          name: string
+          persona: string
+          real_model: boolean
+          tagline: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          abilities?: string | null
+          created_at?: string
+          custom?: boolean
+          endpoint_key?: string | null
+          endpoint_url?: string | null
+          id: string
+          is_new?: boolean
+          logo?: string | null
+          model_type?: string | null
+          name: string
+          persona?: string
+          real_model?: boolean
+          tagline: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          abilities?: string | null
+          created_at?: string
+          custom?: boolean
+          endpoint_key?: string | null
+          endpoint_url?: string | null
+          id?: string
+          is_new?: boolean
+          logo?: string | null
+          model_type?: string | null
+          name?: string
+          persona?: string
+          real_model?: boolean
+          tagline?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       apps: {
         Row: {
           apk_content_type: string | null

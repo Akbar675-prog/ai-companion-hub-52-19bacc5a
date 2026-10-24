@@ -184,7 +184,7 @@ function CitationPill({
         loading="lazy"
       />
       <span className="truncate">{siteNameOf(source)}</span>
-      <span className="shrink-0 text-muted-foreground">+{index}</span>
+      <span className="shrink-0 text-muted-foreground">+ {index}</span>
     </a>
   );
 }

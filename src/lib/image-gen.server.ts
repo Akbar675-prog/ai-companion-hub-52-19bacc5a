@@ -147,11 +147,11 @@ async function fetchImageBytes(
         }
 
         // JIKA 3040: Kapasitas penuh. Wajib Retry.
-        if (cfCode === 3040 || res.status === 429) {
+        if (cfCode === 3040 || res.status === 429 || res.status === 403) {
           lastError = "Server Cloudflare sedang sibuk (Kapasitas Penuh)";
-          console.warn(`[Cloudflare 3040] Attempt ${attempt + 1} gagal. Mencoba lagi...`);
+          console.warn(`[Cloudflare 3040/403] Attempt ${attempt + 1} gagal. Mencoba lagi...`);
           // Exponential backoff + Jitter (acak) agar tidak menabrak server bersamaan
-          const waitMs = 1500 * (attempt + 1) + Math.floor(Math.random() * 500);
+          const waitMs = 2000 * (attempt + 1) + Math.floor(Math.random() * 1000);
           await sleep(waitMs);
           continue;
         }

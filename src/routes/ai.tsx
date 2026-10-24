@@ -11,6 +11,7 @@ import type { AiPluginId } from "@/lib/ai-plugins";
 import { generateImageFn } from "@/lib/image-gen.functions";
 import { getAiProfileFn } from "@/lib/ai-profile.functions";
 import { chatCreditsFn, recordChatUsageFn } from "@/lib/ai-credits.functions";
+import { listAiModelsFn } from "@/lib/ai-models.functions";
 import type { AiProfile } from "@/lib/ai-profile.server";
 import { useAccount } from "@/lib/use-account";
 import {
@@ -123,19 +124,35 @@ function AiChatPage() {
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    // Selalu mulai dari chat baru saat halaman /ai dibuka.
-    // Riwayat tetap dimuat, tapi tidak otomatis dibuka.
+    // Memuat riwayat, tapi tidak menetapkan activeId secara otomatis ke thread terakhir.
+    // Pengguna akan memulai chat baru secara default.
     setThreads(loadThreads(userId));
     setActiveId(null);
   }, [userId]);
 
   // Daftar model (termasuk AI buatan pengguna dari /ai/addai) + pilihan terakhir.
   useEffect(() => {
-    const list = allModels();
-    setModels(list);
-    const saved = loadSelectedModelId();
-    setModelId(list.some((m) => m.id === saved) ? saved : DEFAULT_MODEL_ID);
-  }, []);
+    let alive = true;
+    const applyModels = (list: AiModel[]) => {
+      if (!alive) return;
+      setModels(list);
+      const saved = loadSelectedModelId();
+      setModelId(list.some((m) => m.id === saved) ? saved : DEFAULT_MODEL_ID);
+    };
+
+    const localList = allModels([]);
+    applyModels(localList);
+    if (userId) {
+      void listAiModelsFn()
+        .then((customModels) => applyModels(allModels(customModels)))
+        .catch(() => {
+          // Tetap gunakan model bawaan/local bila Supabase belum tersedia.
+        });
+    }
+    return () => {
+      alive = false;
+    };
+  }, [userId]);
 
 
   // Profil GetrixAI + kredit chat (khusus pengguna yang login).
@@ -440,12 +457,15 @@ function AiChatPage() {
 
       const baseMessages = history.map((m) => ({ role: m.role, content: m.content }));
 
-
       const runStream = async (): Promise<boolean> => {
         const ctrl = new AbortController();
         attempt.ctrl = ctrl;
         const signal = AbortSignal.any([controller.signal, ctrl.signal]);
+
+        // Cek apakah ada konten yang sudah terisi dari usaha sebelumnya (untuk penyambungan)
         const resume = acc.content.trim();
+
+        // Membangun ulang pesan jika sedang melanjutkan
         const messages = resume
           ? [
               ...baseMessages,
@@ -484,48 +504,49 @@ function AiChatPage() {
             endpointKey: modelById(modelId, models).realModel
               ? modelById(modelId, models).endpointKey
               : undefined,
-
-
           }),
-
           signal,
         });
 
         if (!res.ok || !res.body) {
-          const j = (await res.json().catch(() => ({}))) as { error?: string };
-          throw new Error(j.error || "Gagal menghubungi AI.");
+          // Jika gagal fetch, lempar error agar mekanisme retry mengambil alih
+          throw new Error("Gagal menghubungi AI.");
         }
 
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
         let buffer = "";
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          bumpWatchdog();
-          buffer += decoder.decode(value, { stream: true });
-          const parts = buffer.split("\n\n");
-          buffer = parts.pop() ?? "";
-          let closed = false;
-          for (const part of parts) {
-            const line = part.trim();
-            if (!line.startsWith("data:")) continue;
-            try {
-              const evt = JSON.parse(line.slice(5).trim()) as { type?: string; v?: string };
-              if (evt.type === "done") closed = true;
-              else if (evt.type === "reasoning")
-                acc = { ...acc, reasoning: acc.reasoning + (evt.v ?? "") };
-              else if (evt.type === "text") acc = { ...acc, content: acc.content + (evt.v ?? "") };
-            } catch {
-              /* skip */
+
+        try {
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            bumpWatchdog();
+            buffer += decoder.decode(value, { stream: true });
+            const parts = buffer.split("\n\n");
+            buffer = parts.pop() ?? "";
+
+            let closed = false;
+            for (const part of parts) {
+              const line = part.trim();
+              if (!line.startsWith("data:")) continue;
+              try {
+                const evt = JSON.parse(line.slice(5).trim()) as { type?: string; v?: string };
+                if (evt.type === "done") closed = true;
+                else if (evt.type === "reasoning")
+                  acc = { ...acc, reasoning: acc.reasoning + (evt.v ?? "") };
+                else if (evt.type === "text") acc = { ...acc, content: acc.content + (evt.v ?? "") };
+              } catch {
+                /* skip */
+              }
             }
+            if (closed) return true;
           }
-          if (closed) {
-            void reader.cancel().catch(() => {});
-            return true;
-          }
+          return true;
+        } finally {
+          await reader.cancel().catch(() => {});
         }
-        return true;
       };
 
       let finished = false;
