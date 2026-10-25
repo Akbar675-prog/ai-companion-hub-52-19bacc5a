@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireAccountAuth } from "@/integrations/auth-supabase/auth-middleware";
 import type { AiModel } from "./ai-models";
 import { deleteStoredAiModel, listStoredAiModels, saveStoredAiModel } from "./ai-models.server";
 
