@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Info, Sparkles, Package, ShieldCheck, Gift, Lock } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Info, Sparkles, Package, ShieldCheck, Gift, Lock, ArrowRight } from "lucide-react";
 import { AppHeader } from "@/components/AppHeader";
 
 export const Route = createFileRoute("/about")({
@@ -33,28 +33,28 @@ function About() {
   const items = [
     {
       icon: <Gift className="size-5" />,
-      title: "100% Gratis",
-      body: "Semua aplikasi di katalog ini bisa diunduh gratis tanpa biaya apa pun. Tidak ada langganan, tidak ada paywall — cukup klik Download APK.",
+      title: "Gratis digunakan",
+      body: "Aplikasi di katalog ini tersedia tanpa biaya dan langganan. Buka halaman detail untuk melihat versi serta pilihan unduhan yang tersedia.",
     },
     {
       icon: <Lock className="size-5" />,
-      title: "Aplikasi Exclusive (butuh password)",
-      body: "Sebagian kecil aplikasi ditandai Exclusive dan hanya perlu password singkat untuk membuka unduhannya. Aplikasinya tetap gratis — password hanya sebagai pembatas akses.",
+      title: "Aplikasi eksklusif",
+      body: "Sebagian aplikasi memerlukan password untuk membuka unduhannya. Statusnya tetap gratis; password hanya membatasi akses ke tautan unduhan.",
     },
     {
       icon: <Sparkles className="size-5" />,
-      title: "Material 3 Expressive",
-      body: "Website ini menggunakan bahasa desain Material 3 (Expressive) — bentuk membulat besar, warna dinamis, dan tipografi Roboto Flex + Roboto Serif.",
+      title: "Dibuat untuk mudah dijelajahi",
+      body: "Tampilan menggunakan Material 3 Expressive, dengan navigasi konsisten, tipografi yang mudah dibaca, dan komponen yang nyaman di ponsel maupun desktop.",
     },
     {
       icon: <Package className="size-5" />,
-      title: "Library & Stack",
-      body: "Dibangun dengan TanStack Start (React 19 + Vite 7), Tailwind CSS v4, shadcn/ui, lucide-react, dan Lovable Cloud sebagai backend penyimpanan.",
+      title: "Teknologi",
+      body: "Dibangun dengan TanStack Start, React, Tailwind CSS, dan komponen Lucide. Katalog dan detail aplikasi dikelola melalui layanan backend proyek.",
     },
     {
       icon: <ShieldCheck className="size-5" />,
-      title: "Pemberitauan",
-      body: "Semua APK yang ada di katalog dikelola oleh owner. Pastikan mengunduh hanya dari sumber tepercaya. Web ini masih dalam pengembangan aktif.",
+      title: "Info & kehati-hatian",
+      body: "Berkas aplikasi dikelola oleh pemilik katalog. Periksa detail dan sumber aplikasi sebelum memasang. Situs ini masih dalam pengembangan aktif.",
     },
   ];
 
@@ -63,39 +63,64 @@ function About() {
       <AppHeader />
       <div
         aria-hidden="true"
-        className="m3-aura pointer-events-none absolute inset-x-0 -top-24 h-96 opacity-50 blur-2xl"
+        className="m3-aura pointer-events-none absolute inset-x-0 -top-24 h-96 opacity-40 blur-3xl"
       />
 
-      <main className="relative mx-auto max-w-3xl px-5 pb-32 pt-8 md:px-10 md:pt-12">
-        <span className="m3-hairline inline-flex items-center gap-2 rounded-full bg-card/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary backdrop-blur-md">
-          <Info className="size-3.5" /> Tentang
-        </span>
-        <h1 className="mt-4 font-display text-4xl leading-[1.05] md:text-5xl">
-          Katalog APK yang{" "}
-          <span className="bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
-            sederhana & jujur.
+      <main className="relative mx-auto max-w-6xl px-4 pb-24 pt-8 sm:px-6 md:pt-12">
+        <section className="max-w-3xl">
+          <span className="m3-hairline inline-flex items-center gap-2 rounded-full bg-card/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-primary backdrop-blur-md">
+            <Info aria-hidden="true" className="size-3.5" /> Tentang katalog
           </span>
-        </h1>
-        <p className="mt-4 max-w-xl leading-relaxed text-muted-foreground">
-          Galileo Mod APK adalah katalog aplikasi Android yang bisa kamu unduh
-          langsung, dibuat dengan bahasa desain Material 3 Expressive.
-        </p>
+          <h1 className="mt-5 font-display text-4xl leading-[1.08] tracking-tight sm:text-5xl">
+            Aplikasi yang mudah dijelajahi, dengan{" "}
+            <span className="bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
+              detail yang jelas.
+            </span>
+          </h1>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+            Galileo Mod APK mengumpulkan aplikasi Android dalam satu katalog. Lihat informasi dan versi aplikasi sebelum membuka pilihan unduhan.
+          </p>
+        </section>
 
-        <div className="mt-10 grid gap-4">
-          {items.map((it, i) => (
-            <Info3Card
-              key={it.title}
-              icon={it.icon}
-              title={it.title}
-              body={it.body}
-              tone={TONES[i % TONES.length]}
-              index={i}
-            />
-          ))}
-        </div>
+        <section className="mt-10" aria-labelledby="about-details-heading">
+          <div className="mb-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Tentang layanan</p>
+            <h2 id="about-details-heading" className="mt-1 font-display text-2xl sm:text-3xl">
+              Yang perlu diketahui
+            </h2>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {items.map((item, i) => (
+              <Info3Card
+                key={item.title}
+                icon={item.icon}
+                title={item.title}
+                body={item.body}
+                tone={TONES[i % TONES.length]}
+                index={i}
+              />
+            ))}
+          </div>
+        </section>
 
-        <p className="mt-10 text-center text-sm text-muted-foreground">
-          Dibuat dengan Material 3 Expressive · Galileo Mod APK
+        <section className="mt-10 flex flex-col gap-5 rounded-3xl border border-border/70 bg-card/80 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
+          <div>
+            <h2 className="font-display text-xl">Siap menjelajah?</h2>
+            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+              Temukan aplikasi dan baca detailnya sebelum mengunduh.
+            </p>
+          </div>
+          <Link
+            to="/"
+            className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <Package aria-hidden="true" className="size-4" /> Buka katalog
+            <ArrowRight aria-hidden="true" className="size-4" />
+          </Link>
+        </section>
+
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          Galileo Mod APK · Material 3 Expressive
         </p>
       </main>
     </div>
@@ -116,24 +141,25 @@ function Info3Card({
   index: number;
 }) {
   return (
-    <div
+    <article
       style={{
-        animationDelay: `${Math.min(index * 60, 400)}ms`,
+        animationDelay: `${Math.min(index * 40, 160)}ms`,
         animationFillMode: "backwards",
       }}
-      className="m3-shadow-1 m3-hairline group flex animate-fade-in gap-4 rounded-3xl bg-card p-5 transition-all duration-300 hover:m3-shadow-2 hover:-translate-y-1 md:p-6"
+      className="m3-shadow-1 m3-hairline flex h-full items-start gap-4 rounded-3xl bg-card p-5 animate-fade-in sm:p-6"
     >
       <span
-        className={`inline-flex size-12 shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105 ${tone}`}
+        aria-hidden="true"
+        className={`inline-flex size-12 shrink-0 items-center justify-center rounded-2xl ${tone}`}
       >
         {icon}
       </span>
-      <div>
-        <h2 className="font-display text-xl leading-tight">{title}</h2>
-        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+      <div className="min-w-0">
+        <h3 className="font-display text-xl leading-tight">{title}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
           {body}
         </p>
       </div>
-    </div>
+    </article>
   );
 }

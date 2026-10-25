@@ -6,8 +6,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
-import { ArrowLeft, Download, CalendarDays, Users, Lock, Gem, Cpu, Tag, Sparkles, Images, Clock, HardDrive, Play, ExternalLink, FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Download, CalendarDays, Users, Lock, Gem, Cpu, Tag, Sparkles, Images, Clock, HardDrive, Play, ExternalLink, FileText, X } from "lucide-react";
 import {
   getAppFn,
   incrementDownloadFn,
@@ -148,6 +148,15 @@ function AppDetail() {
   const fetchChangelogs = useServerFn(listChangelogsFn);
   const [sheet, setSheet] = useState<ChangelogItem[] | null>(null);
 
+  useEffect(() => {
+    if (!lightbox) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLightbox(null);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [lightbox]);
+
   const previews = app.Previews ?? [];
   const banner = app.Banner_url ?? null;
   const fresh = isNew(app.Created_at);
@@ -231,23 +240,24 @@ function AppDetail() {
           className="m3-aura pointer-events-none absolute inset-x-0 -top-20 h-80 opacity-50 blur-2xl"
         />
       )}
-      <header className="relative mx-auto flex max-w-3xl items-center gap-3 px-5 pt-6 md:px-10">
+      <header className="relative mx-auto flex max-w-4xl items-center gap-3 px-4 pt-5 sm:px-6 md:pt-7">
         <Link
           to="/"
-          aria-label="Kembali"
-          className="inline-flex size-10 items-center justify-center rounded-full bg-surface-variant/80 text-foreground backdrop-blur-md transition-colors hover:bg-primary-container"
+          aria-label="Kembali ke katalog"
+          className="inline-flex min-h-11 items-center gap-2 rounded-full bg-surface-variant/80 px-4 py-2 text-sm font-medium text-foreground backdrop-blur-md transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          <ArrowLeft className="size-5" />
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          Kembali ke katalog
         </Link>
         <span className="text-sm font-medium text-muted-foreground">Detail aplikasi</span>
       </header>
 
-      <main className="relative mx-auto max-w-3xl px-5 pb-32 pt-6 md:px-10">
+      <main className="relative mx-auto max-w-4xl px-4 pb-24 pt-5 sm:px-6 md:pt-6">
         <div
           className={
             banner
-              ? "m3-shadow-2 rounded-4xl border border-white/25 bg-card/50 p-6 backdrop-blur-2xl md:p-10"
-              : "m3-shadow-1 m3-hairline rounded-4xl bg-card p-6 md:p-10"
+              ? "m3-shadow-2 rounded-4xl border border-white/25 bg-card/90 p-5 backdrop-blur-2xl sm:p-7 md:p-10"
+              : "m3-shadow-1 m3-hairline rounded-4xl bg-card p-5 sm:p-7 md:p-10"
           }
         >
 
@@ -274,24 +284,24 @@ function AppDetail() {
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 {fresh && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-950 shadow-sm animate-fade-in">
-                    <Sparkles className="size-3.5" /> New
+                    <Sparkles className="size-3.5" /> Baru
                   </span>
                 )}
                 {app.Coming_soon && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white shadow-sm">
-                    <Clock className="size-3.5" /> Coming Soon
+                    <Clock className="size-3.5" /> Segera hadir
                   </span>
                 )}
                 {app.Is_exclusive && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-950 shadow-sm">
-                    <Gem className="size-3.5" /> Exclusive
+                    <Gem className="size-3.5" /> Eksklusif
                   </span>
                 )}
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary-container px-3 py-1 text-xs font-semibold text-on-secondary-container">
                   <Tag className="size-3.5" /> v{versionLabel(app.Version)}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-tertiary-container px-3 py-1 text-xs font-semibold text-on-tertiary-container">
-                  <Cpu className="size-3.5" /> Arch: {archLabel(app.Arch)}
+                  <Cpu className="size-3.5" /> Arsitektur: {archLabel(app.Arch)}
                 </span>
               </div>
               <PressButton
@@ -306,7 +316,7 @@ function AppDetail() {
                   WebkitUserSelect: "none",
                   userSelect: "none",
                 }}
-                className="mt-5 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground hover:scale-[1.02] disabled:opacity-70"
+                className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
               >
                 {downloading ? (
                   <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Menyiapkan unduhan" />
@@ -321,13 +331,13 @@ function AppDetail() {
                   ? "Akan Datang"
                   : downloading
                     ? "Memulai..."
-                    : "Download APK"}
+                    : "Unduh APK"}
               </PressButton>
             </div>
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div className="m3-hairline flex items-center gap-3 rounded-3xl bg-surface-variant/60 p-4 transition-colors hover:bg-surface-variant">
+            <div className="m3-hairline flex items-center gap-3 rounded-2xl bg-surface-variant/50 p-4">
               <div className="flex size-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
                 <CalendarDays className="size-5" />
               </div>
@@ -336,12 +346,12 @@ function AppDetail() {
                 <p className="font-semibold">{formatDate(app.Created_at)}</p>
               </div>
             </div>
-            <div className="m3-hairline flex items-center gap-3 rounded-3xl bg-surface-variant/60 p-4 transition-colors hover:bg-surface-variant">
+            <div className="m3-hairline flex items-center gap-3 rounded-2xl bg-surface-variant/50 p-4">
               <div className="flex size-10 items-center justify-center rounded-full bg-tertiary-container text-on-tertiary-container">
                 <Users className="size-5" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Total install</p>
+                <p className="text-xs text-muted-foreground">Total unduhan</p>
                 <p className="font-semibold">
                   {formatCount(app.Download_count ?? 0)} orang
                 </p>
@@ -352,12 +362,12 @@ function AppDetail() {
           {(app.Size_label || app.Play_link) && (
             <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {app.Size_label && (
-                <div className="m3-hairline flex items-center gap-3 rounded-3xl bg-surface-variant/60 p-4 transition-colors hover:bg-surface-variant">
+                <div className="m3-hairline flex items-center gap-3 rounded-2xl bg-surface-variant/50 p-4">
                   <div className="flex size-10 items-center justify-center rounded-full bg-secondary-container text-on-secondary-container">
                     <HardDrive className="size-5" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Size</p>
+                    <p className="text-xs text-muted-foreground">Ukuran</p>
                     <p className="font-semibold">{app.Size_label}</p>
                   </div>
                 </div>
@@ -367,7 +377,7 @@ function AppDetail() {
                   href={app.Play_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="m3-hairline flex items-center gap-3 rounded-3xl bg-surface-variant/60 p-4 transition-colors hover:bg-primary-container"
+                  className="m3-hairline flex min-h-16 items-center gap-3 rounded-2xl bg-surface-variant/50 p-4 transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   <div className="flex size-10 items-center justify-center rounded-full bg-primary-container text-on-primary-container">
                     <Play className="size-5" />
@@ -386,7 +396,7 @@ function AppDetail() {
           {previews.length > 0 && (
             <section className="mt-8">
               <h2 className="flex items-center gap-2 font-display text-xl">
-                <Images className="size-5 text-primary" /> Preview
+                <Images className="size-5 text-primary" /> Pratinjau
               </h2>
               <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3">
                 {previews.map((p, i) => {
@@ -395,12 +405,13 @@ function AppDetail() {
                     <button
                       key={p.url}
                       type="button"
+                      aria-label={`Buka pratinjau ${isVideo ? "video" : "gambar"} ${i + 1}`}
                       onClick={() => setLightbox(p)}
                       style={{
                         animationDelay: `${Math.min(i * 60, 400)}ms`,
                         animationFillMode: "backwards",
                       }}
-                      className="m3-shadow-1 relative aspect-[9/16] h-64 shrink-0 snap-start animate-fade-in overflow-hidden rounded-2xl bg-surface-variant transition-transform hover:-translate-y-1 hover:scale-[1.02]"
+                      className="m3-shadow-1 relative aspect-[9/16] h-64 shrink-0 snap-start animate-fade-in overflow-hidden rounded-2xl bg-surface-variant transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       {isVideo ? (
                         <video
@@ -443,7 +454,7 @@ function AppDetail() {
           {(app.Changelog?.length ?? 0) > 0 && (
             <section className="m3-hairline mt-6 rounded-3xl bg-surface-variant/40 p-5 md:p-6">
               <h2 className="flex items-center gap-2 font-display text-xl">
-                <FileText className="size-5 text-primary" /> Changelog
+                <FileText className="size-5 text-primary" /> Riwayat versi
               </h2>
               <ol className="mt-4 space-y-4 border-l border-primary/30 pl-4">
                 {app.Changelog!.map((c, i) => (
@@ -472,22 +483,35 @@ function AppDetail() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 animate-fade-in"
+          aria-label="Pratinjau media"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 animate-fade-in"
           onClick={() => setLightbox(null)}
         >
+          <button
+            type="button"
+            aria-label="Tutup pratinjau"
+            onClick={(event) => {
+              event.stopPropagation();
+              setLightbox(null);
+            }}
+            className="absolute right-4 top-4 inline-flex size-11 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur transition-colors hover:bg-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+          >
+            <X aria-hidden="true" className="size-5" />
+          </button>
           {(lightbox.contentType || "").startsWith("video/") ? (
             <video
               src={lightbox.url}
               controls
               autoPlay
               playsInline
+              aria-label="Video pratinjau"
               className="max-h-full max-w-full rounded-2xl"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
             <img
               src={lightbox.url}
-              alt="Preview"
+              alt="Pratinjau aplikasi"
               className="max-h-full max-w-full rounded-2xl object-contain"
               onClick={(e) => e.stopPropagation()}
             />
@@ -608,7 +632,7 @@ function PasswordGate({
           </span>
           <div>
             <h3 className="font-display text-lg leading-tight">
-              Exclusive App
+              Aplikasi eksklusif
             </h3>
             <p className="text-xs text-muted-foreground">
               Masukkan password untuk mengunduh "{appName}".
@@ -617,17 +641,24 @@ function PasswordGate({
         </div>
 
         <form onSubmit={onSubmit} className="mt-5 space-y-3">
+          <label htmlFor="exclusive-password" className="block text-sm font-medium">
+            Password
+          </label>
           <input
+            id="exclusive-password"
             type="password"
+            autoComplete="current-password"
             autoFocus
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
+            placeholder="Masukkan password"
             maxLength={200}
-            className="w-full rounded-2xl bg-surface-variant px-4 py-3 text-base outline-none focus:ring-2 focus:ring-primary"
+            aria-invalid={!!error}
+            aria-describedby={error ? "exclusive-password-error" : undefined}
+            className="min-h-12 w-full rounded-2xl bg-surface-variant px-4 py-3 text-base outline-none focus-visible:ring-2 focus-visible:ring-primary"
           />
           {error && (
-            <p className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            <p id="exclusive-password-error" role="alert" className="rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">
               {error}
             </p>
           )}
@@ -635,17 +666,17 @@ function PasswordGate({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full bg-surface-variant px-4 py-2.5 text-sm font-medium hover:bg-primary-container"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-surface-variant px-4 py-2.5 text-sm font-medium transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
               Batal
             </button>
             <PressButton
               type="submit"
               disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading && <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Memasang" />}
-              Instal
+              Lanjutkan unduhan
             </PressButton>
           </div>
         </form>
