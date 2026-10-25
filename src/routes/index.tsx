@@ -225,13 +225,19 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
         <IconBox src={app.App_icon} alt={app.App_name} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <h2 className="min-w-0 flex-1 break-words font-display text-lg leading-tight">
-              {t(app.App_name)}
+            <h2
+              data-no-translate
+              className="min-w-0 flex-1 break-words font-display text-lg leading-tight"
+            >
+              {app.App_name}
             </h2>
             <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
           </div>
-          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-            {t(app.Description || "Tidak ada deskripsi.")}
+          <p
+            data-no-translate
+            className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground"
+          >
+            {app.Description || "Tidak ada deskripsi."}
           </p>
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
             {fresh && (
