@@ -3,7 +3,7 @@ import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { AI_PLUGINS, pluginById, type AiPluginId } from "@/lib/ai-plugins";
-import { BUILTIN_MODELS, modelById, type AiModel } from "@/lib/ai-models";
+import type { AiModel } from "@/lib/ai-models";
 import { NewBadge } from "@/components/NewBadge";
 
 
@@ -226,8 +226,9 @@ export interface PromptBoxProps extends React.TextareaHTMLAttributes<HTMLTextAre
   /** Plugin aktif (dipilih lewat "@"). */
   plugin?: AiPluginId | null;
   onPluginChange?: (id: AiPluginId | null) => void;
-  /** Daftar model yang bisa dipilih + model aktif. */
+  /** Daftar model Supabase yang bisa dipilih + model aktif. */
   models?: AiModel[];
+  modelsLoading?: boolean;
   modelId?: string;
   onModelChange?: (id: string) => void;
   /** Dipakai supaya komponen bisa membersihkan karakter "@" dari teks. */
@@ -251,6 +252,7 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
       plugin,
       onPluginChange,
       models,
+      modelsLoading,
       modelId,
       onModelChange,
 
@@ -279,8 +281,9 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
     const [pluginMenuOpen, setPluginMenuOpen] = React.useState(false);
     const activePlugin = pluginById(plugin ?? null);
     const [isModelOpen, setIsModelOpen] = React.useState(false);
-    const modelList = models && models.length > 0 ? models : BUILTIN_MODELS;
-    const activeModel = modelById(modelId, modelList);
+    const modelList = models ?? [];
+    const activeModel =
+      modelList.find((model) => model.id === modelId) ?? modelList[0] ?? null;
 
 
     React.useImperativeHandle(ref, () => internalTextareaRef.current!, []);
@@ -474,16 +477,24 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
                 <PopoverTrigger asChild>
                   <button
                     type="button"
-                    className="flex h-8 min-w-0 items-center gap-1.5 rounded-full bg-surface-variant px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-primary-container"
+                    disabled={!activeModel}
+                    className="flex h-8 min-w-0 items-center gap-1.5 rounded-full bg-surface-variant px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-primary-container disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {activeModel.logo ? (
-                      <img src={activeModel.logo} alt="" className="size-4 rounded-full object-cover" />
+                    {activeModel?.logo ? (
+                      <img
+                        src={activeModel.logo}
+                        alt=""
+                        className="size-4 rounded-full object-cover"
+                      />
                     ) : (
                       <SparkIcon className="size-4 text-primary" />
                     )}
-                    <span className="max-w-[8.5rem] truncate">{activeModel.name}</span>
-                    {activeModel.isNew && <NewBadge className="hidden sm:inline-flex" />}
-                    <ChevronIcon className="size-3.5 opacity-60" />
+                    <span className="max-w-[8.5rem] truncate">
+                      {activeModel?.name ??
+                        (modelsLoading ? "Memuat model…" : "Model tidak tersedia")}
+                    </span>
+                    {activeModel?.isNew && <NewBadge className="hidden sm:inline-flex" />}
+                    {activeModel && <ChevronIcon className="size-3.5 opacity-60" />}
                     <span className="sr-only">Pilih model AI</span>
                   </button>
                 </PopoverTrigger>
@@ -499,7 +510,7 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
                         }}
                         className={cn(
                           "flex w-full items-start gap-2.5 rounded-xl p-2 text-left transition-colors hover:bg-accent",
-                          m.id === activeModel.id && "bg-primary/10",
+                          m.id === activeModel?.id && "bg-primary/10",
                         )}
                       >
                         {m.logo ? (

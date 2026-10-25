@@ -15,8 +15,6 @@ import { listAiModelsFn } from "@/lib/ai-models.functions";
 import type { AiProfile } from "@/lib/ai-profile.server";
 import { useAccount } from "@/lib/use-account";
 import {
-  BUILTIN_MODELS,
-  DEFAULT_MODEL_ID,
   allModels,
   loadSelectedModelId,
   modelById,
@@ -111,8 +109,9 @@ function AiChatPage() {
   const [attachedDocument, setAttachedDocument] = useState<{ name: string; text: string } | null>(null);
   const [tool, setTool] = useState<string | null>(null);
   const [plugin, setPlugin] = useState<AiPluginId | null>(null);
-  const [models, setModels] = useState<AiModel[]>(BUILTIN_MODELS);
-  const [modelId, setModelId] = useState<string>(DEFAULT_MODEL_ID);
+  const [models, setModels] = useState<AiModel[]>([]);
+  const [modelId, setModelId] = useState("");
+  const [modelsLoading, setModelsLoading] = useState(true);
 
   const [imaging, setImaging] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -130,22 +129,25 @@ function AiChatPage() {
     setActiveId(null);
   }, [userId]);
 
-  // Daftar model (termasuk AI buatan pengguna dari /ai/addai) + pilihan terakhir.
+  // Hanya tampilkan model yang dimuat dari katalog Supabase.
   useEffect(() => {
     let alive = true;
-    const applyModels = (list: AiModel[]) => {
-      if (!alive) return;
-      setModels(list);
-      const saved = loadSelectedModelId();
-      setModelId(list.some((m) => m.id === saved) ? saved : DEFAULT_MODEL_ID);
-    };
-
-    const localList = allModels([]);
-    applyModels(localList);
+    setModels([]);
+    setModelId("");
+    setModelsLoading(true);
     void listAiModelsFn()
-      .then((customModels) => applyModels(allModels(customModels)))
+      .then((storedModels) => {
+        if (!alive) return;
+        const list = allModels(storedModels).filter((model) => model.custom);
+        const saved = loadSelectedModelId();
+        setModels(list);
+        setModelId(list.some((model) => model.id === saved) ? saved : (list[0]?.id ?? ""));
+        setModelsLoading(false);
+      })
       .catch(() => {
-        // Tetap gunakan model bawaan/local bila Supabase belum tersedia.
+        if (!alive) return;
+        setModels([]);
+        setModelsLoading(false);
       });
     return () => {
       alive = false;
@@ -223,6 +225,11 @@ function AiChatPage() {
     threadIdIn: string | null,
     baseIn: ChatThread[],
   ) {
+    if (models.length === 0) {
+      setError("Belum ada model AI yang tersedia dari Supabase.");
+      return;
+    }
+
     const lastUser = history[history.length - 1]?.content ?? "";
     let threadId = threadIdIn;
     let base = baseIn;
@@ -869,6 +876,7 @@ function AiChatPage() {
             plugin={plugin}
             onPluginChange={setPlugin}
             models={models}
+            modelsLoading={modelsLoading}
             modelId={modelId}
             onModelChange={(id) => {
               setModelId(id);
