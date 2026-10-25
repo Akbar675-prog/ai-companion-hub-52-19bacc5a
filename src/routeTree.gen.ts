@@ -20,8 +20,10 @@ import { Route as GetVerifiedRouteImport } from './routes/get-verified'
 import { Route as GiveCreditsRouteImport } from './routes/give-credits'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MyReportRouteImport } from './routes/my-report'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ReportRouteImport } from './routes/report'
 import { Route as RequestRouteImport } from './routes/request'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -39,6 +41,7 @@ import { Route as ApiAiSearchRouteImport } from './routes/api.ai-search'
 import { Route as ApiAiTitleRouteImport } from './routes/api.ai-title'
 import { Route as ApiAiVisionRouteImport } from './routes/api.ai-vision'
 import { Route as AppsIdRouteImport } from './routes/apps.$id'
+import { Route as CheckReportRouteImport } from './routes/check.report'
 import { Route as DataGetVerifiedRouteImport } from './routes/data.get-verified'
 import { Route as RequestDataRouteImport } from './routes/request_.data'
 import { Route as StatusSetRouteImport } from './routes/status_.set'
@@ -110,6 +113,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MyReportRoute = MyReportRouteImport.update({
+  id: '/my-report',
+  path: '/my-report',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -118,6 +126,11 @@ const ProfileRoute = ProfileRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportRoute = ReportRouteImport.update({
+  id: '/report',
+  path: '/report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RequestRoute = RequestRouteImport.update({
@@ -203,6 +216,11 @@ const ApiAiVisionRoute = ApiAiVisionRouteImport.update({
 const AppsIdRoute = AppsIdRouteImport.update({
   id: '/apps/$id',
   path: '/apps/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CheckReportRoute = CheckReportRouteImport.update({
+  id: '/check/report',
+  path: '/check/report',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DataGetVerifiedRoute = DataGetVerifiedRouteImport.update({
@@ -294,8 +312,10 @@ export interface FileRoutesByFullPath {
   '/give-credits': typeof GiveCreditsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/my-report': typeof MyReportRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/report': typeof ReportRoute
   '/request': typeof RequestRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -313,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
   '/apps/$id': typeof AppsIdRoute
+  '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
@@ -341,8 +362,10 @@ export interface FileRoutesByTo {
   '/give-credits': typeof GiveCreditsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/my-report': typeof MyReportRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/report': typeof ReportRoute
   '/request': typeof RequestRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -360,6 +383,7 @@ export interface FileRoutesByTo {
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
   '/apps/$id': typeof AppsIdRoute
+  '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
@@ -389,8 +413,10 @@ export interface FileRoutesById {
   '/give-credits': typeof GiveCreditsRoute
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
+  '/my-report': typeof MyReportRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
+  '/report': typeof ReportRoute
   '/request': typeof RequestRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -408,6 +434,7 @@ export interface FileRoutesById {
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
   '/apps/$id': typeof AppsIdRoute
+  '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
   '/request_/data': typeof RequestDataRoute
   '/status_/set': typeof StatusSetRoute
@@ -438,8 +465,10 @@ export interface FileRouteTypes {
     | '/give-credits'
     | '/leaderboard'
     | '/login'
+    | '/my-report'
     | '/profile'
     | '/register'
+    | '/report'
     | '/request'
     | '/settings'
     | '/sitemap.xml'
@@ -457,6 +486,7 @@ export interface FileRouteTypes {
     | '/api/ai-title'
     | '/api/ai-vision'
     | '/apps/$id'
+    | '/check/report'
     | '/data/get-verified'
     | '/request/data'
     | '/status/set'
@@ -485,8 +515,10 @@ export interface FileRouteTypes {
     | '/give-credits'
     | '/leaderboard'
     | '/login'
+    | '/my-report'
     | '/profile'
     | '/register'
+    | '/report'
     | '/request'
     | '/settings'
     | '/sitemap.xml'
@@ -504,6 +536,7 @@ export interface FileRouteTypes {
     | '/api/ai-title'
     | '/api/ai-vision'
     | '/apps/$id'
+    | '/check/report'
     | '/data/get-verified'
     | '/request/data'
     | '/status/set'
@@ -532,8 +565,10 @@ export interface FileRouteTypes {
     | '/give-credits'
     | '/leaderboard'
     | '/login'
+    | '/my-report'
     | '/profile'
     | '/register'
+    | '/report'
     | '/request'
     | '/settings'
     | '/sitemap.xml'
@@ -551,6 +586,7 @@ export interface FileRouteTypes {
     | '/api/ai-title'
     | '/api/ai-vision'
     | '/apps/$id'
+    | '/check/report'
     | '/data/get-verified'
     | '/request_/data'
     | '/status_/set'
@@ -580,8 +616,10 @@ export interface RootRouteChildren {
   GiveCreditsRoute: typeof GiveCreditsRoute
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
+  MyReportRoute: typeof MyReportRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
+  ReportRoute: typeof ReportRoute
   RequestRoute: typeof RequestRoute
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -599,6 +637,7 @@ export interface RootRouteChildren {
   ApiAiTitleRoute: typeof ApiAiTitleRoute
   ApiAiVisionRoute: typeof ApiAiVisionRoute
   AppsIdRoute: typeof AppsIdRoute
+  CheckReportRoute: typeof CheckReportRoute
   DataGetVerifiedRoute: typeof DataGetVerifiedRoute
   RequestDataRoute: typeof RequestDataRoute
   StatusSetRoute: typeof StatusSetRoute
@@ -695,6 +734,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my-report': {
+      id: '/my-report'
+      path: '/my-report'
+      fullPath: '/my-report'
+      preLoaderRoute: typeof MyReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -707,6 +753,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report': {
+      id: '/report'
+      path: '/report'
+      fullPath: '/report'
+      preLoaderRoute: typeof ReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/request': {
@@ -826,6 +879,13 @@ declare module '@tanstack/react-router' {
       path: '/apps/$id'
       fullPath: '/apps/$id'
       preLoaderRoute: typeof AppsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/check/report': {
+      id: '/check/report'
+      path: '/check/report'
+      fullPath: '/check/report'
+      preLoaderRoute: typeof CheckReportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/data/get-verified': {
@@ -948,8 +1008,10 @@ const rootRouteChildren: RootRouteChildren = {
   GiveCreditsRoute: GiveCreditsRoute,
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
+  MyReportRoute: MyReportRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
+  ReportRoute: ReportRoute,
   RequestRoute: RequestRoute,
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
@@ -967,6 +1029,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiTitleRoute: ApiAiTitleRoute,
   ApiAiVisionRoute: ApiAiVisionRoute,
   AppsIdRoute: AppsIdRoute,
+  CheckReportRoute: CheckReportRoute,
   DataGetVerifiedRoute: DataGetVerifiedRoute,
   RequestDataRoute: RequestDataRoute,
   StatusSetRoute: StatusSetRoute,

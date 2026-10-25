@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Menu, X, Search, Download, Info, MessageCircle, Settings as SettingsIcon, Gem, Trophy, Send, Activity, LogIn, ChevronRight, Bot } from "lucide-react";
+import { Menu, X, Search, Download, Info, MessageCircle, Settings as SettingsIcon, Gem, Trophy, Send, Activity, LogIn, ChevronRight, Bot, Bug } from "lucide-react";
 import { listAppsFn, type AppListItem } from "@/lib/apps.functions";
 import { versionLabel } from "@/lib/metadata.functions";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
@@ -220,6 +220,8 @@ export function AppHeader() {
                   <DrawerLink to="/ai" icon={<Bot className="size-4" />} label="AI Chat" />
                   <DrawerLink to="/leaderboard" icon={<Trophy className="size-4" />} label="Papan peringkat" />
                   <DrawerLink to="/request" icon={<Send className="size-4" />} label="Ajukan APK" />
+                  <DrawerLink to="/report" icon={<Bug className="size-4" />} label="Laporan Tiket Masalah" />
+                  <DrawerLink to="/my-report" icon={<Bug className="size-4" />} label="Laporan saya" />
                   <DrawerLink to="/status" icon={<Activity className="size-4" />} label="Status" />
                   <DrawerLink to="/settings" icon={<SettingsIcon className="size-4" />} label="Pengaturan" />
                   <DrawerLink to="/about" icon={<Info className="size-4" />} label="Tentang" />
