@@ -34,6 +34,14 @@ export function AppHeader() {
     document.body.style.overflow = open ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [open]);
 
   const { data: apps } = useQuery({
     queryKey: ["apps"],
@@ -72,24 +80,41 @@ export function AppHeader() {
 
   return (
     <>
-      <div className="sticky top-0 z-40 px-4 pt-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3">
+      <div className="sticky top-0 z-40 px-3 pt-3 sm:px-5">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 rounded-[1.75rem] border border-border/70 bg-background/85 px-3 py-2 shadow-sm backdrop-blur-xl sm:px-4">
+          <Link
+            to="/"
+            aria-label="Galileo Mod APK — beranda"
+            className="flex min-h-11 min-w-0 items-center gap-2.5 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
+              <Download className="size-5" aria-hidden="true" />
+            </span>
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate font-display text-base font-semibold">Galileo</span>
+              <span className="truncate text-[11px] text-muted-foreground">Katalog APK</span>
+            </span>
+          </Link>
+
+          <PrimaryNavigation />
+
           <button
+            type="button"
             onClick={() => setOpen(true)}
             aria-label="Buka menu"
-            className="m3-shadow-1 inline-flex size-12 items-center justify-center rounded-2xl bg-card text-foreground transition-transform active:scale-95 hover:scale-105"
+            aria-expanded={open}
+            aria-controls="app-menu-drawer"
+            className="m3-shadow-1 inline-flex size-11 shrink-0 items-center justify-center rounded-2xl bg-card text-foreground transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-95"
           >
-            <Menu className="size-5" />
+            <Menu className="size-5" aria-hidden="true" />
           </button>
-
-          <ExpandingHoverMenu />
-
-          <div className="size-12" />
         </div>
       </div>
 
       {/* Drawer */}
       <div
+        inert={!open}
+        aria-hidden={!open}
         className={`fixed inset-0 z-50 transition-opacity ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       >
         <button
@@ -98,7 +123,9 @@ export function AppHeader() {
           className={`absolute inset-0 bg-black/40 transition-opacity ${open ? "opacity-100" : "opacity-0"}`}
         />
         <aside
-          className={`absolute left-0 top-0 flex h-full w-[80%] max-w-sm flex-col overflow-y-auto bg-surface p-5 shadow-2xl transition-transform ${
+          id="app-menu-drawer"
+          aria-label="Menu utama"
+          className={`absolute left-0 top-0 flex h-full w-[min(88%,24rem)] flex-col overflow-y-auto bg-surface p-5 shadow-2xl transition-transform ${
             open ? "translate-x-0" : "-translate-x-full"
           }`}
         >
@@ -115,12 +142,14 @@ export function AppHeader() {
 
           <div className="mt-5">
             <label className="relative block">
-              <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+              <span className="sr-only">Cari aplikasi dalam katalog</span>
+              <Search aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <input
+                type="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Cari APK..."
-                className="w-full rounded-full bg-surface-variant py-3 pl-11 pr-4 text-sm outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Cari aplikasi..."
+                className="min-h-12 w-full rounded-full bg-surface-variant py-3 pl-11 pr-4 text-base outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 autoFocus={false}
               />
             </label>
@@ -187,19 +216,19 @@ export function AppHeader() {
                   Navigasi
                 </p>
                 <nav className="mt-2 flex flex-col gap-1">
-                  <DrawerLink to="/" icon={<Download className="size-4" />} label="Download" />
-                  <DrawerLink to="/ai" icon={<Bot className="size-4" />} label="AI chats" />
-                  <DrawerLink to="/leaderboard" icon={<Trophy className="size-4" />} label="Leaderboard" />
-                  <DrawerLink to="/request" icon={<Send className="size-4" />} label="Request APK" />
+                  <DrawerLink to="/" icon={<Download className="size-4" />} label="Katalog" />
+                  <DrawerLink to="/ai" icon={<Bot className="size-4" />} label="AI Chat" />
+                  <DrawerLink to="/leaderboard" icon={<Trophy className="size-4" />} label="Papan peringkat" />
+                  <DrawerLink to="/request" icon={<Send className="size-4" />} label="Ajukan APK" />
                   <DrawerLink to="/status" icon={<Activity className="size-4" />} label="Status" />
-                  <DrawerLink to="/settings" icon={<SettingsIcon className="size-4" />} label="Settings" />
-                  <DrawerLink to="/about" icon={<Info className="size-4" />} label="About" />
+                  <DrawerLink to="/settings" icon={<SettingsIcon className="size-4" />} label="Pengaturan" />
+                  <DrawerLink to="/about" icon={<Info className="size-4" />} label="Tentang" />
                 </nav>
               </div>
 
               <div className="mt-6">
                 <p className="px-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
-                  Social Media
+                  Media sosial
                 </p>
                 <nav className="mt-2 flex flex-col gap-1">
                   <SocialLink
@@ -251,7 +280,7 @@ export function AppHeader() {
                     <span className="inline-flex size-9 items-center justify-center rounded-xl bg-surface-variant">
                       <LogIn className="size-4" />
                     </span>
-                    Login
+                    Masuk
                   </Link>
                 )}
               </div>
@@ -302,43 +331,34 @@ function SocialLink({
   );
 }
 
-function ExpandingHoverMenu() {
+function PrimaryNavigation() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = [
-    { to: "/", label: "Download", icon: <Download className="size-4" /> },
-    { to: "/leaderboard", label: "Leaderboard", icon: <Trophy className="size-4" /> },
-    { to: "/request", label: "Request", icon: <Send className="size-4" /> },
-    { to: "/about", label: "About", icon: <Info className="size-4" /> },
+    { to: "/", label: "Katalog" },
+    { to: "/ai", label: "AI Chat" },
+    { to: "/request", label: "Ajukan" },
+    { to: "/about", label: "Tentang" },
   ];
+
   return (
-    <div className="m3-shadow-1 flex items-center gap-1 rounded-full bg-card p-1.5">
-      {items.map((it) => {
-        const active = pathname === it.to;
+    <nav aria-label="Navigasi utama" className="hidden items-center gap-1 md:flex">
+      {items.map((item) => {
+        const active = pathname === item.to;
         return (
           <Link
-            key={it.to}
-            to={it.to}
-            className={`group/chip inline-flex items-center gap-2 overflow-hidden rounded-full px-3 py-2 text-sm font-medium transition-[background-color,color,transform,box-shadow] duration-300 ease-out active:scale-95 ${
+            key={item.to}
+            to={item.to}
+            aria-current={active ? "page" : undefined}
+            className={`inline-flex min-h-10 items-center rounded-full px-3.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
               active
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-foreground hover:bg-primary-container hover:-translate-y-0.5"
+                ? "bg-primary-container text-on-primary-container"
+                : "text-foreground hover:bg-surface-variant"
             }`}
           >
-            <span className="inline-flex transition-transform duration-300 ease-out group-hover/chip:scale-110">
-              {it.icon}
-            </span>
-            <span
-              className={`grid whitespace-nowrap transition-[grid-template-columns,opacity,margin] duration-[400ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                active
-                  ? "[grid-template-columns:1fr] opacity-100 ml-1"
-                  : "[grid-template-columns:0fr] opacity-0 ml-0 group-hover/chip:[grid-template-columns:1fr] group-hover/chip:opacity-100 group-hover/chip:ml-1"
-              }`}
-            >
-              <span className="min-w-0 overflow-hidden">{it.label}</span>
-            </span>
+            {item.label}
           </Link>
         );
       })}
-    </div>
+    </nav>
   );
 }

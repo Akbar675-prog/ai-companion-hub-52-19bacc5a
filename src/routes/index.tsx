@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
-import { Plus, Download, Gem, Sparkles, Clock, Package, ArrowUpRight } from "lucide-react";
+import { Plus, Download, Gem, Sparkles, Clock, Package, Search, ArrowRight } from "lucide-react";
 import { z } from "zod";
 import { listAppsFn, type AppListItem } from "@/lib/apps.functions";
 import { versionLabel } from "@/lib/metadata.functions";
@@ -77,58 +77,97 @@ function Home() {
     <div className="min-h-screen bg-background">
       <AppHeader />
 
-      <header className="relative overflow-hidden px-5 pt-8 pb-8 md:px-10 md:pt-14">
+      <header className="relative px-4 pb-8 pt-6 sm:px-6 md:pb-10 md:pt-8">
         <div
           aria-hidden="true"
-          className="m3-aura pointer-events-none absolute inset-x-0 -top-24 h-[26rem] opacity-60 blur-2xl"
+          className="m3-aura pointer-events-none absolute inset-x-0 -top-24 h-[28rem] opacity-40 blur-3xl"
         />
-        <div className="relative mx-auto max-w-6xl">
-          <span className="m3-hairline inline-flex items-center gap-2 rounded-full bg-card/70 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-primary backdrop-blur-md">
-            <Sparkles className="size-3.5" />
-            Galileo Mod APK
-          </span>
-          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-[1.05] md:text-6xl">
-            {t("Katalog aplikasi")}
-            <span className="block bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
-              {t("siap di-download.")}
+        <div className="relative mx-auto grid max-w-6xl gap-8 overflow-hidden rounded-[2rem] border border-border/70 bg-card/85 p-5 shadow-sm backdrop-blur-xl sm:p-8 md:grid-cols-[minmax(0,1.35fr)_minmax(15rem,0.65fr)] md:items-end md:p-10">
+          <div>
+            <span className="m3-hairline inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+              <Sparkles aria-hidden="true" className="size-3.5" />
+              Katalog APK
             </span>
-          </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
-            {t("Ketuk kartu untuk membuka detail dan mengunduh APK-nya.")}
-          </p>
+            <h1 className="mt-5 max-w-3xl font-display text-4xl leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
+              {t("Temukan aplikasi")}{" "}
+              <span className="bg-gradient-to-r from-primary via-tertiary to-secondary bg-clip-text text-transparent">
+                {t("yang kamu cari.")}
+              </span>
+            </h1>
+            <p className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
+              {t("Jelajahi katalog, cek informasi dan versi aplikasi, lalu buka detail sebelum mengunduh.")}
+            </p>
 
-          <div className="mt-6 flex flex-wrap gap-2.5">
-            <StatChip
-              icon={<Package className="size-4" />}
-              label={`${apps.length} aplikasi`}
-            />
-            <StatChip
-              icon={<Download className="size-4" />}
-              label={`${new Intl.NumberFormat("id-ID").format(totalDownloads)} unduhan`}
-            />
-            {exclusiveCount > 0 && (
-              <StatChip
-                icon={<Gem className="size-4" />}
-                label={`${exclusiveCount} exclusive`}
+            <form
+              key={q ?? ""}
+              role="search"
+              action="/"
+              method="get"
+              className="mt-6 flex min-h-14 items-center gap-3 rounded-2xl border border-border bg-background p-1.5 pl-4 shadow-sm transition focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/30"
+            >
+              <Search aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+              <input
+                type="search"
+                name="q"
+                defaultValue={q ?? ""}
+                placeholder="Cari nama aplikasi..."
+                aria-label="Cari aplikasi dalam katalog"
+                className="min-h-11 min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted-foreground"
               />
+              <button
+                type="submit"
+                className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                Cari <ArrowRight aria-hidden="true" className="size-4" />
+              </button>
+            </form>
+
+            {keyword ? (
+              <p role="status" className="mt-3 text-sm text-muted-foreground">
+                Hasil untuk <span className="font-semibold text-foreground">“{q}”</span>
+                {" · "}{filtered.length} aplikasi
+                {" · "}
+                <Link to="/" className="font-semibold text-primary underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  Hapus pencarian
+                </Link>
+              </p>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Cari berdasarkan nama aplikasi atau kata kunci.
+              </p>
             )}
           </div>
 
-          {keyword && (
-            <p className="mt-5 text-sm text-muted-foreground">
-              Hasil pencarian untuk{" "}
-              <span className="font-semibold text-foreground">"{q}"</span> —{" "}
-              {filtered.length} aplikasi
-              {" · "}
-              <Link to="/" className="font-medium text-primary underline">
-                Reset
-              </Link>
-            </p>
-          )}
+          <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-3 md:grid-cols-1">
+            <StatTile
+              icon={<Package aria-hidden="true" className="size-4" />}
+              label="Aplikasi"
+              value={new Intl.NumberFormat("id-ID").format(apps.length)}
+            />
+            <StatTile
+              icon={<Download aria-hidden="true" className="size-4" />}
+              label="Total unduhan"
+              value={new Intl.NumberFormat("id-ID").format(totalDownloads)}
+            />
+            <StatTile
+              icon={<Gem aria-hidden="true" className="size-4" />}
+              label="Eksklusif"
+              value={new Intl.NumberFormat("id-ID").format(exclusiveCount)}
+            />
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-5 pb-32 md:px-10">
+      <main className="mx-auto max-w-6xl px-4 pb-24 sm:px-6">
+        <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Katalog</p>
+            <h2 className="mt-1 font-display text-2xl sm:text-3xl">
+              {keyword ? "Hasil pencarian" : "Semua aplikasi"}
+            </h2>
+          </div>
+          <p className="text-sm text-muted-foreground">{filtered.length} aplikasi</p>
+        </div>
         {filtered.length === 0 ? (
           <EmptyState hasSearch={!!keyword} />
         ) : (
@@ -143,12 +182,25 @@ function Home() {
   );
 }
 
-function StatChip({ icon, label }: { icon: React.ReactNode; label: string }) {
+function StatTile({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+}) {
   return (
-    <span className="m3-hairline inline-flex items-center gap-2 rounded-full bg-card/70 px-3.5 py-2 text-sm font-medium text-foreground/80 backdrop-blur-md">
-      <span className="text-primary">{icon}</span>
-      {label}
-    </span>
+    <div className="flex min-w-0 items-center gap-3 rounded-2xl border border-border/70 bg-background/75 p-3 sm:p-3.5">
+      <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary-container text-on-primary-container">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate text-lg font-semibold leading-tight tabular-nums">{value}</span>
+        <span className="block truncate text-xs text-muted-foreground">{label}</span>
+      </span>
+    </div>
   );
 }
 
@@ -163,7 +215,7 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
         animationDelay: `${Math.min(index * 40, 400)}ms`,
         animationFillMode: "backwards",
       }}
-      className="group m3-shadow-1 m3-hairline relative flex animate-fade-in flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 transition-all duration-300 hover:m3-shadow-2 hover:-translate-y-1.5 active:scale-[0.985]"
+      className="group m3-shadow-1 m3-hairline relative flex min-h-64 animate-fade-in flex-col gap-4 overflow-hidden rounded-3xl bg-card p-5 transition-all duration-200 hover:m3-shadow-2 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.99]"
     >
       <span
         aria-hidden="true"
@@ -173,10 +225,10 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
         <IconBox src={app.App_icon} alt={app.App_name} />
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-2">
-            <h2 className="min-w-0 flex-1 truncate font-display text-lg leading-tight">
+            <h2 className="min-w-0 flex-1 break-words font-display text-lg leading-tight">
               {t(app.App_name)}
             </h2>
-            <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-muted-foreground opacity-0 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-100" />
+            <ArrowRight aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
           </div>
           <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
             {t(app.Description || "Tidak ada deskripsi.")}
@@ -185,19 +237,19 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
             {fresh && (
               <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-950">
                 <Sparkles className="size-3" />
-                New
+                Baru
               </span>
             )}
             {app.Coming_soon && (
               <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
                 <Clock className="size-3" />
-                Soon
+                Segera
               </span>
             )}
             {app.Is_exclusive && (
               <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-400 to-yellow-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-950">
                 <Gem className="size-3" />
-                Exclusive
+                Eksklusif
               </span>
             )}
           </div>
@@ -212,9 +264,9 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
             v{versionLabel(app.Version)}
           </span>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-container px-3 py-1.5 text-xs font-semibold text-on-primary-container transition-all group-hover:bg-primary group-hover:text-primary-foreground group-hover:shadow-md">
-          <Download className="size-3.5 transition-transform group-hover:translate-y-0.5" />
-          Download
+        <span className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-primary-container px-3 py-1.5 text-xs font-semibold text-on-primary-container transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+          Lihat detail
+          <ArrowRight aria-hidden="true" className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </span>
       </div>
     </Link>
@@ -224,7 +276,7 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
 function IconBox({ src, alt }: { src: string; alt: string }) {
   if (!src) {
     return (
-      <div className="m3-icon-glow flex size-14 shrink-0 items-center justify-center rounded-2xl bg-tertiary-container font-display text-xl text-on-tertiary-container">
+      <div aria-hidden="true" className="m3-icon-glow flex size-14 shrink-0 items-center justify-center rounded-2xl bg-tertiary-container font-display text-xl text-on-tertiary-container">
         {alt.slice(0, 1).toUpperCase()}
       </div>
     );
@@ -232,7 +284,7 @@ function IconBox({ src, alt }: { src: string; alt: string }) {
   return (
     <img
       src={src}
-      alt={alt}
+      alt=""
       className="size-14 shrink-0 rounded-2xl bg-surface-variant object-cover ring-1 ring-black/5 transition-transform duration-300 group-hover:scale-105"
       loading="lazy"
     />
@@ -250,12 +302,21 @@ function EmptyState({ hasSearch }: { hasSearch: boolean }) {
           ? "Coba kata kunci lain, atau reset pencarian."
           : "Mulai isi katalog dengan menambahkan aplikasi pertama."}
       </p>
-      <Link
-        to="/addapps"
-        className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground"
-      >
-        <Plus className="size-5" /> Tambah aplikasi
-      </Link>
+      {hasSearch ? (
+        <Link
+          to="/"
+          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          Hapus pencarian
+        </Link>
+      ) : (
+        <Link
+          to="/addapps"
+          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full bg-primary px-5 py-3 font-semibold text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <Plus aria-hidden="true" className="size-5" /> Tambah aplikasi
+        </Link>
+      )}
     </div>
   );
 }
