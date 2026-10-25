@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { NotificationBridge } from "../components/NotificationBridge";
+import { DownloadLinkNotice } from "../components/DownloadLinkNotice";
 import { applySettings, loadSettings } from "../lib/settings";
 import { I18nProvider } from "../lib/i18n";
 import "@m3e/web/loading-indicator";
@@ -193,6 +194,7 @@ function RootComponent() {
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
         <NotificationBridge />
+        <DownloadLinkNotice />
       </I18nProvider>
     </QueryClientProvider>
   );
