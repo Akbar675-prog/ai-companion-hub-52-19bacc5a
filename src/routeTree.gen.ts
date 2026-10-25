@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as About1NovemberLaterRouteImport } from './routes/about-1-november-later'
 import { Route as AddappsRouteImport } from './routes/addapps'
 import { Route as AiRouteImport } from './routes/ai'
 import { Route as BroadcastRouteImport } from './routes/broadcast'
@@ -62,6 +63,11 @@ const IndexRoute = IndexRouteImport.update({
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const About1NovemberLaterRoute = About1NovemberLaterRouteImport.update({
+  id: '/about-1-november-later',
+  path: '/about-1-november-later',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AddappsRoute = AddappsRouteImport.update({
@@ -279,6 +285,7 @@ const ApiPublicV1ChatCompletionsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/about-1-november-later': typeof About1NovemberLaterRoute
   '/addapps': typeof AddappsRoute
   '/ai': typeof AiRoute
   '/broadcast': typeof BroadcastRoute
@@ -325,6 +332,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/about-1-november-later': typeof About1NovemberLaterRoute
   '/addapps': typeof AddappsRoute
   '/ai': typeof AiRoute
   '/broadcast': typeof BroadcastRoute
@@ -372,6 +380,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/about-1-november-later': typeof About1NovemberLaterRoute
   '/addapps': typeof AddappsRoute
   '/ai': typeof AiRoute
   '/broadcast': typeof BroadcastRoute
@@ -420,6 +429,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/about-1-november-later'
     | '/addapps'
     | '/ai'
     | '/broadcast'
@@ -466,6 +476,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/about'
+    | '/about-1-november-later'
     | '/addapps'
     | '/ai'
     | '/broadcast'
@@ -512,6 +523,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/about'
+    | '/about-1-november-later'
     | '/addapps'
     | '/ai'
     | '/broadcast'
@@ -559,6 +571,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
+  About1NovemberLaterRoute: typeof About1NovemberLaterRoute
   AddappsRoute: typeof AddappsRoute
   AiRoute: typeof AiRoute
   BroadcastRoute: typeof BroadcastRoute
@@ -617,6 +630,13 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about-1-november-later': {
+      id: '/about-1-november-later'
+      path: '/about-1-november-later'
+      fullPath: '/about-1-november-later'
+      preLoaderRoute: typeof About1NovemberLaterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/addapps': {
@@ -919,6 +939,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
+  About1NovemberLaterRoute: About1NovemberLaterRoute,
   AddappsRoute: AddappsRoute,
   AiRoute: AiRoute,
   BroadcastRoute: BroadcastRoute,
