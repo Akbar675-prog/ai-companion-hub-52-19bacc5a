@@ -24,7 +24,7 @@ export async function listStoredAiModels(): Promise<AiModel[]> {
   const { data, error } = await supabaseAdmin
     .from("ai_models")
     .select(
-      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, abilities, endpoint_url, endpoint_key",
+      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, abilities, endpoint_url",
     )
     .order("created_at", { ascending: true });
 
@@ -76,6 +76,18 @@ export async function saveStoredAiModel(model: AiModel): Promise<AiModel> {
     endpointUrl: data.endpoint_url,
     endpointKey: data.endpoint_key,
   } as StoredAiModel);
+}
+
+export async function getStoredAiModelConnection(id: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("ai_models")
+    .select("endpoint_url, endpoint_key")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw new Error(`Gagal memuat konfigurasi AI: ${error.message}`);
+  return data ?? undefined;
 }
 
 export async function deleteStoredAiModel(id: string) {

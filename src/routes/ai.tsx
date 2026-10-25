@@ -142,13 +142,11 @@ function AiChatPage() {
 
     const localList = allModels([]);
     applyModels(localList);
-    if (userId) {
-      void listAiModelsFn()
-        .then((customModels) => applyModels(allModels(customModels)))
-        .catch(() => {
-          // Tetap gunakan model bawaan/local bila Supabase belum tersedia.
-        });
-    }
+    void listAiModelsFn()
+      .then((customModels) => applyModels(allModels(customModels)))
+      .catch(() => {
+        // Tetap gunakan model bawaan/local bila Supabase belum tersedia.
+      });
     return () => {
       alive = false;
     };
@@ -494,6 +492,9 @@ function AiChatPage() {
               ? ""
               : modelById(modelId, models).persona,
             modelLabel: modelById(modelId, models).name,
+            catalogModelId: modelById(modelId, models).custom
+              ? modelById(modelId, models).id
+              : undefined,
             realModelId: modelById(modelId, models).realModel
               ? modelById(modelId, models).modelType
               : undefined,

@@ -68,11 +68,6 @@ function AddAiPage() {
 
   useEffect(() => {
     let alive = true;
-    if (!userId) {
-      setCloudModels([]);
-      setList(allModels([]));
-      return;
-    }
     void listAiModelsFn()
       .then((models) => {
         if (!alive) return;

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAiExtraContext } from "@/lib/ai-context.server";
 import { abilityPrompts, parseAbilities } from "@/lib/ai-abilities";
+import { getStoredAiModelConnection } from "@/lib/ai-models.server";
 
 const CHAT_MODEL = "nvidia/nemotron-3.5-super-vl:free";
 const REASONING_MODEL = "nvidia/nemotron-3.5-super-vl:free";
@@ -47,6 +48,7 @@ type Body = {
   reasoning?: boolean;
   persona?: string;
   modelLabel?: string;
+  catalogModelId?: string;
   realModelId?: string;
   endpointUrl?: string;
   endpointKey?: string;
@@ -368,7 +370,17 @@ export const Route = createFileRoute("/api/ai-chat")({
         const hardStop = setTimeout(() => upstreamAbort.abort(), ANSWER_TIMEOUT_MS);
         request.signal.addEventListener("abort", () => upstreamAbort.abort());
 
-        const rawEndpoint = realModelId ? String(body.endpointUrl ?? "").trim() : "";
+        const catalogModelId = String(body.catalogModelId ?? "").trim();
+        const catalogConnection = catalogModelId
+          ? await getStoredAiModelConnection(catalogModelId)
+          : undefined;
+        const rawEndpoint = realModelId
+          ? String(
+              catalogConnection
+                ? (catalogConnection.endpoint_url ?? "")
+                : (body.endpointUrl ?? ""),
+            ).trim()
+          : "";
         let endpoint = "https://openrouter.ai/api/v1/chat/completions";
         let endpointKey = key;
         if (rawEndpoint) {
@@ -378,7 +390,9 @@ export const Route = createFileRoute("/api/ai-chat")({
           }
           const base = rawEndpoint.replace(/\/+$/, "");
           endpoint = /\/chat\/completions$/i.test(base) ? base : `${base}/chat/completions`;
-          endpointKey = String(body.endpointKey ?? "").trim();
+          endpointKey = catalogConnection
+            ? (catalogConnection.endpoint_key ?? "")
+            : String(body.endpointKey ?? "").trim();
         }
 
         /* ---------------- susun system prompt ---------------- */

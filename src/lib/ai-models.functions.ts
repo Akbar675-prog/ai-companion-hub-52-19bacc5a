@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireAccountAuth } from "@/integrations/auth-supabase/auth-middleware";
 import type { AiModel } from "./ai-models";
 import { deleteStoredAiModel, listStoredAiModels, saveStoredAiModel } from "./ai-models.server";
 
@@ -19,9 +18,9 @@ const modelSchema = z.object({
   endpointKey: z.string().max(400).optional(),
 });
 
-export const listAiModelsFn = createServerFn({ method: "POST" })
-  .middleware([requireAccountAuth])
-  .handler(async () => listStoredAiModels());
+export const listAiModelsFn = createServerFn({ method: "POST" }).handler(async () =>
+  listStoredAiModels(),
+);
 
 export const saveAiModelFn = createServerFn({ method: "POST" })
   .middleware([requireAccountAuth])
