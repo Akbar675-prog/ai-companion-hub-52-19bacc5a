@@ -275,7 +275,10 @@ function AppDetail() {
             )}
 
             <div className="flex-1">
-              <h1 className="font-display text-3xl leading-tight md:text-4xl">
+              <h1
+                data-no-translate
+                className="font-display text-3xl leading-tight md:text-4xl"
+              >
                 {app.App_name}
               </h1>
               <p className="mt-1 text-xs font-mono text-muted-foreground">
@@ -446,7 +449,10 @@ function AppDetail() {
             <h2 className="flex items-center gap-2 font-display text-xl">
               <FileText className="size-5 text-primary" /> Deskripsi
             </h2>
-            <p className="mt-3 whitespace-pre-wrap text-base leading-relaxed text-foreground/90">
+            <p
+              data-no-translate
+              className="mt-3 whitespace-pre-wrap text-base leading-relaxed text-foreground/90"
+            >
               {app.Description || "Tidak ada deskripsi."}
             </p>
           </section>
