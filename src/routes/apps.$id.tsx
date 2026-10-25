@@ -52,25 +52,31 @@ export const Route = createFileRoute("/apps/$id")({
     }
     const title = `${app.App_name} APK v${versionLabel(app.Version)} · Galileo Mod APK`;
     const desc = (app.Description || `Download ${app.App_name} APK gratis di Galileo Mod APK.`).slice(0, 155);
-    const icon = app.App_icon || "";
+    const imageUrl = app.Banner_url || app.App_icon || "";
+    const absoluteImageUrl = imageUrl
+      ? new URL(imageUrl, "https://galileomodapk.visora.my.id").href
+      : "";
+    const absolutePageUrl = `https://galileomodapk.visora.my.id/apps/${app.ID}`;
     const meta = [
       { title },
       { name: "description", content: desc },
       { property: "og:title", content: title },
       { property: "og:description", content: desc },
       { property: "og:type", content: "article" },
-      { property: "og:url", content: `/apps/${app.ID}` },
+      { property: "og:url", content: absolutePageUrl },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: desc },
     ];
-    if (icon) {
-      meta.push({ property: "og:image", content: icon });
-      meta.push({ name: "twitter:image", content: icon });
+    if (absoluteImageUrl) {
+      meta.push({ property: "og:image", content: absoluteImageUrl });
+      meta.push({ property: "og:image:alt", content: app.App_name });
+      meta.push({ name: "twitter:image", content: absoluteImageUrl });
+      meta.push({ name: "twitter:image:alt", content: app.App_name });
     }
     return {
       meta,
-      links: [{ rel: "canonical", href: `/apps/${app.ID}` }],
+      links: [{ rel: "canonical", href: absolutePageUrl }],
       scripts: [
         {
           type: "application/ld+json",
@@ -82,7 +88,7 @@ export const Route = createFileRoute("/apps/$id")({
             operatingSystem: "Android",
             applicationCategory: "MobileApplication",
             softwareVersion: app.Version || undefined,
-            image: icon || undefined,
+            image: absoluteImageUrl || undefined,
             offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
           }),
         },
