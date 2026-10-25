@@ -264,7 +264,8 @@ export const getAppFn = createServerFn({ method: "GET" })
       ID: row.id,
       App_name: row.app_name,
       Description: row.description ?? "",
-      Download_url: meta?.comingSoon ? "" : excl ? "" : row.download_url ?? "",
+      // Download URLs stay in the public app-list JSON, not detail-page loader data.
+      Download_url: "",
       App_icon: iconUrlFor(row),
       Created_at: row.created_at,
       Download_count: (row as { download_count?: number }).download_count ?? 0,
@@ -281,7 +282,10 @@ export const getAppFn = createServerFn({ method: "GET" })
       Banner_url: meta?.banner?.id ? `/apps/preview/${meta.banner.id}` : null,
       Package_name: meta?.packageName ?? null,
       Previews: previewUrls(meta?.previews),
-      Changelog: changelogs[row.id] ?? [],
+      Changelog: (changelogs[row.id] ?? []).map((item) => ({
+        ...item,
+        Download_url: null,
+      })),
       Is_new: isNewApp(changelogs[row.id]),
     };
   });
