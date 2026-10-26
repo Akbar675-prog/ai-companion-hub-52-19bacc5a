@@ -12,7 +12,11 @@ export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
       { title: "Daftar Akun - Galileo Mod APK" },
-      { name: "description", content: "Buat akun GMA gratis: pilih nama panggilan, username unik, dan password untuk mulai menggunakan profil." },
+      {
+        name: "description",
+        content:
+          "Buat akun GMA gratis: pilih nama panggilan, username unik, dan password untuk mulai menggunakan profil.",
+      },
       { property: "og:title", content: "Daftar Akun - Galileo Mod APK" },
       { property: "og:description", content: "Buat akun GMA gratis dalam hitungan detik." },
       { property: "og:type", content: "website" },
@@ -25,7 +29,13 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const t = useT();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: "", username: "", email: "", password: "", confirm: "" });
+  const [form, setForm] = useState({
+    name: "",
+    username: "",
+    email: "",
+    password: "",
+    confirm: "",
+  });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -58,7 +68,8 @@ function RegisterPage() {
         email,
         password: form.password,
       });
-      if (signInError) throw new Error("Akun dibuat, tapi gagal login otomatis. Coba masuk manual.");
+      if (signInError)
+        throw new Error("Akun dibuat, tapi gagal login otomatis. Coba masuk manual.");
       navigate({ to: "/profile" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal mendaftar.");
@@ -136,7 +147,9 @@ function RegisterPage() {
           </Field>
 
           {error && (
-            <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{t(error)}</p>
+            <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {t(error)}
+            </p>
           )}
 
           <button
@@ -144,16 +157,27 @@ function RegisterPage() {
             disabled={busy}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition active:scale-95 disabled:opacity-60"
           >
-            {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Mendaftar" /> : <UserPlus className="size-4" />}
+            {busy ? (
+              <m3e-loading-indicator
+                variant="contained"
+                className="m3-loading-sm"
+                aria-label="Mendaftar"
+              />
+            ) : (
+              <UserPlus className="size-4" />
+            )}
             {t("Buat akun")}
           </button>
 
-          <GoogleButton label={t("Daftar dengan Google")} onError={setError} />
+          <GoogleButton label={t("Daftar dengan Google")} flow="signup" onError={setError} />
         </form>
 
         <p className="mt-5 text-center text-sm text-muted-foreground">
           {t("Sudah punya akun?")}{" "}
-          <Link to="/login" className="font-semibold text-primary underline-offset-4 hover:underline">
+          <Link
+            to="/login"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
             {t("Masuk")}
           </Link>
         </p>

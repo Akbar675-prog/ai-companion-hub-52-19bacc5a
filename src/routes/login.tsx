@@ -12,7 +12,11 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Login Akun - Galileo Mod APK" },
-      { name: "description", content: "Masuk ke akun GMA kamu dengan username atau email untuk mengakses profil dan fitur komunitas." },
+      {
+        name: "description",
+        content:
+          "Masuk ke akun GMA kamu dengan username atau email untuk mengakses profil dan fitur komunitas.",
+      },
       { property: "og:title", content: "Login Akun - Galileo Mod APK" },
       { property: "og:description", content: "Masuk ke akun GMA kamu dengan username atau email." },
       { property: "og:type", content: "website" },
@@ -36,7 +40,10 @@ function LoginPage() {
     setBusy(true);
     try {
       const { email } = await resolveLoginEmailFn({ data: { identifier } });
-      const { error: signInError } = await authSupabase.auth.signInWithPassword({ email, password });
+      const { error: signInError } = await authSupabase.auth.signInWithPassword({
+        email,
+        password,
+      });
       if (signInError) throw new Error("Username/email atau password salah.");
       navigate({ to: "/profile" });
     } catch (err) {
@@ -76,7 +83,9 @@ function LoginPage() {
           </Field>
 
           {error && (
-            <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{t(error)}</p>
+            <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
+              {t(error)}
+            </p>
           )}
 
           <button
@@ -84,16 +93,27 @@ function LoginPage() {
             disabled={busy}
             className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition active:scale-95 disabled:opacity-60"
           >
-            {busy ? <m3e-loading-indicator variant="contained" className="m3-loading-sm" aria-label="Masuk" /> : <LogIn className="size-4" />}
+            {busy ? (
+              <m3e-loading-indicator
+                variant="contained"
+                className="m3-loading-sm"
+                aria-label="Masuk"
+              />
+            ) : (
+              <LogIn className="size-4" />
+            )}
             {t("Masuk")}
           </button>
 
-          <GoogleButton label={t("Masuk dengan Google")} onError={setError} />
+          <GoogleButton label={t("Masuk dengan Google")} flow="signin" onError={setError} />
         </form>
 
         <p className="mt-5 text-center text-sm text-muted-foreground">
           {t("Belum punya akun?")}{" "}
-          <Link to="/register" className="font-semibold text-primary underline-offset-4 hover:underline">
+          <Link
+            to="/register"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
             {t("Daftar sekarang")}
           </Link>
         </p>

@@ -43,9 +43,11 @@ import { Route as ApiAiVisionRouteImport } from './routes/api.ai-vision'
 import { Route as AppsIdRouteImport } from './routes/apps.$id'
 import { Route as CheckReportRouteImport } from './routes/check.report'
 import { Route as DataGetVerifiedRouteImport } from './routes/data.get-verified'
+import { Route as ErrorLoginRouteImport } from './routes/error.login'
 import { Route as RequestDataRouteImport } from './routes/request_.data'
 import { Route as StatusSetRouteImport } from './routes/status_.set'
 import { Route as VoteIdRouteImport } from './routes/vote.$id'
+import { Route as ApiV1LoginRouteImport } from './routes/api.v1.login'
 import { Route as AppsGypsB64RouteImport } from './routes/apps.gyps.$b64'
 import { Route as AppsIndexApplistDotjsonRouteImport } from './routes/apps.index.applist[.]json'
 import { Route as AppsPreviewIdRouteImport } from './routes/apps.preview.$id'
@@ -228,6 +230,11 @@ const DataGetVerifiedRoute = DataGetVerifiedRouteImport.update({
   path: '/data/get-verified',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ErrorLoginRoute = ErrorLoginRouteImport.update({
+  id: '/error/login',
+  path: '/error/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RequestDataRoute = RequestDataRouteImport.update({
   id: '/request_/data',
   path: '/request/data',
@@ -241,6 +248,11 @@ const StatusSetRoute = StatusSetRouteImport.update({
 const VoteIdRoute = VoteIdRouteImport.update({
   id: '/vote/$id',
   path: '/vote/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1LoginRoute = ApiV1LoginRouteImport.update({
+  id: '/api/v1/login',
+  path: '/api/v1/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppsGypsB64Route = AppsGypsB64RouteImport.update({
@@ -335,9 +347,11 @@ export interface FileRoutesByFullPath {
   '/apps/$id': typeof AppsIdRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
+  '/error/login': typeof ErrorLoginRoute
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
+  '/api/v1/login': typeof ApiV1LoginRoute
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -385,9 +399,11 @@ export interface FileRoutesByTo {
   '/apps/$id': typeof AppsIdRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
+  '/error/login': typeof ErrorLoginRoute
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
+  '/api/v1/login': typeof ApiV1LoginRoute
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -436,9 +452,11 @@ export interface FileRoutesById {
   '/apps/$id': typeof AppsIdRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
+  '/error/login': typeof ErrorLoginRoute
   '/request_/data': typeof RequestDataRoute
   '/status_/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
+  '/api/v1/login': typeof ApiV1LoginRoute
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -488,9 +506,11 @@ export interface FileRouteTypes {
     | '/apps/$id'
     | '/check/report'
     | '/data/get-verified'
+    | '/error/login'
     | '/request/data'
     | '/status/set'
     | '/vote/$id'
+    | '/api/v1/login'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
     | '/broadcasts/image/$id'
@@ -538,9 +558,11 @@ export interface FileRouteTypes {
     | '/apps/$id'
     | '/check/report'
     | '/data/get-verified'
+    | '/error/login'
     | '/request/data'
     | '/status/set'
     | '/vote/$id'
+    | '/api/v1/login'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
     | '/broadcasts/image/$id'
@@ -588,9 +610,11 @@ export interface FileRouteTypes {
     | '/apps/$id'
     | '/check/report'
     | '/data/get-verified'
+    | '/error/login'
     | '/request_/data'
     | '/status_/set'
     | '/vote/$id'
+    | '/api/v1/login'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
     | '/broadcasts/image/$id'
@@ -639,9 +663,11 @@ export interface RootRouteChildren {
   AppsIdRoute: typeof AppsIdRoute
   CheckReportRoute: typeof CheckReportRoute
   DataGetVerifiedRoute: typeof DataGetVerifiedRoute
+  ErrorLoginRoute: typeof ErrorLoginRoute
   RequestDataRoute: typeof RequestDataRoute
   StatusSetRoute: typeof StatusSetRoute
   VoteIdRoute: typeof VoteIdRoute
+  ApiV1LoginRoute: typeof ApiV1LoginRoute
   AppsGypsB64Route: typeof AppsGypsB64Route
   AppsPreviewIdRoute: typeof AppsPreviewIdRoute
   BroadcastsImageIdRoute: typeof BroadcastsImageIdRoute
@@ -895,6 +921,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DataGetVerifiedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/error/login': {
+      id: '/error/login'
+      path: '/error/login'
+      fullPath: '/error/login'
+      preLoaderRoute: typeof ErrorLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/request_/data': {
       id: '/request_/data'
       path: '/request/data'
@@ -914,6 +947,13 @@ declare module '@tanstack/react-router' {
       path: '/vote/$id'
       fullPath: '/vote/$id'
       preLoaderRoute: typeof VoteIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/login': {
+      id: '/api/v1/login'
+      path: '/api/v1/login'
+      fullPath: '/api/v1/login'
+      preLoaderRoute: typeof ApiV1LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/apps/gyps/$b64': {
@@ -1031,9 +1071,11 @@ const rootRouteChildren: RootRouteChildren = {
   AppsIdRoute: AppsIdRoute,
   CheckReportRoute: CheckReportRoute,
   DataGetVerifiedRoute: DataGetVerifiedRoute,
+  ErrorLoginRoute: ErrorLoginRoute,
   RequestDataRoute: RequestDataRoute,
   StatusSetRoute: StatusSetRoute,
   VoteIdRoute: VoteIdRoute,
+  ApiV1LoginRoute: ApiV1LoginRoute,
   AppsGypsB64Route: AppsGypsB64Route,
   AppsPreviewIdRoute: AppsPreviewIdRoute,
   BroadcastsImageIdRoute: BroadcastsImageIdRoute,
