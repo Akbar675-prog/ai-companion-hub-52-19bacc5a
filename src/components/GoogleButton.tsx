@@ -66,14 +66,10 @@ function startLogin(flow: "signin" | "signup") {
   window.location.assign(`/api/v1/login?${params.toString()}`);
 }
 
-function failLogin(requestId: string, errorCode: string) {
-  const params = new URLSearchParams({ token: requestId, error_code: errorCode });
-  window.location.replace(`/error/login?${params.toString()}`);
-}
-
 export function GoogleButton({
   label,
   flow: requestedFlow,
+  onError,
 }: {
   label: string;
   flow?: "signin" | "signup";
@@ -102,7 +98,7 @@ export function GoogleButton({
     let active = true;
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
     if (!clientId) {
-      failLogin(request.requestId, "oauth_client_not_configured");
+      onError?.("Google Sign-In belum dikonfigurasi.");
       return;
     }
 
@@ -112,27 +108,31 @@ export function GoogleButton({
         const identity = window.google.accounts.id;
         identity.initialize({
           client_id: clientId,
-          nonce: request.token,
           context: isSignup ? "signup" : "signin",
           ux_mode: "popup",
           callback: async ({ credential }) => {
             if (!credential) {
-              failLogin(request.requestId, "missing_google_credential");
+              onError?.("Gagal mendapatkan akun Google. Coba lagi.");
               return;
             }
             setBusy(true);
             try {
-              const completion = await completeGoogleLoginRequestFn({ data: request });
-              if (!completion.ok) throw new Error("Login request tidak valid.");
               const { error: authError } = await authSupabase.auth.signInWithIdToken({
                 provider: "google",
                 token: credential,
-                nonce: request.token,
               });
               if (authError) throw authError;
+              try {
+                const completion = await completeGoogleLoginRequestFn({ data: request });
+                if (!completion.ok) throw new Error("Login request sudah kedaluwarsa.");
+              } catch (err) {
+                await authSupabase.auth.signOut();
+                throw err;
+              }
               window.location.assign("/profile");
             } catch {
-              failLogin(request.requestId, "token_exchange_failed");
+              setBusy(false);
+              onError?.("Gagal masuk dengan Google. Silakan mulai lagi.");
             }
           },
         });
@@ -151,13 +151,13 @@ export function GoogleButton({
         });
       })
       .catch(() => {
-        if (active) failLogin(request.requestId, "google_script_unavailable");
+        if (active) onError?.("Gagal memuat Google Sign-In. Silakan coba lagi.");
       });
 
     return () => {
       active = false;
     };
-  }, [isSignup, request]);
+  }, [isSignup, onError, request]);
 
   if (request) {
     return (
