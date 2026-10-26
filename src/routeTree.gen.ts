@@ -56,6 +56,7 @@ import { Route as UPB64RouteImport } from './routes/u.p.$b64'
 import { Route as UsersIdProfileRouteImport } from './routes/users.$id.profile'
 import { Route as ApiV1ChatCompletionsRouteImport } from './routes/api.v1.chat.completions'
 import { Route as ApiV1FetchAccount_dataRouteImport } from './routes/api.v1.fetch.account_data'
+import { Route as ApiV1LoginCallbackRouteImport } from './routes/api.v1.login.callback'
 import { Route as AppsIconFGJ01IdRouteImport } from './routes/apps.icon.FGJ01.$id'
 import { Route as ApiPublicV1ChatCompletionsRouteImport } from './routes/api.public.v1.chat.completions'
 
@@ -294,6 +295,11 @@ const ApiV1FetchAccount_dataRoute = ApiV1FetchAccount_dataRouteImport.update({
   path: '/api/v1/fetch/account_data',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiV1LoginCallbackRoute = ApiV1LoginCallbackRouteImport.update({
+  id: '/callback',
+  path: '/callback',
+  getParentRoute: () => ApiV1LoginRoute,
+} as any)
 const AppsIconFGJ01IdRoute = AppsIconFGJ01IdRouteImport.update({
   id: '/apps/icon/FGJ01/$id',
   path: '/apps/icon/FGJ01/$id',
@@ -344,7 +350,7 @@ export interface FileRoutesByFullPath {
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
-  '/api/v1/login': typeof ApiV1LoginRoute
+  '/api/v1/login': typeof ApiV1LoginRouteWithChildren
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -354,6 +360,7 @@ export interface FileRoutesByFullPath {
   '/apps/index/applist.json': typeof AppsIndexApplistDotjsonRoute
   '/api/v1/chat/completions': typeof ApiV1ChatCompletionsRoute
   '/api/v1/fetch/account_data': typeof ApiV1FetchAccount_dataRoute
+  '/api/v1/login/callback': typeof ApiV1LoginCallbackRoute
   '/apps/icon/FGJ01/$id': typeof AppsIconFGJ01IdRoute
   '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
 }
@@ -395,7 +402,7 @@ export interface FileRoutesByTo {
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
-  '/api/v1/login': typeof ApiV1LoginRoute
+  '/api/v1/login': typeof ApiV1LoginRouteWithChildren
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -405,6 +412,7 @@ export interface FileRoutesByTo {
   '/apps/index/applist.json': typeof AppsIndexApplistDotjsonRoute
   '/api/v1/chat/completions': typeof ApiV1ChatCompletionsRoute
   '/api/v1/fetch/account_data': typeof ApiV1FetchAccount_dataRoute
+  '/api/v1/login/callback': typeof ApiV1LoginCallbackRoute
   '/apps/icon/FGJ01/$id': typeof AppsIconFGJ01IdRoute
   '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
 }
@@ -447,7 +455,7 @@ export interface FileRoutesById {
   '/request_/data': typeof RequestDataRoute
   '/status_/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
-  '/api/v1/login': typeof ApiV1LoginRoute
+  '/api/v1/login': typeof ApiV1LoginRouteWithChildren
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -457,6 +465,7 @@ export interface FileRoutesById {
   '/apps/index/applist.json': typeof AppsIndexApplistDotjsonRoute
   '/api/v1/chat/completions': typeof ApiV1ChatCompletionsRoute
   '/api/v1/fetch/account_data': typeof ApiV1FetchAccount_dataRoute
+  '/api/v1/login/callback': typeof ApiV1LoginCallbackRoute
   '/apps/icon/FGJ01/$id': typeof AppsIconFGJ01IdRoute
   '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
 }
@@ -510,6 +519,7 @@ export interface FileRouteTypes {
     | '/apps/index/applist.json'
     | '/api/v1/chat/completions'
     | '/api/v1/fetch/account_data'
+    | '/api/v1/login/callback'
     | '/apps/icon/FGJ01/$id'
     | '/api/public/v1/chat/completions'
   fileRoutesByTo: FileRoutesByTo
@@ -561,6 +571,7 @@ export interface FileRouteTypes {
     | '/apps/index/applist.json'
     | '/api/v1/chat/completions'
     | '/api/v1/fetch/account_data'
+    | '/api/v1/login/callback'
     | '/apps/icon/FGJ01/$id'
     | '/api/public/v1/chat/completions'
   id:
@@ -612,6 +623,7 @@ export interface FileRouteTypes {
     | '/apps/index/applist.json'
     | '/api/v1/chat/completions'
     | '/api/v1/fetch/account_data'
+    | '/api/v1/login/callback'
     | '/apps/icon/FGJ01/$id'
     | '/api/public/v1/chat/completions'
   fileRoutesById: FileRoutesById
@@ -654,7 +666,7 @@ export interface RootRouteChildren {
   RequestDataRoute: typeof RequestDataRoute
   StatusSetRoute: typeof StatusSetRoute
   VoteIdRoute: typeof VoteIdRoute
-  ApiV1LoginRoute: typeof ApiV1LoginRoute
+  ApiV1LoginRoute: typeof ApiV1LoginRouteWithChildren
   AppsGypsB64Route: typeof AppsGypsB64Route
   AppsPreviewIdRoute: typeof AppsPreviewIdRoute
   BroadcastsImageIdRoute: typeof BroadcastsImageIdRoute
@@ -999,6 +1011,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1FetchAccount_dataRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/v1/login/callback': {
+      id: '/api/v1/login/callback'
+      path: '/callback'
+      fullPath: '/api/v1/login/callback'
+      preLoaderRoute: typeof ApiV1LoginCallbackRouteImport
+      parentRoute: typeof ApiV1LoginRoute
+    }
     '/apps/icon/FGJ01/$id': {
       id: '/apps/icon/FGJ01/$id'
       path: '/apps/icon/FGJ01/$id'
@@ -1015,6 +1034,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface ApiV1LoginRouteChildren {
+  ApiV1LoginCallbackRoute: typeof ApiV1LoginCallbackRoute
+}
+
+const ApiV1LoginRouteChildren: ApiV1LoginRouteChildren = {
+  ApiV1LoginCallbackRoute: ApiV1LoginCallbackRoute,
+}
+
+const ApiV1LoginRouteWithChildren = ApiV1LoginRoute._addFileChildren(
+  ApiV1LoginRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -1054,7 +1085,7 @@ const rootRouteChildren: RootRouteChildren = {
   RequestDataRoute: RequestDataRoute,
   StatusSetRoute: StatusSetRoute,
   VoteIdRoute: VoteIdRoute,
-  ApiV1LoginRoute: ApiV1LoginRoute,
+  ApiV1LoginRoute: ApiV1LoginRouteWithChildren,
   AppsGypsB64Route: AppsGypsB64Route,
   AppsPreviewIdRoute: AppsPreviewIdRoute,
   BroadcastsImageIdRoute: BroadcastsImageIdRoute,

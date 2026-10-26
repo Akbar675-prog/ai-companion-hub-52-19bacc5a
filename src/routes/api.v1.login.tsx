@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { GoogleButton } from "@/components/GoogleButton";
+import { authSupabase } from "@/integrations/auth-supabase/client";
 import { startGoogleLoginRequestFn } from "@/lib/google-login.functions";
+
+const googleLoginRequestStorageKey = "gma:google-login-request";
 
 export const Route = createFileRoute("/api/v1/login")({
   head: () => ({
@@ -11,15 +13,12 @@ export const Route = createFileRoute("/api/v1/login")({
 });
 
 function GoogleLoginGateway() {
-  const [flow, setFlow] = useState<"signin" | "signup">("signin");
-  const [ready, setReady] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let active = true;
     const flow =
       new URLSearchParams(window.location.search).get("flow") === "signup" ? "signup" : "signin";
-    setFlow(flow);
     const minimumLoading = new Promise<void>((resolve) => window.setTimeout(resolve, 2500));
 
     async function continueLogin() {
@@ -30,15 +29,26 @@ function GoogleLoginGateway() {
         ]);
         if (!active) return;
 
-        const fragment = new URLSearchParams({
-          google_login_token: request.token,
-          google_login_request_id: request.requestId,
+        window.sessionStorage.setItem(
+          googleLoginRequestStorageKey,
+          JSON.stringify({ requestId: request.requestId, token: request.token }),
+        );
+        const { error: oauthError } = await authSupabase.auth.signInWithOAuth({
+          provider: "google",
+          options: {
+            redirectTo: new URL("/api/v1/login/callback", window.location.origin).toString(),
+            queryParams: { prompt: "select_account" },
+          },
         });
-        window.history.replaceState(null, "", `${window.location.pathname}#${fragment}`);
-        setReady(true);
+        if (oauthError) throw oauthError;
       } catch {
         await minimumLoading;
-        if (active) setError("Gagal menyiapkan login. Silakan coba lagi.");
+        try {
+          window.sessionStorage.removeItem(googleLoginRequestStorageKey);
+        } catch {
+          // Ignore storage cleanup errors; keep the redirect error visible.
+        }
+        if (active) setError("Gagal mengarahkan ke Google. Silakan coba lagi.");
       }
     }
 
@@ -49,20 +59,12 @@ function GoogleLoginGateway() {
   }, []);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background">
       <m3e-loading-indicator
         className="m3-loading-lg"
-        aria-label={error || "Menyiapkan login Google"}
+        aria-label={error || "Mengalihkan ke Google"}
       />
-      {ready && (
-        <div className="hidden" aria-hidden="true">
-          <GoogleButton
-            label={flow === "signup" ? "Daftar dengan Google" : "Masuk dengan Google"}
-            flow={flow}
-            onError={setError}
-          />
-        </div>
-      )}
+      {error && <p className="px-4 text-center text-sm text-destructive">{error}</p>}
     </main>
   );
 }
