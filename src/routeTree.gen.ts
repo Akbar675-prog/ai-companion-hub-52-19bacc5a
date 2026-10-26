@@ -21,6 +21,7 @@ import { Route as GiveCreditsRouteImport } from './routes/give-credits'
 import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MyReportRouteImport } from './routes/my-report'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ReportRouteImport } from './routes/report'
@@ -28,6 +29,7 @@ import { Route as RequestRouteImport } from './routes/request'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as TermOfServicesRouteImport } from './routes/term-of-services'
 import { Route as TrainingaiRouteImport } from './routes/trainingai'
 import { Route as VerifiedRouteImport } from './routes/verified'
 import { Route as VoteMakerRouteImport } from './routes/vote-maker'
@@ -120,6 +122,11 @@ const MyReportRoute = MyReportRouteImport.update({
   path: '/my-report',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -153,6 +160,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermOfServicesRoute = TermOfServicesRouteImport.update({
+  id: '/term-of-services',
+  path: '/term-of-services',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrainingaiRoute = TrainingaiRouteImport.update({
@@ -325,6 +337,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/my-report': typeof MyReportRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/report': typeof ReportRoute
@@ -332,6 +345,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
+  '/term-of-services': typeof TermOfServicesRoute
   '/trainingai': typeof TrainingaiRoute
   '/verified': typeof VerifiedRoute
   '/vote-maker': typeof VoteMakerRoute
@@ -377,6 +391,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/my-report': typeof MyReportRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/report': typeof ReportRoute
@@ -384,6 +399,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
+  '/term-of-services': typeof TermOfServicesRoute
   '/trainingai': typeof TrainingaiRoute
   '/verified': typeof VerifiedRoute
   '/vote-maker': typeof VoteMakerRoute
@@ -430,6 +446,7 @@ export interface FileRoutesById {
   '/leaderboard': typeof LeaderboardRoute
   '/login': typeof LoginRoute
   '/my-report': typeof MyReportRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/profile': typeof ProfileRoute
   '/register': typeof RegisterRoute
   '/report': typeof ReportRoute
@@ -437,6 +454,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
+  '/term-of-services': typeof TermOfServicesRoute
   '/trainingai': typeof TrainingaiRoute
   '/verified': typeof VerifiedRoute
   '/vote-maker': typeof VoteMakerRoute
@@ -484,6 +502,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/my-report'
+    | '/privacy-policy'
     | '/profile'
     | '/register'
     | '/report'
@@ -491,6 +510,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sitemap.xml'
     | '/status'
+    | '/term-of-services'
     | '/trainingai'
     | '/verified'
     | '/vote-maker'
@@ -536,6 +556,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/my-report'
+    | '/privacy-policy'
     | '/profile'
     | '/register'
     | '/report'
@@ -543,6 +564,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sitemap.xml'
     | '/status'
+    | '/term-of-services'
     | '/trainingai'
     | '/verified'
     | '/vote-maker'
@@ -588,6 +610,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/login'
     | '/my-report'
+    | '/privacy-policy'
     | '/profile'
     | '/register'
     | '/report'
@@ -595,6 +618,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sitemap.xml'
     | '/status'
+    | '/term-of-services'
     | '/trainingai'
     | '/verified'
     | '/vote-maker'
@@ -641,6 +665,7 @@ export interface RootRouteChildren {
   LeaderboardRoute: typeof LeaderboardRoute
   LoginRoute: typeof LoginRoute
   MyReportRoute: typeof MyReportRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   ProfileRoute: typeof ProfileRoute
   RegisterRoute: typeof RegisterRoute
   ReportRoute: typeof ReportRoute
@@ -648,6 +673,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StatusRoute: typeof StatusRoute
+  TermOfServicesRoute: typeof TermOfServicesRoute
   TrainingaiRoute: typeof TrainingaiRoute
   VerifiedRoute: typeof VerifiedRoute
   VoteMakerRoute: typeof VoteMakerRoute
@@ -766,6 +792,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MyReportRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -813,6 +846,13 @@ declare module '@tanstack/react-router' {
       path: '/status'
       fullPath: '/status'
       preLoaderRoute: typeof StatusRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/term-of-services': {
+      id: '/term-of-services'
+      path: '/term-of-services'
+      fullPath: '/term-of-services'
+      preLoaderRoute: typeof TermOfServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/trainingai': {
@@ -1060,6 +1100,7 @@ const rootRouteChildren: RootRouteChildren = {
   LeaderboardRoute: LeaderboardRoute,
   LoginRoute: LoginRoute,
   MyReportRoute: MyReportRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   ProfileRoute: ProfileRoute,
   RegisterRoute: RegisterRoute,
   ReportRoute: ReportRoute,
@@ -1067,6 +1108,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StatusRoute: StatusRoute,
+  TermOfServicesRoute: TermOfServicesRoute,
   TrainingaiRoute: TrainingaiRoute,
   VerifiedRoute: VerifiedRoute,
   VoteMakerRoute: VoteMakerRoute,
