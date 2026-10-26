@@ -12,9 +12,8 @@ function redirect(path: string): Response {
   });
 }
 
-function errorPath(requestId: string, code: string): string {
-  const params = new URLSearchParams({ token: requestId, error_code: code });
-  return `/error/login?${params.toString()}`;
+function errorPath(): string {
+  return "/login";
 }
 
 async function handleLogin({ request }: { request: Request }) {
@@ -33,7 +32,7 @@ async function handleLogin({ request }: { request: Request }) {
     (scopes && scopes !== "profile" && scopes !== "email profile") ||
     (flowName && flowName !== "GeneralOAuthFlow")
   ) {
-    return redirect(errorPath(requestId || crypto.randomUUID(), "invalid_login_request"));
+    return redirect(errorPath());
   }
 
   const { authSupabaseAdmin } = await import("@/integrations/auth-supabase/client.server");
@@ -51,7 +50,7 @@ async function handleLogin({ request }: { request: Request }) {
       typeof row.request_id !== "string" ||
       typeof row.token !== "string"
     ) {
-      return redirect(errorPath(crypto.randomUUID(), "request_creation_failed"));
+      return redirect(errorPath());
     }
 
     const params = new URLSearchParams({
@@ -67,14 +66,14 @@ async function handleLogin({ request }: { request: Request }) {
   }
 
   if (!token || !requestId || !/^[a-f0-9]{64}$/.test(token)) {
-    return redirect(errorPath(requestId || crypto.randomUUID(), "invalid_login_request"));
+    return redirect(errorPath());
   }
 
   const { data: valid, error } = await db.rpc("validate_google_login_request", {
     p_request_id: requestId,
     p_token: token,
   });
-  if (error || valid !== true) return redirect(errorPath(requestId, "token_expired_or_invalid"));
+  if (error || valid !== true) return redirect(errorPath());
 
   const params = new URLSearchParams({
     google_login_token: token,
