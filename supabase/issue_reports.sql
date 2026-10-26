@@ -28,6 +28,11 @@ alter table public.issue_reports add column if not exists user_id uuid;
 alter table public.issue_reports add column if not exists admin_note text not null default '';
 alter table public.issue_reports add column if not exists updated_at timestamptz not null default now();
 
+-- Account identities are validated against AUTH_SUPABASE_URL, while this table
+-- lives in the separate data Supabase project. A local auth.users FK would
+-- reject valid account IDs that do not exist in the data project's auth schema.
+alter table public.issue_reports drop constraint if exists issue_reports_user_id_fkey;
+
 create index if not exists issue_reports_user_id_created_at_idx
   on public.issue_reports (user_id, created_at desc);
 
