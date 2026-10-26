@@ -48,38 +48,21 @@ function GoogleLoginGateway() {
     };
   }, []);
 
-  if (ready) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-        <section className="m3-shadow-1 flex w-full max-w-sm flex-col items-center rounded-3xl bg-card p-8 text-center">
-          <h1 className="font-display text-xl font-semibold">Masuk dengan Google</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Pilih akun Google untuk melanjutkan.</p>
-          <div className="mt-6 w-full">
-            <GoogleButton
-              label={flow === "signup" ? "Daftar dengan Google" : "Masuk dengan Google"}
-              flow={flow}
-              onError={setError}
-            />
-          </div>
-          {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
-        </section>
-      </main>
-    );
-  }
-
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      <section className="m3-shadow-1 flex w-full max-w-sm flex-col items-center rounded-3xl bg-card p-8 text-center">
-        <m3e-loading-indicator
-          variant="contained"
-          className="m3-loading-sm"
-          aria-label="Menyiapkan login"
-        />
-        <h1 className="mt-5 font-display text-xl font-semibold">Menyiapkan login</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Kami sedang memeriksa permintaan login Anda. Mohon tunggu sebentar.
-        </p>
-      </section>
+    <main className="flex min-h-screen items-center justify-center bg-background">
+      <m3e-loading-indicator
+        className="m3-loading-lg"
+        aria-label={error || "Menyiapkan login Google"}
+      />
+      {ready && (
+        <div className="hidden" aria-hidden="true">
+          <GoogleButton
+            label={flow === "signup" ? "Daftar dengan Google" : "Masuk dengan Google"}
+            flow={flow}
+            onError={setError}
+          />
+        </div>
+      )}
     </main>
   );
 }
