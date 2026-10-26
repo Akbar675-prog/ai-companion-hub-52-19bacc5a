@@ -7,7 +7,6 @@ type GooglePromptNotification = { isNotDisplayed: () => boolean; isSkippedMoment
 type GoogleIdentity = {
   initialize: (options: {
     client_id: string;
-    nonce: string;
     callback: (response: GoogleCredentialResponse) => void;
     context?: "signin" | "signup";
     ux_mode?: "popup";
