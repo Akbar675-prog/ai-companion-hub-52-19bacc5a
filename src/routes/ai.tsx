@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { User } from "lucide-react";
 import { PromptBox } from "@/components/ui/chatgpt-prompt-input";
 import { ShiningText } from "@/components/ui/shining-text";
 import { AiAvatar } from "@/components/ui/plasma-shader";
@@ -13,7 +12,7 @@ import { getAiProfileFn } from "@/lib/ai-profile.functions";
 import { chatCreditsFn, recordChatUsageFn } from "@/lib/ai-credits.functions";
 import { listAiModelsFn } from "@/lib/ai-models.functions";
 import type { AiProfile } from "@/lib/ai-profile.server";
-import { useAccount } from "@/lib/use-account";
+import { DEFAULT_AVATAR, useAccount } from "@/lib/use-account";
 import {
   allModels,
   loadSelectedModelId,
@@ -97,6 +96,7 @@ function AiChatPage() {
   const { userId, profile } = useAccount();
   const [aiProfile, setAiProfile] = useState<AiProfile | null>(null);
   const userName = aiProfile?.nickname?.trim() || profile?.name || profile?.username || null;
+  const userAvatar = profile?.avatar_url || DEFAULT_AVATAR;
   const [credits, setCredits] = useState<{ used: number; limit: number; remaining: number } | null>(
     null,
   );
@@ -766,6 +766,7 @@ function AiChatPage() {
           if (id === activeId) setActiveId(next[0]?.id ?? null);
         }}
         userName={userName}
+        userAvatar={userAvatar}
       />
 
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-6 md:px-8 md:pt-10 lg:max-w-4xl">
@@ -809,9 +810,11 @@ function AiChatPage() {
                     {m.content}
                   </div>
                 </div>
-                <span className="mt-1 inline-flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-variant md:size-8">
-                  <User className="size-3.5 md:size-4" />
-                </span>
+                <img
+                  src={userAvatar}
+                  alt={userName ? `Foto profil ${userName}` : "Foto profil pengguna"}
+                  className="mt-1 size-7 shrink-0 rounded-full bg-surface-variant object-cover md:size-8"
+                />
               </div>
 
             ) : (
