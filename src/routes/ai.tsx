@@ -134,6 +134,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
   const endRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const pendingSendRef = useRef<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -194,6 +195,14 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     };
   }, [userId]);
 
+  useEffect(() => {
+    if (modelsLoading || pendingSendRef.current === null) return;
+    const pending = pendingSendRef.current;
+    pendingSendRef.current = null;
+    void send(pending);
+  // `send` is intentionally resolved from the latest render after models finish loading.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelsLoading]);
 
   // Profil GetrixAI + kredit chat (khusus pengguna yang login).
   useEffect(() => {
@@ -786,6 +795,12 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
   async function send(text: string) {
     const trimmed = text.trim();
     if ((!trimmed && !image) || loading || imaging) return;
+
+    if (modelsLoading) {
+      pendingSendRef.current = text;
+      setError("Model AI sedang disiapkan. Pesan akan dikirim otomatis sebentar lagi.");
+      return;
+    }
 
     if (credits && credits.remaining <= 0) {
       setError("Kredit chat harian kamu sudah habis. Direset lagi pukul 07:00 WIB.");
