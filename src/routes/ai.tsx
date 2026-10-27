@@ -135,6 +135,8 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
   const boxRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const pendingSendRef = useRef<string | null>(null);
+  const runningThreadRef = useRef<string | null>(null);
+  const autoStartedThreadRef = useRef<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -203,6 +205,19 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
   // `send` is intentionally resolved from the latest render after models finish loading.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelsLoading]);
+
+  useEffect(() => {
+    if (!userId || !requestedThreadId || modelsLoading || loading || imaging) return;
+    if (runningThreadRef.current === requestedThreadId) return;
+    if (autoStartedThreadRef.current === requestedThreadId) return;
+
+    const thread = threads.find((item) => item.id === requestedThreadId);
+    const lastMessage = thread?.messages.at(-1);
+    if (!thread || lastMessage?.role !== "user") return;
+
+    autoStartedThreadRef.current = requestedThreadId;
+    void run(thread.messages, lastMessage.image ?? null, thread.id, threads);
+  }, [imaging, loading, modelsLoading, requestedThreadId, threads, userId]);
 
   // Profil GetrixAI + kredit chat (khusus pengguna yang login).
   useEffect(() => {
@@ -299,6 +314,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         t.id === threadId ? { ...t, updatedAt: Date.now(), messages: history } : t,
       );
     }
+    runningThreadRef.current = threadId;
     persist(base);
 
     setInput("");
@@ -717,6 +733,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       if (stallTimer) clearTimeout(stallTimer);
       clearTimeout(maxTimer);
       abortRef.current = null;
+      if (runningThreadRef.current === threadId) runningThreadRef.current = null;
       setLoading(false);
       setStatus(null);
       setDraft(null);
@@ -823,7 +840,24 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       ...(attached ? { image: attached } : {}),
     };
     setAttachedDocument(null);
-    await run([...messages, userMsg], attached, activeId, threads);
+
+    const history = [...messages, userMsg];
+    if (!activeId && userId) {
+      const threadId = newThreadId();
+      const next = [
+        { id: threadId, title: "", updatedAt: Date.now(), messages: history },
+        ...threads,
+      ];
+      setActiveId(threadId);
+      persist(next);
+      setInput("");
+      setImage(null);
+      setError(null);
+      void navigate({ to: "/ai/c/$threadId", params: { threadId } });
+      return;
+    }
+
+    await run(history, attached, activeId, threads);
   }
 
 
