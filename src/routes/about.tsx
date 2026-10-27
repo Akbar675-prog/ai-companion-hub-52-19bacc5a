@@ -12,6 +12,7 @@ export const Route = createFileRoute("/about")({
           "Tentang Galileo Mod APK — katalog download APK dengan tema Material 3 Expressive.",
       },
       { property: "og:title", content: "About — Galileo Mod APK" },
+      { property: "og:url", content: "https://galileomodapk.visora.my.id/about" },
       {
         property: "og:description",
         content: "Info tentang aplikasi, library, dan pengembangnya.",
@@ -19,6 +20,7 @@ export const Route = createFileRoute("/about")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://galileomodapk.visora.my.id/about" }],
   }),
   component: About,
 });

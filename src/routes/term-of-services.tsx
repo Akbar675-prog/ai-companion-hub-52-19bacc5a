@@ -11,9 +11,11 @@ export const Route = createFileRoute("/term-of-services")({
         content: "Ketentuan penggunaan layanan dan katalog Galileo Mod APK.",
       },
       { property: "og:title", content: "Ketentuan Layanan — Galileo Mod APK" },
+      { property: "og:url", content: "https://galileomodapk.visora.my.id/term-of-services" },
       { property: "og:type", content: "website" },
       { name: "robots", content: "index, follow" },
     ],
+    links: [{ rel: "canonical", href: "https://galileomodapk.visora.my.id/term-of-services" }],
   }),
   component: TermsOfServicesPage,
 });

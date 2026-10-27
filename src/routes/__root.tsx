@@ -159,11 +159,6 @@ function RootShell({ children }: { children: ReactNode }) {
               "price": "0",
               "priceCurrency": "USD"
             },
-            "aggregateRating": {
-              "@type": "AggregateRating",
-              "ratingValue": "4.8",
-              "ratingCount": "2500"
-            }
           })}
         </script>
       </head>
