@@ -12,6 +12,7 @@ export function AiHeader({
   onNew,
   onDelete,
   userName,
+  userAvatar,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -21,6 +22,7 @@ export function AiHeader({
   onNew: () => void;
   onDelete: (id: string) => void;
   userName: string | null;
+  userAvatar: string;
 }) {
   return (
     <>
@@ -73,7 +75,14 @@ export function AiHeader({
           </div>
 
           {userName ? (
-            <p className="mt-2 text-sm text-muted-foreground">Masuk sebagai {userName}</p>
+            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-surface-variant p-3">
+              <img
+                src={userAvatar}
+                alt={`Foto profil ${userName}`}
+                className="size-10 shrink-0 rounded-full bg-background object-cover"
+              />
+              <p className="min-w-0 truncate text-sm text-muted-foreground">Masuk sebagai {userName}</p>
+            </div>
           ) : (
             <Link
               to="/login"
