@@ -280,13 +280,11 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     const lastUser = history[history.length - 1]?.content ?? "";
     let threadId = threadIdIn;
     let base = baseIn;
+    const createdThread = !threadId;
     if (!threadId) {
       threadId = newThreadId();
       base = [{ id: threadId, title: "", updatedAt: Date.now(), messages: history }, ...baseIn];
       setActiveId(threadId);
-      if (userId) {
-        void navigate({ to: "/ai/c/$threadId", params: { threadId } });
-      }
     } else {
       base = baseIn.map((t) =>
         t.id === threadId ? { ...t, updatedAt: Date.now(), messages: history } : t,
@@ -653,18 +651,20 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
           .then((c) => setCredits({ used: c.used, limit: c.limit, remaining: c.remaining }))
           .catch(() => {});
       }
-      persist(
-        base.map((t) =>
-          t.id === threadId
-            ? {
-                ...t,
-                title: t.title || title || lastUser.slice(0, 40) || "Analisis gambar",
-                updatedAt: Date.now(),
-                messages: withReply,
-              }
-            : t,
-        ),
+      const completedThreads = base.map((t) =>
+        t.id === threadId
+          ? {
+              ...t,
+              title: t.title || title || lastUser.slice(0, 40) || "Analisis gambar",
+              updatedAt: Date.now(),
+              messages: withReply,
+            }
+          : t,
       );
+      persist(completedThreads);
+      if (createdThread && userId) {
+        void navigate({ to: "/ai/c/$threadId", params: { threadId } });
+      }
     } catch (e) {
       // Jangan pernah membuang jawaban yang sudah terlanjur diketik AI:
       // apa pun penyebab putusnya (abort, watchdog, jaringan), simpan bagian
@@ -682,18 +682,20 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             ...(attached ? { analyzedImage: true } : {}),
           },
         ];
-        persist(
-          base.map((t) =>
-            t.id === threadId
-              ? {
-                  ...t,
-                  title: t.title || lastUser.slice(0, 40) || "Analisis gambar",
-                  updatedAt: Date.now(),
-                  messages: withReply,
-                }
-              : t,
-          ),
+        const partialThreads = base.map((t) =>
+          t.id === threadId
+            ? {
+                ...t,
+                title: t.title || lastUser.slice(0, 40) || "Analisis gambar",
+                updatedAt: Date.now(),
+                messages: withReply,
+              }
+            : t,
         );
+        persist(partialThreads);
+        if (createdThread && userId) {
+          void navigate({ to: "/ai/c/$threadId", params: { threadId } });
+        }
         if (!(e instanceof DOMException && e.name === "AbortError")) {
           setError("Jawaban terputus. Tekan tombol ulangi kalau mau versi lengkapnya.");
         }
@@ -743,6 +745,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
 
     let threadId = activeId;
     let base = threads;
+    const createdThread = !threadId;
     if (!threadId) {
       threadId = newThreadId();
       base = [
@@ -750,7 +753,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         ...threads,
       ];
       setActiveId(threadId);
-      void navigate({ to: "/ai/c/$threadId", params: { threadId } });
     } else {
       base = threads.map((t) =>
         t.id === threadId ? { ...t, updatedAt: Date.now(), messages: history } : t,
@@ -771,6 +773,9 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       };
       const withReply = [...history, reply];
       persist(base.map((t) => (t.id === threadId ? { ...t, messages: withReply } : t)));
+      if (createdThread && userId) {
+        void navigate({ to: "/ai/c/$threadId", params: { threadId } });
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal membuat gambar.");
     } finally {
