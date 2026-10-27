@@ -16,6 +16,7 @@ import {
   type ChangelogItem,
 } from "@/lib/apps.functions";
 import { archLabel, versionLabel } from "@/lib/metadata.functions";
+import { AppIcon } from "@/components/AppIcon";
 import { verifyExclusiveFn, exclusiveBypassFn } from "@/lib/exclusive.functions";
 import { useAccount } from "@/lib/use-account";
 import { PressButton } from "@/components/Pressable";
@@ -268,17 +269,15 @@ function AppDetail() {
         >
 
           <div className="flex flex-col items-center gap-5 text-center md:flex-row md:items-start md:text-left">
-            {app.App_icon ? (
-              <img
-                src={app.App_icon}
-                alt={app.App_name}
-                className="m3-icon-glow size-28 rounded-3xl bg-surface-variant object-cover ring-1 ring-black/5 md:size-32"
-              />
-            ) : (
-              <div className="m3-icon-glow flex size-28 items-center justify-center rounded-3xl bg-tertiary-container font-display text-4xl text-on-tertiary-container md:size-32">
-                {app.App_name.slice(0, 1).toUpperCase()}
-              </div>
-            )}
+            <AppIcon
+              src={app.App_icon}
+              name={app.App_name}
+              className="size-28 rounded-3xl md:size-32"
+              imageClassName="m3-icon-glow bg-surface-variant object-cover ring-1 ring-black/5"
+              fallbackClassName="m3-icon-glow bg-tertiary-container text-4xl text-on-tertiary-container"
+              decorative
+              loading="eager"
+            />
 
             <div className="flex-1">
               <h1

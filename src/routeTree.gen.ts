@@ -48,6 +48,7 @@ import { Route as DataGetVerifiedRouteImport } from './routes/data.get-verified'
 import { Route as RequestDataRouteImport } from './routes/request_.data'
 import { Route as StatusSetRouteImport } from './routes/status_.set'
 import { Route as VoteIdRouteImport } from './routes/vote.$id'
+import { Route as AiCThreadIdRouteImport } from './routes/ai_.c.$threadId'
 import { Route as ApiV1LoginRouteImport } from './routes/api.v1.login'
 import { Route as AppsGypsB64RouteImport } from './routes/apps.gyps.$b64'
 import { Route as AppsIndexApplistDotjsonRouteImport } from './routes/apps.index.applist[.]json'
@@ -257,6 +258,11 @@ const VoteIdRoute = VoteIdRouteImport.update({
   path: '/vote/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiCThreadIdRoute = AiCThreadIdRouteImport.update({
+  id: '/ai_/c/$threadId',
+  path: '/ai/c/$threadId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiV1LoginRoute = ApiV1LoginRouteImport.update({
   id: '/api/v1/login',
   path: '/api/v1/login',
@@ -364,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
+  '/ai/c/$threadId': typeof AiCThreadIdRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
@@ -418,6 +425,7 @@ export interface FileRoutesByTo {
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
+  '/ai/c/$threadId': typeof AiCThreadIdRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
@@ -473,6 +481,7 @@ export interface FileRoutesById {
   '/request_/data': typeof RequestDataRoute
   '/status_/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
+  '/ai_/c/$threadId': typeof AiCThreadIdRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
@@ -529,6 +538,7 @@ export interface FileRouteTypes {
     | '/request/data'
     | '/status/set'
     | '/vote/$id'
+    | '/ai/c/$threadId'
     | '/api/v1/login'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
@@ -583,6 +593,7 @@ export interface FileRouteTypes {
     | '/request/data'
     | '/status/set'
     | '/vote/$id'
+    | '/ai/c/$threadId'
     | '/api/v1/login'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
@@ -637,6 +648,7 @@ export interface FileRouteTypes {
     | '/request_/data'
     | '/status_/set'
     | '/vote/$id'
+    | '/ai_/c/$threadId'
     | '/api/v1/login'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
@@ -692,6 +704,7 @@ export interface RootRouteChildren {
   RequestDataRoute: typeof RequestDataRoute
   StatusSetRoute: typeof StatusSetRoute
   VoteIdRoute: typeof VoteIdRoute
+  AiCThreadIdRoute: typeof AiCThreadIdRoute
   ApiV1LoginRoute: typeof ApiV1LoginRouteWithChildren
   AppsGypsB64Route: typeof AppsGypsB64Route
   AppsPreviewIdRoute: typeof AppsPreviewIdRoute
@@ -981,6 +994,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VoteIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai_/c/$threadId': {
+      id: '/ai_/c/$threadId'
+      path: '/ai/c/$threadId'
+      fullPath: '/ai/c/$threadId'
+      preLoaderRoute: typeof AiCThreadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/v1/login': {
       id: '/api/v1/login'
       path: '/api/v1/login'
@@ -1127,6 +1147,7 @@ const rootRouteChildren: RootRouteChildren = {
   RequestDataRoute: RequestDataRoute,
   StatusSetRoute: StatusSetRoute,
   VoteIdRoute: VoteIdRoute,
+  AiCThreadIdRoute: AiCThreadIdRoute,
   ApiV1LoginRoute: ApiV1LoginRouteWithChildren,
   AppsGypsB64Route: AppsGypsB64Route,
   AppsPreviewIdRoute: AppsPreviewIdRoute,
