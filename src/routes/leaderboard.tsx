@@ -15,6 +15,7 @@ import {
 } from "recharts";
 import { listAppsFn, type AppListItem } from "@/lib/apps.functions";
 import { AppHeader } from "@/components/AppHeader";
+import { AppIcon } from "@/components/AppIcon";
 
 const appsQuery = queryOptions({
   queryKey: ["apps"],
@@ -194,17 +195,14 @@ function TopOneCard({ app }: { app: AppListItem }) {
         </div>
       </div>
       <div className="relative mt-6 flex flex-col items-center gap-6 md:flex-row md:items-center md:text-left">
-        {app.App_icon ? (
-          <img
-            src={app.App_icon}
-            alt={app.App_name}
-            className="size-24 rounded-2xl bg-white/20 object-cover shadow-xl md:size-32"
-          />
-        ) : (
-          <div className="flex size-24 items-center justify-center rounded-2xl bg-white/20 font-display text-4xl shadow-xl md:size-32">
-            {app.App_name.slice(0, 1).toUpperCase()}
-          </div>
-        )}
+        <AppIcon
+          src={app.App_icon}
+          name={app.App_name}
+          className="size-24 rounded-2xl md:size-32"
+          imageClassName="bg-white/20 object-cover shadow-xl"
+          fallbackClassName="bg-white/20 text-4xl shadow-xl"
+          decorative
+        />
         <div className="flex-1 text-center md:text-left">
           <h2 className="font-display text-3xl leading-tight md:text-5xl">
             {app.App_name}
@@ -281,13 +279,14 @@ function RankRow({ app, rank }: { app: AppListItem; rank: number }) {
       }`}
     >
       {badge}
-      {app.App_icon ? (
-        <img src={app.App_icon} alt="" className="size-11 shrink-0 rounded-lg bg-surface-variant object-cover" />
-      ) : (
-        <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-tertiary-container font-display text-base text-on-tertiary-container">
-          {app.App_name.slice(0, 1).toUpperCase()}
-        </div>
-      )}
+      <AppIcon
+        src={app.App_icon}
+        name={app.App_name}
+        className="size-11 rounded-lg"
+        imageClassName="bg-surface-variant object-cover"
+        fallbackClassName="bg-tertiary-container text-base text-on-tertiary-container"
+        decorative
+      />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-semibold">{app.App_name}</p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">

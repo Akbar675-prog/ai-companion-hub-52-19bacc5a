@@ -177,6 +177,44 @@ function iconUrlFor(row: {
   return "";
 }
 
+const MAX_ICON_BYTES = 8 * 1024 * 1024;
+
+type IconPayload = { bytes: Uint8Array; contentType: string };
+
+function normalizeIconContentType(contentType: string | null | undefined): string {
+  const normalized = contentType?.split(";", 1)[0].trim().toLowerCase() ?? "";
+  if (!normalized.startsWith("image/")) {
+    throw new Error("Icon harus berupa file gambar dengan content type image/*.");
+  }
+  return normalized;
+}
+
+function validateIconBytes(bytes: Uint8Array): void {
+  if (bytes.byteLength === 0) throw new Error("File icon kosong.");
+  if (bytes.byteLength > MAX_ICON_BYTES) throw new Error("Icon lebih dari 8MB.");
+}
+
+function iconPayloadFromUpload(
+  base64: string,
+  contentType: string | null | undefined,
+): IconPayload {
+  const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+  validateIconBytes(bytes);
+  return { bytes, contentType: normalizeIconContentType(contentType) };
+}
+
+async function iconPayloadFromUrl(url: string): Promise<IconPayload> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Gagal ambil icon dari URL (${response.status})`);
+  }
+
+  const contentType = normalizeIconContentType(response.headers.get("content-type"));
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  validateIconBytes(bytes);
+  return { bytes, contentType };
+}
+
 function apkUrlFor(id: string): string {
   return `/apps/gyps/${toBase64Url(id)}`;
 }
@@ -397,26 +435,25 @@ export const createAppFn = createServerFn({ method: "POST" })
     const icon_external_url: string | null = null;
     let icon_content_type: string | null = null;
 
-    let iconBytes: Uint8Array | null = null;
-    if (data.icon_kind === "upload" && data.icon_data_base64) {
-      iconBytes = Uint8Array.from(atob(data.icon_data_base64), (c) => c.charCodeAt(0));
-      icon_content_type = data.icon_content_type || "application/octet-stream";
-    } else if (data.icon_kind === "url" && data.icon_url) {
-      const res = await fetch(data.icon_url);
-      if (!res.ok) throw new Error(`Gagal ambil icon dari URL (${res.status})`);
-      iconBytes = new Uint8Array(await res.arrayBuffer());
-      if (iconBytes.byteLength > 8 * 1024 * 1024)
-        throw new Error("Icon dari URL lebih dari 8MB.");
-      icon_content_type =
-        res.headers.get("content-type") || "application/octet-stream";
+    let iconPayload: IconPayload | null = null;
+    if (data.icon_kind === "upload") {
+      if (!data.icon_data_base64) throw new Error("Pilih file icon terlebih dahulu.");
+      iconPayload = iconPayloadFromUpload(
+        data.icon_data_base64,
+        data.icon_content_type,
+      );
+    } else if (data.icon_kind === "url") {
+      if (!data.icon_url) throw new Error("Masukkan URL icon terlebih dahulu.");
+      iconPayload = await iconPayloadFromUrl(data.icon_url);
     }
 
-    if (iconBytes) {
+    if (iconPayload) {
       icon_id = genId();
+      icon_content_type = iconPayload.contentType;
       const { error: upErr } = await supabaseAdmin.storage
         .from("app-icons")
-        .upload(`FGJ01/${icon_id}`, iconBytes, {
-          contentType: icon_content_type!,
+        .upload(`FGJ01/${icon_id}`, iconPayload.bytes, {
+          contentType: icon_content_type,
           upsert: false,
         });
       if (upErr) throw new Error(`Icon upload failed: ${upErr.message}`);
@@ -444,7 +481,17 @@ export const createAppFn = createServerFn({ method: "POST" })
       apk_content_type,
       apk_size,
     } as never);
-    if (error) throw new Error(error.message);
+    if (error) {
+      if (icon_id) {
+        const { error: cleanupError } = await supabaseAdmin.storage
+          .from("app-icons")
+          .remove([`FGJ01/${icon_id}`]);
+        if (cleanupError) {
+          console.error("Failed to clean up app icon after create failure:", cleanupError.message);
+        }
+      }
+      throw new Error(error.message);
+    }
 
     const versionTrim = (data.version ?? "").trim();
     await setAppMeta(id, {
@@ -515,45 +562,39 @@ export const updateAppFn = createServerFn({ method: "POST" })
     if (data.description !== undefined) patch.description = data.description;
     if (data.download_url !== undefined) patch.download_url = data.download_url;
 
-    // Icon handling
+    // Keep the current icon until its replacement and database update succeed.
+    let iconIdToRemoveAfterUpdate: string | null = null;
+    let newIconIdToCleanup: string | null = null;
     if (data.icon_kind && data.icon_kind !== "keep") {
-      // Remove old icon file if any
-      if (row.icon_id) {
-        await supabaseAdmin.storage
-          .from("app-icons")
-          .remove([`FGJ01/${row.icon_id}`]);
-      }
+      iconIdToRemoveAfterUpdate = row.icon_id;
       let newIconId: string | null = null;
       let newIconType: string | null = null;
-      if (data.icon_kind === "upload" && data.icon_data_base64) {
-        const bytes = Uint8Array.from(atob(data.icon_data_base64), (c) =>
-          c.charCodeAt(0),
+      let payload: IconPayload | null = null;
+
+      if (data.icon_kind === "upload") {
+        if (!data.icon_data_base64) throw new Error("Pilih file icon terlebih dahulu.");
+        payload = iconPayloadFromUpload(
+          data.icon_data_base64,
+          data.icon_content_type,
         );
-        newIconId = genId();
-        newIconType = data.icon_content_type || "application/octet-stream";
-        const { error } = await supabaseAdmin.storage
-          .from("app-icons")
-          .upload(`FGJ01/${newIconId}`, bytes, {
-            contentType: newIconType,
-            upsert: false,
-          });
-        if (error) throw new Error(`Icon upload failed: ${error.message}`);
-      } else if (data.icon_kind === "url" && data.icon_url) {
-        const res = await fetch(data.icon_url);
-        if (!res.ok) throw new Error(`Gagal ambil icon dari URL (${res.status})`);
-        const bytes = new Uint8Array(await res.arrayBuffer());
-        if (bytes.byteLength > 8 * 1024 * 1024)
-          throw new Error("Icon dari URL lebih dari 8MB.");
-        newIconType = res.headers.get("content-type") || "application/octet-stream";
-        newIconId = genId();
-        const { error } = await supabaseAdmin.storage
-          .from("app-icons")
-          .upload(`FGJ01/${newIconId}`, bytes, {
-            contentType: newIconType,
-            upsert: false,
-          });
-        if (error) throw new Error(`Icon upload failed: ${error.message}`);
+      } else if (data.icon_kind === "url") {
+        if (!data.icon_url) throw new Error("Masukkan URL icon terlebih dahulu.");
+        payload = await iconPayloadFromUrl(data.icon_url);
       }
+
+      if (payload) {
+        newIconId = genId();
+        newIconType = payload.contentType;
+        const { error } = await supabaseAdmin.storage
+          .from("app-icons")
+          .upload(`FGJ01/${newIconId}`, payload.bytes, {
+            contentType: newIconType,
+            upsert: false,
+          });
+        if (error) throw new Error(`Icon upload failed: ${error.message}`);
+        newIconIdToCleanup = newIconId;
+      }
+
       patch.icon_id = newIconId;
       patch.icon_content_type = newIconType;
       patch.icon_external_url = null;
@@ -586,7 +627,26 @@ export const updateAppFn = createServerFn({ method: "POST" })
         .from("apps")
         .update(patch as never)
         .eq("id", data.id);
-      if (error) throw new Error(error.message);
+      if (error) {
+        if (newIconIdToCleanup) {
+          const { error: cleanupError } = await supabaseAdmin.storage
+            .from("app-icons")
+            .remove([`FGJ01/${newIconIdToCleanup}`]);
+          if (cleanupError) {
+            console.error("Failed to clean up replacement app icon:", cleanupError.message);
+          }
+        }
+        throw new Error(error.message);
+      }
+    }
+
+    if (iconIdToRemoveAfterUpdate) {
+      const { error } = await supabaseAdmin.storage
+        .from("app-icons")
+        .remove([`FGJ01/${iconIdToRemoveAfterUpdate}`]);
+      if (error) {
+        console.error("Failed to remove replaced app icon:", error.message);
+      }
     }
 
     // Metadata (version, arch, previews)

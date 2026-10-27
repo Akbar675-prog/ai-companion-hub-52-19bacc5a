@@ -5,6 +5,7 @@ import { z } from "zod";
 import { listAppsFn, type AppListItem } from "@/lib/apps.functions";
 import { versionLabel } from "@/lib/metadata.functions";
 import { AppHeader } from "@/components/AppHeader";
+import { AppIcon } from "@/components/AppIcon";
 import { useT } from "@/lib/i18n";
 import { currentHost, isStatusHost } from "@/lib/status-host";
 
@@ -280,19 +281,14 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
 }
 
 function IconBox({ src, alt }: { src: string; alt: string }) {
-  if (!src) {
-    return (
-      <div aria-hidden="true" className="m3-icon-glow flex size-14 shrink-0 items-center justify-center rounded-2xl bg-tertiary-container font-display text-xl text-on-tertiary-container">
-        {alt.slice(0, 1).toUpperCase()}
-      </div>
-    );
-  }
   return (
-    <img
+    <AppIcon
       src={src}
-      alt=""
-      className="size-14 shrink-0 rounded-2xl bg-surface-variant object-cover ring-1 ring-black/5 transition-transform duration-300 group-hover:scale-105"
-      loading="lazy"
+      name={alt}
+      className="size-14 rounded-2xl"
+      imageClassName="bg-surface-variant object-cover ring-1 ring-black/5 transition-transform duration-300 group-hover:scale-105"
+      fallbackClassName="m3-icon-glow bg-tertiary-container text-xl text-on-tertiary-container"
+      decorative
     />
   );
 }

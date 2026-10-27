@@ -1,9 +1,10 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Menu, X, Search, Download, Info, MessageCircle, Settings as SettingsIcon, Gem, Trophy, Send, Activity, LogIn, ChevronRight, Bot, Bug } from "lucide-react";
+import { Menu, X, Search, Download, Info, MessageCircle, Settings as SettingsIcon, Gem, Trophy, Send, Activity, LogIn, ChevronRight, Bot, Bug, FileText, ShieldCheck } from "lucide-react";
 import { listAppsFn, type AppListItem } from "@/lib/apps.functions";
 import { versionLabel } from "@/lib/metadata.functions";
+import { AppIcon } from "@/components/AppIcon";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { DEFAULT_AVATAR, useAccount } from "@/lib/use-account";
 
@@ -171,17 +172,14 @@ export function AppHeader() {
                       }}
                       className="m3-shadow-1 flex w-full animate-fade-in items-center gap-3 rounded-2xl bg-card p-3 text-left transition-all duration-200 hover:-translate-y-0.5 hover:m3-shadow-2 active:scale-[0.98]"
                     >
-                      {app.App_icon ? (
-                        <img
-                          src={app.App_icon}
-                          alt=""
-                          className="size-11 shrink-0 rounded-lg bg-surface-variant object-cover"
-                        />
-                      ) : (
-                        <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-tertiary-container font-display text-base text-on-tertiary-container">
-                          {app.App_name.slice(0, 1).toUpperCase()}
-                        </div>
-                      )}
+                      <AppIcon
+                        src={app.App_icon}
+                        name={app.App_name}
+                        className="size-11 rounded-lg"
+                        imageClassName="bg-surface-variant object-cover"
+                        fallbackClassName="bg-tertiary-container text-base text-on-tertiary-container"
+                        decorative
+                      />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5">
                           <p className="truncate text-sm font-semibold">
@@ -225,6 +223,16 @@ export function AppHeader() {
                   <DrawerLink to="/status" icon={<Activity className="size-4" />} label="Status" />
                   <DrawerLink to="/settings" icon={<SettingsIcon className="size-4" />} label="Pengaturan" />
                   <DrawerLink to="/about" icon={<Info className="size-4" />} label="Tentang" />
+                  <DrawerLink
+                    to="/privacy-policy"
+                    icon={<ShieldCheck className="size-4" />}
+                    label="Kebijakan Privasi"
+                  />
+                  <DrawerLink
+                    to="/term-of-services"
+                    icon={<FileText className="size-4" />}
+                    label="Ketentuan Layanan"
+                  />
                 </nav>
               </div>
 

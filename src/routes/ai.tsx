@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PromptBox } from "@/components/ui/chatgpt-prompt-input";
 import { ShiningText } from "@/components/ui/shining-text";
@@ -9,6 +9,7 @@ import { GeneratingImageCard } from "@/components/GeneratingImageCard";
 import type { AiPluginId } from "@/lib/ai-plugins";
 import { generateImageFn } from "@/lib/image-gen.functions";
 import { getAiProfileFn } from "@/lib/ai-profile.functions";
+import { getAiChatHistoryFn, saveAiChatHistoryFn } from "@/lib/ai-chat-history.functions";
 import { chatCreditsFn, recordChatUsageFn } from "@/lib/ai-credits.functions";
 import { listAiModelsFn } from "@/lib/ai-models.functions";
 import type { AiProfile } from "@/lib/ai-profile.server";
@@ -92,7 +93,8 @@ async function fetchAppCatalog(signal?: AbortSignal): Promise<CatalogApp[]> {
 }
 
 
-function AiChatPage() {
+export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string } = {}) {
+  const navigate = useNavigate();
   const { userId, profile } = useAccount();
   const [aiProfile, setAiProfile] = useState<AiProfile | null>(null);
   const userName = aiProfile?.nickname?.trim() || profile?.name || profile?.username || null;
@@ -123,11 +125,33 @@ function AiChatPage() {
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    // Memuat riwayat, tapi tidak menetapkan activeId secara otomatis ke thread terakhir.
-    // Pengguna akan memulai chat baru secara default.
-    setThreads(loadThreads(userId));
+    let alive = true;
+    setThreads([]);
     setActiveId(null);
-  }, [userId]);
+
+    if (!userId) {
+      setThreads(loadThreads(null));
+      return () => {
+        alive = false;
+      };
+    }
+
+    void getAiChatHistoryFn()
+      .then((history) => {
+        if (!alive) return;
+        setThreads(history);
+        if (requestedThreadId && history.some((thread) => thread.id === requestedThreadId)) {
+          setActiveId(requestedThreadId);
+        }
+      })
+      .catch(() => {
+        if (alive) setThreads([]);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [requestedThreadId, userId]);
 
   // Hanya tampilkan model yang dimuat dari katalog Supabase.
   useEffect(() => {
@@ -182,8 +206,13 @@ function AiChatPage() {
 
   const persist = useCallback(
     (next: ChatThread[]) => {
-      setThreads(next);
-      saveThreads(userId, next);
+      const limited = next.slice(0, 60);
+      setThreads(limited);
+      if (userId) {
+        void saveAiChatHistoryFn({ data: { threads: limited } }).catch(() => {});
+      } else {
+        saveThreads(null, limited);
+      }
     },
     [userId],
   );
@@ -208,6 +237,7 @@ function AiChatPage() {
 
   function startNewChat() {
     setActiveId(null);
+    if (userId) void navigate({ to: "/ai" });
     setMenuOpen(false);
     setError(null);
     setInput("");
@@ -237,6 +267,9 @@ function AiChatPage() {
       threadId = newThreadId();
       base = [{ id: threadId, title: "", updatedAt: Date.now(), messages: history }, ...baseIn];
       setActiveId(threadId);
+      if (userId) {
+        void navigate({ to: "/ai/c/$threadId", params: { threadId } });
+      }
     } else {
       base = baseIn.map((t) =>
         t.id === threadId ? { ...t, updatedAt: Date.now(), messages: history } : t,
@@ -664,9 +697,27 @@ function AiChatPage() {
 
   }
 
+  function respondImageLoginRequired(prompt: string) {
+    const userMsg: ChatMessage = { role: "user", content: prompt };
+    const reply: ChatMessage = {
+      role: "assistant",
+      content:
+        "Sebelum aku buatin gambarnya, silakan masuk dulu ke akun kamu ya. Setelah login, kirim ulang permintaan ini dan aku langsung buatkan gambarnya.",
+    };
+    const history = [...messages, userMsg, reply];
+    const threadId = activeId ?? newThreadId();
+    const base = activeId
+      ? threads.map((thread) =>
+          thread.id === threadId ? { ...thread, updatedAt: Date.now(), messages: history } : thread,
+        )
+      : [{ id: threadId, title: prompt.slice(0, 40), updatedAt: Date.now(), messages: history }, ...threads];
+    setActiveId(threadId);
+    persist(base);
+  }
+
   async function runImage(prompt: string) {
     if (!userId) {
-      setError("Masuk dulu ya untuk membuat gambar.");
+      respondImageLoginRequired(prompt);
       return;
     }
 
@@ -682,6 +733,7 @@ function AiChatPage() {
         ...threads,
       ];
       setActiveId(threadId);
+      void navigate({ to: "/ai/c/$threadId", params: { threadId } });
     } else {
       base = threads.map((t) =>
         t.id === threadId ? { ...t, updatedAt: Date.now(), messages: history } : t,
@@ -757,6 +809,7 @@ function AiChatPage() {
         activeId={activeId}
         onSelect={(id) => {
           setActiveId(id);
+          if (userId) void navigate({ to: "/ai/c/$threadId", params: { threadId: id } });
           setMenuOpen(false);
         }}
         onNew={startNewChat}

@@ -13,6 +13,7 @@ import {
   type AppListItem,
 } from "@/lib/apps.functions";
 import { AppHeader } from "@/components/AppHeader";
+import { AppIcon } from "@/components/AppIcon";
 import { PressButton } from "@/components/Pressable";
 
 const appsQuery = queryOptions({
@@ -984,17 +985,14 @@ function ManageAppsSection() {
           {apps.map((app) => (
             <li key={app.ID} className="m3-shadow-1 rounded-2xl bg-card">
               <div className="flex items-center gap-3 p-3 pr-2">
-                {app.App_icon ? (
-                  <img
-                    src={app.App_icon}
-                    alt=""
-                    className="size-12 shrink-0 rounded-xl bg-surface-variant object-cover"
-                  />
-                ) : (
-                  <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-tertiary-container font-display text-lg text-on-tertiary-container">
-                    {app.App_name.slice(0, 1).toUpperCase()}
-                  </div>
-                )}
+                <AppIcon
+                  src={app.App_icon}
+                  name={app.App_name}
+                  className="size-12 rounded-xl"
+                  imageClassName="bg-surface-variant object-cover"
+                  fallbackClassName="bg-tertiary-container text-lg text-on-tertiary-container"
+                  decorative
+                />
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold">{app.App_name}</p>
                   <p className="truncate font-mono text-xs text-muted-foreground">
