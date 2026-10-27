@@ -70,6 +70,17 @@ export type CatalogApp = { ID: string; App_name: string; Description: string };
 
 let catalogCache: { at: number; list: CatalogApp[] } | null = null;
 
+function mergeThreads(...lists: ChatThread[][]): ChatThread[] {
+  const byId = new Map<string, ChatThread>();
+  for (const list of lists) {
+    for (const thread of list) {
+      const current = byId.get(thread.id);
+      if (!current || thread.updatedAt >= current.updatedAt) byId.set(thread.id, thread);
+    }
+  }
+  return [...byId.values()].sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
 /** Katalog aplikasi dibaca dari endpoint publik /apps/index/applist.json. */
 async function fetchAppCatalog(signal?: AbortSignal): Promise<CatalogApp[]> {
   if (catalogCache && Date.now() - catalogCache.at < 5 * 60_000) return catalogCache.list;
@@ -126,11 +137,15 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
 
   useEffect(() => {
     let alive = true;
-    setThreads([]);
-    setActiveId(null);
+    const cached = loadThreads(userId ?? null);
+    setThreads(cached);
+    setActiveId(
+      requestedThreadId && cached.some((thread) => thread.id === requestedThreadId)
+        ? requestedThreadId
+        : null,
+    );
 
     if (!userId) {
-      setThreads(loadThreads(null));
       return () => {
         alive = false;
       };
@@ -139,13 +154,14 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     void getAiChatHistoryFn()
       .then((history) => {
         if (!alive) return;
-        setThreads(history);
-        if (requestedThreadId && history.some((thread) => thread.id === requestedThreadId)) {
+        const merged = mergeThreads(cached, history);
+        setThreads(merged);
+        if (requestedThreadId && merged.some((thread) => thread.id === requestedThreadId)) {
           setActiveId(requestedThreadId);
         }
       })
       .catch(() => {
-        if (alive) setThreads([]);
+        // Cache lokal tetap dipakai jika request history server gagal.
       });
 
     return () => {
@@ -208,10 +224,11 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     (next: ChatThread[]) => {
       const limited = next.slice(0, 60);
       setThreads(limited);
+      // Cache lokal menjaga pesan baru tetap tampil saat route thread melakukan mount
+      // sebelum penyimpanan server selesai.
+      saveThreads(userId ?? null, limited);
       if (userId) {
         void saveAiChatHistoryFn({ data: { threads: limited } }).catch(() => {});
-      } else {
-        saveThreads(null, limited);
       }
     },
     [userId],
