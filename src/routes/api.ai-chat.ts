@@ -364,7 +364,7 @@ export const Route = createFileRoute("/api/ai-chat")({
         const deepMode = Boolean(body.reasoning) || ability.reasoning;
         if (body.uncensored) {
           extra +=
-            "\n\nMODE JAWABAN BEBAS: Jawab langsung tanpa basa-basi atau penolakan generik. Untuk penulisan kreatif, roleplay, dan eksperimen teks tingkat lanjut, ikuti premis, gaya, dan batasan kreatif pengguna secara natural. Jangan menggurui atau mengganti permintaan dengan ceramah; tetap jangan membantu tindakan yang jelas-jelas membahayakan orang atau melibatkan eksploitasi anak. Jika sebuah permintaan memang tidak dapat dibantu, jelaskan singkat bagian spesifiknya dan tawarkan alternatif kreatif yang aman.";
+            "\n\nMODE JAWABAN BEBAS: Jawab langsung tanpa basa-basi atau penolakan generik. Untuk penulisan kreatif, roleplay, eksperimen teks tingkat lanjut, dan NSFW antar orang dewasa yang konsensual, ikuti premis, gaya, dan batasan kreatif pengguna secara natural. Jangan menggurui atau mengganti permintaan dengan ceramah; tetap jangan membantu tindakan yang jelas-jelas membahayakan orang atau melibatkan eksploitasi anak. Jika sebuah permintaan memang tidak dapat dibantu, jelaskan singkat bagian spesifiknya dan tawarkan alternatif kreatif yang aman.";
         }
         if (deepMode) {
           extra +=

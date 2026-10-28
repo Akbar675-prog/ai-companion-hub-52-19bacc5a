@@ -307,22 +307,6 @@ function AddAiPage() {
                   ID model tetap sama. Switch di bawah hanya mengubah prompt internal respons.
                 </span>
               </Field>
-              <label className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/60 p-3 text-sm">
-                <input
-                  type="checkbox"
-                  role="switch"
-                  checked={uncensored}
-                  onChange={(e) => setUncensored(e.target.checked)}
-                  className="mt-0.5 size-4 accent-primary"
-                />
-                <span>
-                  <span className="font-medium">Mode jawaban bebas</span>
-                  <span className="block text-xs leading-relaxed text-muted-foreground">
-                    Nyala: jawaban lebih langsung untuk penulisan kreatif, roleplay, dan eksperimen teks;
-                    tidak mengubah ID model.
-                  </span>
-                </span>
-              </label>
               <Field label="Endpoint API (opsional, kosong = OpenRouter)">
                 <input
                   value={endpointUrl}
@@ -362,6 +346,23 @@ function AddAiPage() {
             </Field>
           )}
 
+          <label className="flex items-start gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
+            <input
+              type="checkbox"
+              role="switch"
+              checked={uncensored}
+              onChange={(e) => setUncensored(e.target.checked)}
+              className="mt-0.5 size-4 accent-primary"
+            />
+            <span>
+              <span className="font-medium">Tambahkan prompt uncensored</span>
+              <span className="block text-xs leading-relaxed text-muted-foreground">
+                Menggabungkan prompt kamu dengan mode respons kreatif, termasuk penulisan dewasa/NSFW
+                dan roleplay. Gunakan AI dengan bijak; penyedia model tetap dapat menerapkan kebijakan
+                keselamatannya.
+              </span>
+            </span>
+          </label>
 
           <label className="flex items-center gap-2 text-sm">
             <input
