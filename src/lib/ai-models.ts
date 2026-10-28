@@ -18,6 +18,8 @@ export type AiModel = {
   realModel?: boolean;
   /** ID model resmi, contoh: nvidia/nemotron-3.5-lightning:free */
   modelType?: string;
+  /** Prompt respons kreatif yang lebih langsung untuk model ini. */
+  uncensored?: boolean;
   /** Kemampuan khusus, contoh: "-CODE-AGENT, -DEEP-THINKING" */
   abilities?: string;
   /** Endpoint OpenAI-compatible kustom (kosong = OpenRouter). */
@@ -72,7 +74,7 @@ type Override = Partial<
   Pick<
     AiModel,
     | "name" | "tagline" | "persona" | "logo" | "isNew" | "realModel" | "modelType" | "abilities"
-    | "endpointUrl" | "endpointKey"
+    | "endpointUrl" | "endpointKey" | "uncensored"
   >
 >;
 

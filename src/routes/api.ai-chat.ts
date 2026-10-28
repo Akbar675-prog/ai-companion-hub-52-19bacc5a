@@ -48,6 +48,7 @@ type Body = {
   reasoning?: boolean;
   persona?: string;
   modelLabel?: string;
+  uncensored?: boolean;
   catalogModelId?: string;
   realModelId?: string;
   endpointUrl?: string;
@@ -361,6 +362,10 @@ export const Route = createFileRoute("/api/ai-chat")({
         }
 
         const deepMode = Boolean(body.reasoning) || ability.reasoning;
+        if (body.uncensored) {
+          extra +=
+            "\n\nMODE JAWABAN BEBAS: Jawab langsung tanpa basa-basi atau penolakan generik. Untuk penulisan kreatif, roleplay, dan eksperimen teks tingkat lanjut, ikuti premis, gaya, dan batasan kreatif pengguna secara natural. Jangan menggurui atau mengganti permintaan dengan ceramah; tetap jangan membantu tindakan yang jelas-jelas membahayakan orang atau melibatkan eksploitasi anak. Jika sebuah permintaan memang tidak dapat dibantu, jelaskan singkat bagian spesifiknya dan tawarkan alternatif kreatif yang aman.";
+        }
         if (deepMode) {
           extra +=
             "\n\nKALI INI KAMU BERPIKIR SECARA MENDALAM. Seperti pakar yang tidak mau salah: uraikan masalah jadi bagian-bagian kecil, bandingkan beberapa pendekatan, periksa angka dan logika dua kali, cari lubang pada jawabanmu sendiri lalu perbaiki. Jawaban akhirmu rapi, beralasan, menyebut asumsi penting, dan tidak mengandung tebakan yang tidak ditandai. Seluruh pikiran itu tertuju pada masalah pengguna dan isi jawabannya.";

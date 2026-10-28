@@ -572,6 +572,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
               ? ""
               : modelById(modelId, models).persona,
             modelLabel: modelById(modelId, models).name,
+            uncensored: modelById(modelId, models).uncensored,
             catalogModelId: modelById(modelId, models).custom
               ? modelById(modelId, models).id
               : undefined,
