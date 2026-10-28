@@ -226,7 +226,11 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     if (!thread || lastMessage?.role !== "user") return;
 
     autoStartedThreadRef.current = requestedThreadId;
-    void run(thread.messages, lastMessage.image ?? null, thread.id, threads);
+    if (looksLikeImageRequest(lastMessage.content)) {
+      void runImage(lastMessage.content, thread.messages, thread.id, threads);
+    } else {
+      void run(thread.messages, lastMessage.image ?? null, thread.id, threads);
+    }
   }, [imaging, loading, modelsLoading, requestedThreadId, threads, userId]);
 
   // Profil GetrixAI + kredit chat (khusus pengguna yang login).
@@ -774,17 +778,22 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     persist(base);
   }
 
-  async function runImage(prompt: string) {
+  async function runImage(
+    prompt: string,
+    historyOverride?: ChatMessage[],
+    threadIdOverride?: string | null,
+    baseOverride?: ChatThread[],
+  ) {
     if (!userId) {
       respondImageLoginRequired(prompt);
       return;
     }
 
     const userMsg: ChatMessage = { role: "user", content: prompt };
-    const history = [...messages, userMsg];
+    const history = historyOverride ?? [...messages, userMsg];
 
-    let threadId = activeId;
-    let base = threads;
+    let threadId = threadIdOverride ?? activeId;
+    let base = baseOverride ?? threads;
     const createdThread = !threadId;
     if (!threadId) {
       threadId = newThreadId();

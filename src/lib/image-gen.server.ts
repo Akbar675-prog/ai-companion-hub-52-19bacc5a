@@ -120,7 +120,7 @@ async function fetchImageBytes(
   });
 
   let lastError = "";
-  for (let attempt = 0; attempt < 3; attempt++) {
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetch(url, {
         method: "POST",
@@ -129,7 +129,7 @@ async function fetchImageBytes(
           "Content-Type": "application/json",
         },
         body,
-        signal: AbortSignal.timeout(90_000),
+        signal: AbortSignal.timeout(60_000),
       });
       
       if (!res.ok) {
