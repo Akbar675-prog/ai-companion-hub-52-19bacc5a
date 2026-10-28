@@ -58,6 +58,13 @@ const SUGGESTIONS = [
   "Tips biar HP nggak lag",
 ];
 
+const IMAGE_REQUEST_RE =
+  /\b(?:buat(?:kan|in)?|buatin|generate|hasilkan|gambarkan|lukis|render)\b[\s\S]{0,120}\b(?:gambar|image|ilustrasi|foto|poster|logo|wallpaper|artwork)\b|\b(?:buat|generate|hasilkan|gambarkan|lukis|render)\s+(?:sebuah\s+)?(?:gambar|image|ilustrasi|foto|poster|logo|wallpaper|artwork)\b/i;
+
+function looksLikeImageRequest(text: string) {
+  return IMAGE_REQUEST_RE.test(text);
+}
+
 type Draft = {
   content: string;
   reasoning: string;
@@ -812,7 +819,8 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       return;
     }
 
-    if (plugin === "generateImage") {
+    const wantsImage = Boolean(trimmed) && !image && looksLikeImageRequest(trimmed);
+    if (plugin === "generateImage" || wantsImage) {
       if (!trimmed) return;
       await runImage(trimmed);
       return;
