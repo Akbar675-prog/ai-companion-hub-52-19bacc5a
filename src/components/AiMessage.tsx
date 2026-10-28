@@ -281,7 +281,7 @@ function MarkdownBody({
                 lang={/language-([\w-]+)/.exec(className)?.[1]}
               />
             ) : (
-              <code className="rounded bg-surface-variant px-1 py-0.5 text-[0.85em]">
+              <code className="font-mono text-[0.9em] text-primary">
                 {children}
               </code>
             ),

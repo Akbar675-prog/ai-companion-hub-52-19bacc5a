@@ -59,6 +59,7 @@ const C = {
 
 const KEYWORDS =
   /\b(function|return|const|let|var|if|else|for|while|new|class|import|export|from|await|async|try|catch|typeof|of|in|null|true|false|def|print|self)\b/;
+const MAX_HIGHLIGHT_CHARS = 50_000;
 
 function tokenize(code: string): Tok[] {
   const re =
@@ -92,7 +93,10 @@ export function CodeBlock({ code, lang }: { code: string; lang?: string }) {
     language === "htm" ||
     (!language && /<html[\s>]|<!doctype html/i.test(code));
 
-  const tokens = useMemo(() => tokenize(code), [code]);
+  const tokens = useMemo(
+    () => (code.length > MAX_HIGHLIGHT_CHARS ? [{ t: code, c: C.txt }] : tokenize(code)),
+    [code],
+  );
   const preview = isHtml && mode === "preview";
 
   async function copy() {

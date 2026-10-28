@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowDown } from "lucide-react";
 import { PromptBox } from "@/components/ui/chatgpt-prompt-input";
 import { ShiningText } from "@/components/ui/shining-text";
 import { AiAvatar } from "@/components/ui/plasma-shader";
@@ -57,6 +58,13 @@ const SUGGESTIONS = [
   "Cara install APK di Android 14",
   "Tips biar HP nggak lag",
 ];
+
+const IMAGE_REQUEST_RE =
+  /\b(?:buat(?:kan|in)?|buatin|generate|hasilkan|gambarkan|lukis|render)\b[\s\S]{0,120}\b(?:gambar|image|ilustrasi|foto|poster|logo|wallpaper|artwork)\b|\b(?:buat|generate|hasilkan|gambarkan|lukis|render)\s+(?:sebuah\s+)?(?:gambar|image|ilustrasi|foto|poster|logo|wallpaper|artwork)\b/i;
+
+function looksLikeImageRequest(text: string) {
+  return IMAGE_REQUEST_RE.test(text);
+}
 
 type Draft = {
   content: string;
@@ -131,12 +139,14 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
   const [status, setStatus] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const pendingSendRef = useRef<string | null>(null);
   const runningThreadRef = useRef<string | null>(null);
   const autoStartedThreadRef = useRef<string | null>(null);
+  const followLatestRef = useRef(true);
 
   useEffect(() => {
     let alive = true;
@@ -263,8 +273,11 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
   const atBottomRef = useRef(true);
   useEffect(() => {
     const onScroll = () => {
-      atBottomRef.current =
+      const atBottom =
         window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 140;
+      atBottomRef.current = atBottom;
+      followLatestRef.current = atBottom;
+      setShowJumpToLatest(!atBottom);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -274,6 +287,19 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
   useEffect(() => {
     if (atBottomRef.current) endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
+
+  useEffect(() => {
+    if (loading && followLatestRef.current && (draft?.content || draft?.reasoning)) {
+      endRef.current?.scrollIntoView({ behavior: "auto" });
+    }
+  }, [draft?.content, draft?.reasoning, loading]);
+
+  function jumpToLatest() {
+    followLatestRef.current = true;
+    atBottomRef.current = true;
+    setShowJumpToLatest(false);
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }
 
 
   function startNewChat() {
@@ -812,7 +838,8 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       return;
     }
 
-    if (plugin === "generateImage") {
+    const wantsImage = Boolean(trimmed) && !image && looksLikeImageRequest(trimmed);
+    if (plugin === "generateImage" || wantsImage) {
       if (!trimmed) return;
       await runImage(trimmed);
       return;
@@ -977,8 +1004,27 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             e.preventDefault();
             void send(input);
           }}
-          className="sticky bottom-0 bg-gradient-to-t from-background via-background to-transparent pb-6 pt-3"
+          className="sticky bottom-0 relative bg-gradient-to-t from-background via-background to-transparent pb-6 pt-3"
         >
+          {showJumpToLatest && (
+            <div className="absolute bottom-full right-2 mb-2">
+              {loading || imaging ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute -inset-1 animate-spin rounded-full border-2 border-primary/20 border-t-primary"
+                />
+              ) : null}
+              <button
+                type="button"
+                onClick={jumpToLatest}
+                aria-label="Lompat ke jawaban terbaru"
+                className="relative inline-flex size-11 items-center justify-center rounded-full border border-border/70 bg-card text-primary shadow-lg transition hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <ArrowDown aria-hidden="true" className="size-5" />
+              </button>
+            </div>
+          )}
+
           <PromptBox
             ref={boxRef}
             value={input}
