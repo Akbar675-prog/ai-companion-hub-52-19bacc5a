@@ -393,17 +393,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         catalogDone = true;
         return list;
       });
-      const titlePromise = fetch("/api/ai-title", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: lastUser }),
-        signal: stepSignal(15_000),
-      })
-        .then((response) => (response.ok ? response.json() : null))
-        .then((value: { title?: string } | null) => value?.title ?? "")
-        .catch(() => "");
-
-
       // 1. Gambar → analisis visual dulu, lalu cari info akurat di web.
       if (attached) {
         setStatus("Menganalisis gambar...");
@@ -650,9 +639,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
 
       if (!acc.content.trim()) throw new Error("AI tidak memberi jawaban. Coba ulangi.");
 
-      title = (await titlePromise) || title;
-
-
+      title = title || lastUser.slice(0, 40);
 
       const reply: ChatMessage = {
         role: "assistant",
