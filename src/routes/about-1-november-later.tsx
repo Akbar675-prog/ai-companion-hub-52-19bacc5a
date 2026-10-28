@@ -12,6 +12,7 @@ export const Route = createFileRoute("/about-1-november-later")({
           "Penjelasan tentang perubahan tautan unduhan mulai 1 November 2026 dan dukungannya terhadap biaya server serta pengembangan mod.",
       },
     ],
+    links: [{ rel: "canonical", href: "https://galileomodapk.visora.my.id/about-1-november-later" }],
   }),
   component: DownloadChangeExplanation,
 });

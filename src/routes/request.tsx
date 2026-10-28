@@ -16,6 +16,7 @@ export const Route = createFileRoute("/request")({
           "Minta APK yang belum tersedia di katalog. Kirim nama aplikasi, versi, dan catatan.",
       },
       { property: "og:title", content: "Request APK · Galileo Mod APK" },
+      { property: "og:url", content: "https://galileomodapk.visora.my.id/request" },
       {
         property: "og:description",
         content:
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/request")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://galileomodapk.visora.my.id/request" }],
   }),
   component: RequestPage,
 });

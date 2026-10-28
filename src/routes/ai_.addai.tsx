@@ -56,6 +56,7 @@ function AddAiPage() {
   const [markNew, setMarkNew] = useState(true);
   const [realModel, setRealModel] = useState(false);
   const [modelType, setModelType] = useState("");
+  const [uncensored, setUncensored] = useState(false);
   const [abilities, setAbilities] = useState("");
   const [endpointUrl, setEndpointUrl] = useState("");
   const [endpointKey, setEndpointKey] = useState("");
@@ -89,6 +90,7 @@ function AddAiPage() {
     setMarkNew(true);
     setRealModel(false);
     setModelType("");
+    setUncensored(false);
     setAbilities("");
     setEndpointUrl("");
     setEndpointKey("");
@@ -103,6 +105,7 @@ function AddAiPage() {
     setMarkNew(Boolean(m.isNew));
     setRealModel(Boolean(m.realModel));
     setModelType(m.modelType ?? "");
+    setUncensored(Boolean(m.uncensored));
     setAbilities(m.abilities ?? "");
     setEndpointUrl(m.endpointUrl ?? "");
     setEndpointKey(m.endpointKey ?? "");
@@ -144,6 +147,7 @@ function AddAiPage() {
       isNew: markNew,
       realModel,
       modelType: realModel && modelType.trim() ? modelType.trim().slice(0, 120) : undefined,
+      uncensored,
       abilities: parseAbilities(abilities).join(", ") || undefined,
       endpointUrl: realModel && ep ? ep.slice(0, 300) : undefined,
       endpointKey: realModel && ep ? endpointKey.trim().slice(0, 400) || undefined : undefined,
@@ -299,7 +303,26 @@ function AddAiPage() {
                   autoCapitalize="none"
                   spellCheck={false}
                 />
+                <span className="mt-1 block text-xs text-muted-foreground">
+                  ID model tetap sama. Switch di bawah hanya mengubah prompt internal respons.
+                </span>
               </Field>
+              <label className="flex items-start gap-3 rounded-2xl border border-border/60 bg-background/60 p-3 text-sm">
+                <input
+                  type="checkbox"
+                  role="switch"
+                  checked={uncensored}
+                  onChange={(e) => setUncensored(e.target.checked)}
+                  className="mt-0.5 size-4 accent-primary"
+                />
+                <span>
+                  <span className="font-medium">Mode jawaban bebas</span>
+                  <span className="block text-xs leading-relaxed text-muted-foreground">
+                    Nyala: jawaban lebih langsung untuk penulisan kreatif, roleplay, dan eksperimen teks;
+                    tidak mengubah ID model.
+                  </span>
+                </span>
+              </label>
               <Field label="Endpoint API (opsional, kosong = OpenRouter)">
                 <input
                   value={endpointUrl}

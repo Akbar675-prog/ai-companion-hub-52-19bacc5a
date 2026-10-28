@@ -11,9 +11,11 @@ export const Route = createFileRoute("/privacy-policy")({
         content: "Kebijakan privasi Galileo Mod APK dan cara kami memproses data akun pengguna.",
       },
       { property: "og:title", content: "Kebijakan Privasi — Galileo Mod APK" },
+      { property: "og:url", content: "https://galileomodapk.visora.my.id/privacy-policy" },
       { property: "og:type", content: "website" },
       { name: "robots", content: "index, follow" },
     ],
+    links: [{ rel: "canonical", href: "https://galileomodapk.visora.my.id/privacy-policy" }],
   }),
   component: PrivacyPolicyPage,
 });

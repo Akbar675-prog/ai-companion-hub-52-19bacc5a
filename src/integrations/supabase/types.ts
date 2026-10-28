@@ -29,6 +29,7 @@ export type Database = {
           persona: string
           real_model: boolean
           tagline: string
+          uncensored: boolean
           updated_at: string
         }
         Insert: {
@@ -45,6 +46,7 @@ export type Database = {
           persona?: string
           real_model?: boolean
           tagline: string
+          uncensored?: boolean
           updated_at?: string
         }
         Update: {
@@ -61,6 +63,7 @@ export type Database = {
           persona?: string
           real_model?: boolean
           tagline?: string
+          uncensored?: boolean
           updated_at?: string
         }
         Relationships: []

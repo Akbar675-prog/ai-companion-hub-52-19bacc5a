@@ -14,6 +14,7 @@ const modelSchema = z.object({
   custom: z.literal(true),
   realModel: z.boolean().optional(),
   modelType: z.string().max(120).optional(),
+  uncensored: z.boolean().optional(),
   abilities: z.string().max(1000).optional(),
   endpointUrl: z.string().max(300).optional(),
   endpointKey: z.string().max(400).optional(),

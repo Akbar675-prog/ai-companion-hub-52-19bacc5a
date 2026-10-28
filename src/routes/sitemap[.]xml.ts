@@ -12,7 +12,10 @@ export const Route = createFileRoute("/sitemap.xml")({
           { path: "/", changefreq: "daily", priority: "1.0" },
           { path: "/leaderboard", changefreq: "hourly", priority: "0.9" },
           { path: "/about", changefreq: "monthly", priority: "0.6" },
+          { path: "/about-1-november-later", changefreq: "monthly", priority: "0.5" },
           { path: "/request", changefreq: "weekly", priority: "0.6" },
+          { path: "/privacy-policy", changefreq: "yearly", priority: "0.4" },
+          { path: "/term-of-services", changefreq: "yearly", priority: "0.4" },
           { path: "/vote-maker", changefreq: "monthly", priority: "0.5" },
         ];
         let apps: Awaited<ReturnType<typeof listAppsFn>> = [];

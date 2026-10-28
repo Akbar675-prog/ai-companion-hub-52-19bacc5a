@@ -32,6 +32,7 @@ export const Route = createFileRoute("/leaderboard")({
           "Papan peringkat aplikasi paling banyak diunduh di katalog Galileo Mod APK.",
       },
       { property: "og:title", content: "Leaderboard aplikasi" },
+      { property: "og:url", content: "https://galileomodapk.visora.my.id/leaderboard" },
       {
         property: "og:description",
         content: "Top aplikasi paling banyak diunduh.",
@@ -39,6 +40,7 @@ export const Route = createFileRoute("/leaderboard")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: "https://galileomodapk.visora.my.id/leaderboard" }],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(appsQuery),
   component: LeaderboardPage,
