@@ -40,6 +40,7 @@ import { Route as ApiAiChatRouteImport } from './routes/api.ai-chat'
 import { Route as ApiAiPlanRouteImport } from './routes/api.ai-plan'
 import { Route as ApiAiQueryRouteImport } from './routes/api.ai-query'
 import { Route as ApiAiSearchRouteImport } from './routes/api.ai-search'
+import { Route as ApiAiSurahRouteImport } from './routes/api.ai-surah'
 import { Route as ApiAiTitleRouteImport } from './routes/api.ai-title'
 import { Route as ApiAiVisionRouteImport } from './routes/api.ai-vision'
 import { Route as AppsIdRouteImport } from './routes/apps.$id'
@@ -218,6 +219,11 @@ const ApiAiSearchRoute = ApiAiSearchRouteImport.update({
   path: '/api/ai-search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiSurahRoute = ApiAiSurahRouteImport.update({
+  id: '/api/ai-surah',
+  path: '/api/ai-surah',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiTitleRoute = ApiAiTitleRouteImport.update({
   id: '/api/ai-title',
   path: '/api/ai-title',
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/api/ai-plan': typeof ApiAiPlanRoute
   '/api/ai-query': typeof ApiAiQueryRoute
   '/api/ai-search': typeof ApiAiSearchRoute
+  '/api/ai-surah': typeof ApiAiSurahRoute
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
   '/apps/$id': typeof AppsIdRoute
@@ -417,6 +424,7 @@ export interface FileRoutesByTo {
   '/api/ai-plan': typeof ApiAiPlanRoute
   '/api/ai-query': typeof ApiAiQueryRoute
   '/api/ai-search': typeof ApiAiSearchRoute
+  '/api/ai-surah': typeof ApiAiSurahRoute
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
   '/apps/$id': typeof AppsIdRoute
@@ -473,6 +481,7 @@ export interface FileRoutesById {
   '/api/ai-plan': typeof ApiAiPlanRoute
   '/api/ai-query': typeof ApiAiQueryRoute
   '/api/ai-search': typeof ApiAiSearchRoute
+  '/api/ai-surah': typeof ApiAiSurahRoute
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
   '/apps/$id': typeof AppsIdRoute
@@ -530,6 +539,7 @@ export interface FileRouteTypes {
     | '/api/ai-plan'
     | '/api/ai-query'
     | '/api/ai-search'
+    | '/api/ai-surah'
     | '/api/ai-title'
     | '/api/ai-vision'
     | '/apps/$id'
@@ -585,6 +595,7 @@ export interface FileRouteTypes {
     | '/api/ai-plan'
     | '/api/ai-query'
     | '/api/ai-search'
+    | '/api/ai-surah'
     | '/api/ai-title'
     | '/api/ai-vision'
     | '/apps/$id'
@@ -640,6 +651,7 @@ export interface FileRouteTypes {
     | '/api/ai-plan'
     | '/api/ai-query'
     | '/api/ai-search'
+    | '/api/ai-surah'
     | '/api/ai-title'
     | '/api/ai-vision'
     | '/apps/$id'
@@ -696,6 +708,7 @@ export interface RootRouteChildren {
   ApiAiPlanRoute: typeof ApiAiPlanRoute
   ApiAiQueryRoute: typeof ApiAiQueryRoute
   ApiAiSearchRoute: typeof ApiAiSearchRoute
+  ApiAiSurahRoute: typeof ApiAiSurahRoute
   ApiAiTitleRoute: typeof ApiAiTitleRoute
   ApiAiVisionRoute: typeof ApiAiVisionRoute
   AppsIdRoute: typeof AppsIdRoute
@@ -938,6 +951,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai-surah': {
+      id: '/api/ai-surah'
+      path: '/api/ai-surah'
+      fullPath: '/api/ai-surah'
+      preLoaderRoute: typeof ApiAiSurahRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai-title': {
       id: '/api/ai-title'
       path: '/api/ai-title'
@@ -1139,6 +1159,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiPlanRoute: ApiAiPlanRoute,
   ApiAiQueryRoute: ApiAiQueryRoute,
   ApiAiSearchRoute: ApiAiSearchRoute,
+  ApiAiSurahRoute: ApiAiSurahRoute,
   ApiAiTitleRoute: ApiAiTitleRoute,
   ApiAiVisionRoute: ApiAiVisionRoute,
   AppsIdRoute: AppsIdRoute,

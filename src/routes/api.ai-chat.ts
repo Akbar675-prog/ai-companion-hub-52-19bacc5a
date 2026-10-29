@@ -64,6 +64,11 @@ type Body = {
     direct?: string;
     results?: { title?: string; link?: string; snippet?: string }[];
   };
+  quran?: {
+    name?: string;
+    number?: number;
+    markdown?: string;
+  } | null;
 };
 
 /* ------------------------------------------------------------------ */
@@ -312,6 +317,13 @@ export const Route = createFileRoute("/api/ai-chat")({
             (s.direct ? `Jawaban langsung: ${s.direct}\n` : "") +
             lines +
             "\nIni informasi terbaru yang kamu pegang. Untuk hal yang bisa berubah seiring waktu, jadikan ini sumber utama dan ikuti bila berbeda dari ingatan lamamu. Rujuk dengan [1], [2] di kalimat yang memakainya.";
+        }
+        const quran = body.quran;
+        if (quran?.markdown) {
+          extra +=
+            `\n\nDATA SURAH AL-QUR'AN YANG BARU DIAMBIL DARI API (${String(quran.name ?? "").slice(0, 80)}):\n` +
+            "Gunakan data ini bila pengguna meminta menampilkan, membaca, atau menjelaskan surah. Pertahankan huruf Arab dan nomor ayat persis seperti sumber. Tampilkan sebagai Markdown dengan judul ##, setiap ayat dalam blockquote terpisah, dan jangan membungkusnya dalam code fence. Terjemahkan atau jelaskan setelah blok Arab bila diminta.\n\n" +
+            String(quran.markdown).slice(0, 80_000);
         }
         const vision = String(body.vision ?? "").slice(0, 4000);
         if (vision) {

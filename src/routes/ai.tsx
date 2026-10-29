@@ -74,6 +74,12 @@ type Draft = {
   analyzedImage?: boolean;
 };
 
+type QuranContext = {
+  markdown: string;
+  name: string;
+  number: number;
+};
+
 export type CatalogApp = { ID: string; App_name: string; Description: string };
 
 let catalogCache: { at: number; list: CatalogApp[] } | null = null;
@@ -108,6 +114,23 @@ async function fetchAppCatalog(signal?: AbortSignal): Promise<CatalogApp[]> {
     return list;
   } catch {
     return catalogCache?.list ?? [];
+  }
+}
+
+async function fetchQuranContext(query: string, signal: AbortSignal): Promise<QuranContext | null> {
+  try {
+    const response = await fetch("/api/ai-surah", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+      signal,
+    });
+    if (!response.ok) return null;
+    const result = (await response.json()) as Partial<QuranContext> & { found?: boolean };
+    if (!result.found || !result.markdown || !result.name || !result.number) return null;
+    return { markdown: result.markdown, name: result.name, number: result.number };
+  } catch {
+    return null;
   }
 }
 
@@ -415,6 +438,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       const deepResearch = plugin === "deepResearch";
       let needsReasoning = tool === "thinkLonger" || plugin === "deepResearch";
       let vision = "";
+      let quran: QuranContext | null = null;
 
       // Katalog aplikasi + judul chat diambil paralel sejak awal supaya tidak
       // menahan jawaban utama.
@@ -423,6 +447,8 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         catalogDone = true;
         return list;
       });
+      // Deteksi dan ambil surah paralel dengan planner; request non-surah akan cepat 404 lokal.
+      const quranPromise = fetchQuranContext(lastUser, stepSignal(12_000));
       // 1. Gambar → analisis visual dulu, lalu cari info akurat di web.
       if (attached) {
         setStatus("Menganalisis gambar...");
@@ -481,6 +507,8 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         if (forceSearch && !query) query = lastUser;
         if (queries.length === 0 && query) queries = [query];
       }
+
+      quran = await quranPromise;
 
       // Query pencarian dibuat AI spesialis terpisah agar ejaan & kualitas query terjaga.
       if (needsSearch) {
@@ -585,6 +613,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             reasoning: needsReasoning && !resume,
             vision,
             search,
+            quran,
             apps,
             origin,
             persona: modelById(modelId, models).realModel
