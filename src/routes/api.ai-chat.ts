@@ -9,8 +9,10 @@ const REASONING_MODEL = "nvidia/nemotron-3.5-super-vl:free";
 // Cadangan bila model utama error. Dicoba berurutan; bisa ditimpa lewat env OPENROUTER_FALLBACK_MODELS.
 const FALLBACK_MODELS = ["google/gemma-4-31b-it:free", "poolside/laguna-s-2.1:free"];
 
-const ANSWER_TIMEOUT_MS = 600_000; // 10 menit
-const IDLE_TIMEOUT_MS = 120_000; // 2 menit
+// Batas ini cukup longgar untuk model gratis, tetapi mencegah request menggantung
+// terlalu lama saat provider hanya mengirim reasoning tanpa jawaban.
+const ANSWER_TIMEOUT_MS = 180_000; // 3 menit
+const IDLE_TIMEOUT_MS = 45_000; // 45 detik tanpa chunk berarti stream macet
 
 // Ketahanan terhadap provider yang sedang bermasalah
 const MAX_TOKENS = 32_000; // 80k terlalu besar untuk provider gratis dan mempersempit pilihan routing
@@ -510,6 +512,7 @@ export const Route = createFileRoute("/api/ai-chat")({
 
         let ctrl: ReadableStreamDefaultController<Uint8Array> | undefined;
         let closed = false;
+        let emittedText = false;
         let idle: ReturnType<typeof setTimeout> | undefined;
 
         const writeRaw = (chunk: string) => {
@@ -559,6 +562,7 @@ export const Route = createFileRoute("/api/ai-chat")({
                     const thinking = delta?.reasoning ?? delta?.reasoning_content;
                     if (thinking) reasoningFilter.push(thinking);
                     if (delta?.content) {
+                      emittedText = true;
                       reasoningFilter.flush();
                       pacer.push("text", delta.content);
                     }
@@ -577,7 +581,10 @@ export const Route = createFileRoute("/api/ai-chat")({
                 reasoningFilter.flush();
                 // tunggu antrean habis supaya ujung jawaban tidak terpotong
                 await pacer.drain();
-                send({ type: "done" });
+                // Beri tahu klien apakah stream benar-benar menghasilkan jawaban.
+                // Stream reasoning-only dianggap gagal agar klien bisa retry/fallback,
+                // bukan menampilkan reasoning seolah respons sudah selesai.
+                send({ type: "done", complete: emittedText });
                 if (!closed) {
                   closed = true;
                   controller.close();
@@ -601,8 +608,9 @@ export const Route = createFileRoute("/api/ai-chat")({
           headers: {
             "Content-Type": "text/event-stream; charset=utf-8",
             "Cache-Control": "no-cache, no-transform",
-            Connection: "keep-alive",
+            // Jangan biarkan proxy/CDN menunggu buffer terlalu lama.
             "X-Accel-Buffering": "no",
+            Connection: "keep-alive",
           },
         });
       },

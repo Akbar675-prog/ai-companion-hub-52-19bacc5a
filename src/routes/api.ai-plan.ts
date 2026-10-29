@@ -38,6 +38,7 @@ export const Route = createFileRoute("/api/ai-plan")({
         const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+          signal: AbortSignal.timeout(12_000),
           body: JSON.stringify({
             model: "stealth/space-bunny-alpha",
             messages: [

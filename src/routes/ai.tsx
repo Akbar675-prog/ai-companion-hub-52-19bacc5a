@@ -633,9 +633,16 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
               const line = part.trim();
               if (!line.startsWith("data:")) continue;
               try {
-                const evt = JSON.parse(line.slice(5).trim()) as { type?: string; v?: string };
-                if (evt.type === "done") closed = true;
-                else if (evt.type === "reasoning")
+                const evt = JSON.parse(line.slice(5).trim()) as {
+                  type?: string;
+                  v?: string;
+                  complete?: boolean;
+                };
+                if (evt.type === "done") {
+                  // Server bisa menutup stream setelah timeout tanpa pernah
+                  // mengirim teks. Anggap itu gagal supaya retry berjalan.
+                  closed = evt.complete === true;
+                } else if (evt.type === "reasoning")
                   acc = { ...acc, reasoning: acc.reasoning + (evt.v ?? "") };
                 else if (evt.type === "text") acc = { ...acc, content: acc.content + (evt.v ?? "") };
               } catch {
@@ -644,7 +651,9 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             }
             if (closed) return true;
           }
-          return true;
+          // EOF tanpa event done berarti koneksi putus di tengah jawaban.
+          // Lempar ke mekanisme retry agar jawaban tidak berhenti diam-diam.
+          return false;
         } finally {
           await reader.cancel().catch(() => {});
         }
@@ -654,6 +663,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       for (let tries = 0; tries < 3 && !finished; tries++) {
         try {
           finished = await runStream();
+          if (!finished) throw new Error("Stream jawaban terputus.");
         } catch (err) {
           attempt.ctrl = null;
           // Pengguna menekan stop / batas total tercapai → jangan sambung ulang.
