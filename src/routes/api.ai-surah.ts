@@ -118,7 +118,12 @@ const SURAH_NAMES = [
   "An-Nas",
 ];
 
-type Ayah = { numberInSurah: number; text: string; translation?: string };
+type Ayah = {
+  numberInSurah: number;
+  text: string;
+  translation?: string;
+  transliteration?: string;
+};
 
 function compact(value: string) {
   return value
@@ -158,12 +163,25 @@ function resolveAyahRange(input: string) {
   return { from, to };
 }
 
-function formatMarkdown(name: string, number: number, ayahs: Ayah[], includeTranslation: boolean) {
-  const lines = [`## QS. ${name} (${number})`, "", "_Teks Arab dari Al Quran Cloud_", ""];
+function formatMarkdown(
+  arabicName: string,
+  englishName: string,
+  meaning: string,
+  ayahs: Ayah[],
+  includeTranslation: boolean,
+) {
+  const lines = [
+    "<!-- quran -->",
+    `## ${arabicName}`,
+    `# ${englishName}`,
+    `_${meaning}_`,
+    "",
+  ];
   for (const ayah of ayahs) {
-    lines.push(`> ${ayah.text} **﴿${ayah.numberInSurah}﴾**`);
-    if (includeTranslation && ayah.translation) lines.push(`> _${ayah.translation}_`);
-    lines.push(">");
+    lines.push(`> **${ayah.text} ۝${ayah.numberInSurah}**`);
+    if (ayah.transliteration) lines.push(">", `> _${ayah.transliteration}_`);
+    if (includeTranslation && ayah.translation) lines.push(">", `> ${ayah.translation}`);
+    lines.push(">", "---", "");
   }
   return lines.join("\n").trim();
 }
@@ -184,18 +202,25 @@ export const Route = createFileRoute("/api/ai-surah")({
         if (!number) return Response.json({ found: false });
 
         const range = resolveAyahRange(query);
-        const url = `${API_BASE}/surah/${number}/editions/quran-uthmani,id.indonesian`;
+        const url = `${API_BASE}/surah/${number}/editions/quran-uthmani,id.indonesian,en.transliteration`;
         try {
           const response = await fetch(url, { signal: AbortSignal.timeout(12_000) });
           if (!response.ok) return Response.json({ error: "API Al-Qur'an sedang tidak tersedia." }, { status: 502 });
           const payload = (await response.json()) as {
-            data?: { name?: string; englishName?: string; ayahs?: Ayah[] }[];
+            data?: {
+              name?: string;
+              englishName?: string;
+              englishNameTranslation?: string;
+              ayahs?: Ayah[];
+            }[];
           };
           const arabic = payload.data?.[0];
           const translation = payload.data?.[1];
+          const transliteration = payload.data?.[2];
           const allAyahs = (arabic?.ayahs ?? []).map((ayah, index) => ({
             ...ayah,
             translation: translation?.ayahs?.[index]?.text,
+            transliteration: transliteration?.ayahs?.[index]?.text,
           }));
           const ayahs = range
             ? allAyahs.filter((ayah) => ayah.numberInSurah >= range.from && ayah.numberInSurah <= range.to)
@@ -203,8 +228,10 @@ export const Route = createFileRoute("/api/ai-surah")({
           if (!ayahs.length) return Response.json({ error: "Nomor ayat tidak ditemukan." }, { status: 404 });
 
           const name = arabic?.englishName || SURAH_NAMES[number - 1];
-          const includeTranslation = /terjemah|arti|makna|indonesia/i.test(query);
-          const markdown = formatMarkdown(name, number, ayahs, includeTranslation);
+          const arabicName = arabic?.name || `سُورَةُ ${name}`;
+          const meaning = arabic?.englishNameTranslation || "";
+          const includeTranslation = !/arab saja|arabnya saja|tanpa terjemah/i.test(query);
+          const markdown = formatMarkdown(arabicName, name, meaning, ayahs, includeTranslation);
           return Response.json({
             found: true,
             number,

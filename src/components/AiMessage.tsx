@@ -213,12 +213,16 @@ function MarkdownBody({
       const idx = Number(n);
       return sources && sources[idx - 1] ? `[cite-${idx}](#cite-${idx})` : m;
     });
+  const isQuran = clean.startsWith("<!-- quran -->");
+  const markdown = isQuran ? clean.replace(/^<!-- quran -->\s*/, "") : clean;
 
   return (
     <div
-      className={`max-w-none space-y-3 text-sm leading-relaxed [overflow-wrap:anywhere] ${
-        muted ? "text-muted-foreground" : "text-foreground"
-      }`}
+      className={`${
+        isQuran
+          ? "quran-markdown max-w-none space-y-4 text-sm leading-relaxed [overflow-wrap:anywhere]"
+          : "max-w-none space-y-3 text-sm leading-relaxed [overflow-wrap:anywhere]"
+      } ${muted ? "text-muted-foreground" : "text-foreground"}`}
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
@@ -243,10 +247,14 @@ function MarkdownBody({
 
           p: ({ children }) => <p className="my-0">{children}</p>,
           h1: ({ children }) => (
-            <h3 className="mt-1 font-display text-lg leading-snug">{children}</h3>
+            <h3 className={isQuran ? "mt-1 text-center font-display text-3xl font-bold leading-tight" : "mt-1 font-display text-lg leading-snug"}>
+              {children}
+            </h3>
           ),
           h2: ({ children }) => (
-            <h3 className="mt-1 font-display text-base leading-snug">{children}</h3>
+            <h3 className={isQuran ? "mt-1 text-center text-2xl leading-relaxed" : "mt-1 font-display text-base leading-snug"}>
+              {children}
+            </h3>
           ),
           h3: ({ children }) => <h4 className="mt-1 text-sm font-semibold">{children}</h4>,
           ul: ({ children }) => <ul className="my-0 list-disc space-y-1 pl-5">{children}</ul>,
@@ -270,7 +278,13 @@ function MarkdownBody({
           },
 
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-border pl-3 text-muted-foreground">
+            <blockquote
+              className={
+                isQuran
+                  ? "my-2 border-0 border-b border-border/60 bg-card/60 px-2 pb-5 pt-3 text-right text-muted-foreground last:border-b-0 [&>p:first-child]:text-2xl [&>p:first-child]:font-serif [&>p:first-child]:leading-[2.2] [&>p:first-child]:text-foreground [&>p:nth-child(2)]:mt-2 [&>p:nth-child(2)]:text-sm [&>p:nth-child(2)]:text-primary [&>p:nth-child(3)]:mt-2 [&>p:nth-child(3)]:text-sm [&>p:nth-child(3)]:leading-relaxed"
+                  : "border-l-2 border-border pl-3 text-muted-foreground"
+              }
+            >
               {children}
             </blockquote>
           ),
@@ -290,7 +304,7 @@ function MarkdownBody({
           hr: () => <hr className="border-border" />,
         }}
       >
-        {clean}
+        {markdown}
       </ReactMarkdown>
     </div>
   );
