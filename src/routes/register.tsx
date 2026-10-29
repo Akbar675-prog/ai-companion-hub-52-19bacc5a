@@ -6,6 +6,7 @@ import { PasswordInput } from "@/components/PasswordInput";
 import { GoogleButton } from "@/components/GoogleButton";
 import { authSupabase } from "@/integrations/auth-supabase/client";
 import { registerAccountFn } from "@/lib/account.functions";
+import { sendEmailVerificationOtpFn } from "@/lib/email-verification.functions";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/register")({
@@ -70,7 +71,11 @@ function RegisterPage() {
       });
       if (signInError)
         throw new Error("Akun dibuat, tapi gagal login otomatis. Coba masuk manual.");
-      navigate({ to: "/profile" });
+
+      const challenge = crypto.randomUUID();
+      sessionStorage.setItem("email-verification-challenge", challenge);
+      await sendEmailVerificationOtpFn({ data: { challenge } });
+      navigate({ to: "/auth/email-verification" });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal mendaftar.");
     } finally {

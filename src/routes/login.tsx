@@ -6,6 +6,7 @@ import { PasswordInput } from "@/components/PasswordInput";
 import { GoogleButton } from "@/components/GoogleButton";
 import { authSupabase } from "@/integrations/auth-supabase/client";
 import { resolveLoginEmailFn } from "@/lib/account.functions";
+import { sendEmailVerificationOtpFn } from "@/lib/email-verification.functions";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/login")({
@@ -45,7 +46,15 @@ function LoginPage() {
         password,
       });
       if (signInError) throw new Error("Username/email atau password salah.");
-      navigate({ to: "/profile" });
+      const { data: account } = await authSupabase.auth.getUser();
+      if (account.user?.user_metadata?.email_verified !== true) {
+        const challenge = crypto.randomUUID();
+        sessionStorage.setItem("email-verification-challenge", challenge);
+        await sendEmailVerificationOtpFn({ data: { challenge } });
+        navigate({ to: "/auth/email-verification" });
+      } else {
+        navigate({ to: "/profile" });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal masuk.");
     } finally {
