@@ -33,7 +33,7 @@ async function admin() {
 }
 
 export async function sendEmailVerificationOtp(userId: string, challenge: string) {
-  const resendKey = process.env.RESEND_API_KEY;
+  const resendKey = process.env.RESEND_API_KEY?.trim();
   if (!resendKey) throw new Error("RESEND_API_KEY belum diatur di environment.");
   if (!/^[a-zA-Z0-9-]{20,100}$/.test(challenge)) throw new Error("Sesi verifikasi tidak valid.");
 
@@ -58,24 +58,35 @@ export async function sendEmailVerificationOtp(userId: string, challenge: string
   });
   if (updateError) throw new Error("Gagal menyiapkan kode verifikasi.");
 
-  const resend = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
-    signal: AbortSignal.timeout(10_000),
-    body: JSON.stringify({
-      from: `Galileo Mod APK <${OTP_FROM}>`,
-      to: [user.email],
-      subject: "Kode verifikasi akun Galileo Mod APK",
-      text: `Kode verifikasi akun kamu adalah ${otp}. Kode ini berlaku selama 3 menit dan hanya berlaku untuk sesi pendaftaran ini. Jika kamu tidak merasa mendaftar, abaikan email ini.`,
-      html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><h2>Verifikasi akun Galileo Mod APK</h2><p>Kode OTP kamu:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${otp}</p><p>Kode berlaku selama <strong>3 menit</strong> dan hanya untuk sesi pendaftaran ini.</p><p>Jika kamu tidak merasa mendaftar, abaikan email ini.</p></div>`,
-    }),
-  });
-
-  if (!resend.ok) {
+  let resend: Response;
+  try {
+    resend = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+      signal: AbortSignal.timeout(10_000),
+      body: JSON.stringify({
+        from: `Galileo Mod APK <${OTP_FROM}>`,
+        to: [user.email],
+        subject: "Kode verifikasi akun Galileo Mod APK",
+        text: `Kode verifikasi akun kamu adalah ${otp}. Kode ini berlaku selama 3 menit dan hanya berlaku untuk sesi pendaftaran ini. Jika kamu tidak merasa mendaftar, abaikan email ini.`,
+        html: `<div style="font-family:Arial,sans-serif;line-height:1.6"><h2>Verifikasi akun Galileo Mod APK</h2><p>Kode OTP kamu:</p><p style="font-size:32px;font-weight:700;letter-spacing:8px">${otp}</p><p>Kode berlaku selama <strong>3 menit</strong> dan hanya untuk sesi pendaftaran ini.</p><p>Jika kamu tidak merasa mendaftar, abaikan email ini.</p></div>`,
+      }),
+    });
+  } catch (error) {
+    console.error("[email-verification] Resend request failed", error instanceof Error ? error.message : error);
     await db.auth.admin.updateUserById(userId, {
       user_metadata: { ...metadata, email_verified: false, email_otp_hash: null, email_otp_expires_at: null, email_otp_challenge: null },
     });
-    throw new Error("Email OTP gagal dikirim. Coba lagi.");
+    throw new Error("Server email tidak bisa dihubungi. Coba lagi.");
+  }
+
+  if (!resend.ok) {
+    const details = (await resend.text().catch(() => "")).slice(0, 300);
+    console.error(`[email-verification] Resend rejected email (${resend.status})`, details);
+    await db.auth.admin.updateUserById(userId, {
+      user_metadata: { ...metadata, email_verified: false, email_otp_hash: null, email_otp_expires_at: null, email_otp_challenge: null },
+    });
+    throw new Error(`Resend menolak pengiriman OTP (${resend.status}). Periksa log deployment.`);
   }
 
   return { alreadyVerified: false, email: maskEmail(user.email), expiresAt };
