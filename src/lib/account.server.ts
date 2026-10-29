@@ -82,10 +82,8 @@ export async function registerAccount(input: {
   const { data: created, error } = await db.auth.admin.createUser({
     email: input.email.trim().toLowerCase(),
     password: input.password,
-    // Supabase auth login tetap dipakai untuk mempertahankan sesi, sedangkan
-    // status verifikasi email dikendalikan oleh OTP Resend di aplikasi.
     email_confirm: true,
-    user_metadata: { name: input.name.trim(), username, email_verified: false },
+    user_metadata: { name: input.name.trim(), username },
   });
   if (error || !created?.user) {
     const msg = error?.message ?? "Gagal membuat akun.";

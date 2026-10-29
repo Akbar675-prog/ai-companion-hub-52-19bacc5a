@@ -43,7 +43,6 @@ import { Route as ApiAiSearchRouteImport } from './routes/api.ai-search'
 import { Route as ApiAiTitleRouteImport } from './routes/api.ai-title'
 import { Route as ApiAiVisionRouteImport } from './routes/api.ai-vision'
 import { Route as AppsIdRouteImport } from './routes/apps.$id'
-import { Route as AuthEmailVerificationRouteImport } from './routes/auth.email-verification'
 import { Route as CheckReportRouteImport } from './routes/check.report'
 import { Route as DataGetVerifiedRouteImport } from './routes/data.get-verified'
 import { Route as RequestDataRouteImport } from './routes/request_.data'
@@ -234,11 +233,6 @@ const AppsIdRoute = AppsIdRouteImport.update({
   path: '/apps/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthEmailVerificationRoute = AuthEmailVerificationRouteImport.update({
-  id: '/auth/email-verification',
-  path: '/auth/email-verification',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CheckReportRoute = CheckReportRouteImport.update({
   id: '/check/report',
   path: '/check/report',
@@ -371,7 +365,6 @@ export interface FileRoutesByFullPath {
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
   '/apps/$id': typeof AppsIdRoute
-  '/auth/email-verification': typeof AuthEmailVerificationRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
   '/request/data': typeof RequestDataRoute
@@ -427,7 +420,6 @@ export interface FileRoutesByTo {
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
   '/apps/$id': typeof AppsIdRoute
-  '/auth/email-verification': typeof AuthEmailVerificationRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
   '/request/data': typeof RequestDataRoute
@@ -484,7 +476,6 @@ export interface FileRoutesById {
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
   '/apps/$id': typeof AppsIdRoute
-  '/auth/email-verification': typeof AuthEmailVerificationRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
   '/request_/data': typeof RequestDataRoute
@@ -542,7 +533,6 @@ export interface FileRouteTypes {
     | '/api/ai-title'
     | '/api/ai-vision'
     | '/apps/$id'
-    | '/auth/email-verification'
     | '/check/report'
     | '/data/get-verified'
     | '/request/data'
@@ -598,7 +588,6 @@ export interface FileRouteTypes {
     | '/api/ai-title'
     | '/api/ai-vision'
     | '/apps/$id'
-    | '/auth/email-verification'
     | '/check/report'
     | '/data/get-verified'
     | '/request/data'
@@ -654,7 +643,6 @@ export interface FileRouteTypes {
     | '/api/ai-title'
     | '/api/ai-vision'
     | '/apps/$id'
-    | '/auth/email-verification'
     | '/check/report'
     | '/data/get-verified'
     | '/request_/data'
@@ -711,7 +699,6 @@ export interface RootRouteChildren {
   ApiAiTitleRoute: typeof ApiAiTitleRoute
   ApiAiVisionRoute: typeof ApiAiVisionRoute
   AppsIdRoute: typeof AppsIdRoute
-  AuthEmailVerificationRoute: typeof AuthEmailVerificationRoute
   CheckReportRoute: typeof CheckReportRoute
   DataGetVerifiedRoute: typeof DataGetVerifiedRoute
   RequestDataRoute: typeof RequestDataRoute
@@ -972,13 +959,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth/email-verification': {
-      id: '/auth/email-verification'
-      path: '/auth/email-verification'
-      fullPath: '/auth/email-verification'
-      preLoaderRoute: typeof AuthEmailVerificationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/check/report': {
       id: '/check/report'
       path: '/check/report'
@@ -1162,7 +1142,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiTitleRoute: ApiAiTitleRoute,
   ApiAiVisionRoute: ApiAiVisionRoute,
   AppsIdRoute: AppsIdRoute,
-  AuthEmailVerificationRoute: AuthEmailVerificationRoute,
   CheckReportRoute: CheckReportRoute,
   DataGetVerifiedRoute: DataGetVerifiedRoute,
   RequestDataRoute: RequestDataRoute,
