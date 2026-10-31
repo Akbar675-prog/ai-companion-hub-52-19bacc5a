@@ -1145,12 +1145,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             onValueChange={setInput}
             onStop={stop}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                void send(input);
-              }
-            }}
           />
           <p className="mt-2 text-center text-xs text-muted-foreground">
             GetrixAI bisa keliru. Cek info penting lewat sumber yang tertera.
