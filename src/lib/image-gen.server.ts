@@ -1,4 +1,4 @@
-// Generate gambar via Cloudflare Workers AI (Stable Diffusion XL) + kuota bulanan per pengguna.
+// Generate gambar via Cloudflare Workers AI (Stable Diffusion XL) + kuota harian per pengguna.
 // Hasil gambar disimpan permanen di storage (bucket app-metadata) pada path
 // create/ai-image/<id 32 karakter> dan disajikan lewat host user content.
 //
@@ -29,8 +29,8 @@ function cfConfig() {
   };
 }
 
-function periodUtc() {
-  return new Date().toISOString().slice(0, 7);
+function todayUtc() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function keyFor(userId: string) {
@@ -49,20 +49,20 @@ function trimHistory(history: Record<string, number>): Record<string, number> {
 async function readQuota(userId: string): Promise<Quota> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data } = await supabaseAdmin.storage.from(BUCKET).download(keyFor(userId));
-  if (!data) return { day: periodUtc(), used: 0 };
+  if (!data) return { day: todayUtc(), used: 0 };
   try {
     const parsed = JSON.parse(await data.text()) as Quota;
     const history = parsed.history ?? {};
-    if (parsed.day !== periodUtc()) {
+    if (parsed.day !== todayUtc()) {
       return {
-        day: periodUtc(),
+        day: todayUtc(),
         used: 0,
         history: trimHistory({ ...history, [parsed.day]: Number(parsed.used) || 0 }),
       };
     }
     return { day: parsed.day, used: Number(parsed.used) || 0, history };
   } catch {
-    return { day: periodUtc(), used: 0 };
+    return { day: todayUtc(), used: 0 };
   }
 }
 
@@ -79,14 +79,12 @@ export async function imageQuotaFor(userId: string) {
   const q = await readQuota(userId);
   const limit = (await limitsFor(userId)).image;
   const history = q.history ?? {};
-  const period = periodUtc();
-  const [year, month] = period.split("-").map(Number);
-  const now = new Date(Date.UTC(year, month - 1, 1));
+  const today = todayUtc();
+  const now = new Date(`${today}T00:00:00Z`);
   const series: { date: string; used: number }[] = [];
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
-    const key = d.toISOString().slice(0, 7);
-    series.push({ date: `${key}-01`, used: key === period ? q.used : (history[key] ?? 0) });
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now.getTime() - i * 86_400_000).toISOString().slice(0, 10);
+    series.push({ date: d, used: d === today ? q.used : (history[d] ?? 0) });
   }
   return {
     used: q.used,
@@ -145,7 +143,7 @@ async function fetchImageBytes(
 
         // JIKA 3036: Kuota Cloudflare habis. Berhenti total.
         if (cfCode === 3036 || errBody.includes("daily free allocation")) {
-          throw new Error("Kuota Cloudflare AI habis. Silakan upgrade ke Workers Paid atau coba lagi bulan depan.");
+          throw new Error("Kuota harian Cloudflare AI habis. Silakan upgrade ke Workers Paid atau coba besok.");
         }
 
         // JIKA 3040: Kapasitas penuh. Wajib Retry.
@@ -206,7 +204,7 @@ export async function generateImage(userId: string, prompt: string) {
   const limit = (await limitsFor(userId)).image;
   if (quota.used >= limit) {
     throw new Error(
-      `Limit gambar bulan ini sudah habis (${limit}/bulan). Coba lagi tanggal 1 bulan depan.`,
+      `Limit gambar hari ini sudah habis (${limit}/hari). Coba lagi setelah pukul 07:00 WIB.`,
     );
   }
 
@@ -224,7 +222,7 @@ export async function generateImage(userId: string, prompt: string) {
     .upload(path, bytes, { contentType: type, upsert: true });
   if (error) throw new Error(`Gagal menyimpan gambar: ${error.message}`);
 
-  await writeQuota(userId, { ...quota, day: periodUtc(), used: quota.used + 1 });
+  await writeQuota(userId, { ...quota, day: todayUtc(), used: quota.used + 1 });
 
   return {
     url: `${USER_CONTENT_ORIGIN}/${AI_IMAGE_PREFIX}/${id}`,
