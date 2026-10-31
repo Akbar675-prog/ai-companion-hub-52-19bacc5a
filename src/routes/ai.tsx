@@ -68,27 +68,28 @@ const LOADING_PHRASES = [
 
 function ChatLoadingText({ status }: { status: string | null }) {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const isThinking = !status || status === "Memikirkan langkah...";
 
   useEffect(() => {
-    if (status) return;
+    if (!isThinking) return;
     const interval = window.setInterval(() => {
       setCurrentIndex((previous) => (previous + 1) % LOADING_PHRASES.length);
-    }, 3000);
+    }, 2800);
     return () => window.clearInterval(interval);
-  }, [status]);
+  }, [isThinking]);
 
-  const text = status ?? LOADING_PHRASES[currentIndex];
+  const text = isThinking ? LOADING_PHRASES[currentIndex] : status;
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.span
         key={text}
         className="inline-block"
-        initial={{ opacity: 0, y: 8 }}
+        initial={{ opacity: 0, y: 3 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.3 }}
+        exit={{ opacity: 0, y: -3 }}
+        transition={{ duration: 0.55, ease: "easeInOut" }}
       >
-        <ShimmeringText text={text} />
+        <ShimmeringText text={text} className="opacity-80" />
       </motion.span>
     </AnimatePresence>
   );

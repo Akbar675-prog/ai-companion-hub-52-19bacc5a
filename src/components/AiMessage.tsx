@@ -127,7 +127,7 @@ function Reasoning({
   live?: boolean;
   sources?: ChatMessage["sources"];
 }) {
-  const [open, setOpen] = useState(!!live);
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="space-y-2">
