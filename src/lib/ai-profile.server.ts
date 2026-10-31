@@ -44,7 +44,7 @@ async function readVoiceAgents(userId: string): Promise<AiVoiceAgent[]> {
     .map((v: any) => ({
       id: String(v.voice_id),
       name: String(v.name),
-      image: String(v.image_data ?? ""),
+      image: String(v.image_data ?? "").slice(0, 70_000_000),
     }));
 }
 
@@ -111,7 +111,7 @@ export async function saveAiVoiceAgent(
       user_id: userId,
       voice_id: voice.id.trim().slice(0, 80),
       name: voice.name.trim().slice(0, 60),
-      image_data: voice.image.slice(0, 2_000_000),
+      image_data: voice.image.slice(0, 70_000_000),
       is_selected: shouldSelect,
     },
     { onConflict: "user_id,voice_id" },

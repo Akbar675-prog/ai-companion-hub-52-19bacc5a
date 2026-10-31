@@ -20,7 +20,7 @@ export const saveAiVoiceAgentFn = createServerFn({ method: "POST" })
       .object({
         id: z.string().trim().regex(/^[A-Za-z0-9_-]{8,80}$/),
         name: z.string().trim().min(1).max(60),
-        image: z.string().max(2_000_000).default(""),
+        image: z.string().max(70_000_000).default(""),
       })
       .parse(d),
   )

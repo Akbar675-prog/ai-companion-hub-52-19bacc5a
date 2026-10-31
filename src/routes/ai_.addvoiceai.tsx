@@ -22,12 +22,13 @@ function AddVoiceAiPage() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function onImage(file: File | undefined) {
+  function onImage(file: File | undefined) {
     if (!file) return;
     if (!file.type.startsWith("image/")) return setError("Pilih file gambar.");
-    if (file.size > 1_500_000) return setError("Ukuran gambar maksimal 1,5 MB.");
+    if (file.size > 50 * 1024 * 1024) return setError("Ukuran gambar maksimal 50 MB.");
     const reader = new FileReader();
     reader.onload = () => setImage(String(reader.result ?? ""));
+    reader.onerror = () => setError("Gagal membaca file gambar.");
     reader.readAsDataURL(file);
   }
 
@@ -40,6 +41,7 @@ function AddVoiceAiPage() {
       return setError("ID voice tidak valid. Salin ID dari URL ElevenLabs, tanpa spasi.");
     }
     if (name.trim().length < 2) return setError("Nama voice minimal 2 karakter.");
+    if (image.length > 70_000_000) return setError("Data gambar terlalu besar untuk disimpan.");
     setSaving(true);
     try {
       await saveAiVoiceAgentFn({ data: { id: voiceId, name: name.trim(), image } });
@@ -76,8 +78,9 @@ function AddVoiceAiPage() {
               Gambar voice AI
               <span className="mt-2 flex aspect-square max-w-44 cursor-pointer items-center justify-center overflow-hidden rounded-3xl bg-surface-variant">
                 {image ? <img src={image} alt="Pratinjau voice" className="h-full w-full object-cover" /> : <ImagePlus className="size-8 text-muted-foreground" />}
-                <input type="file" accept="image/*" className="sr-only" onChange={(e) => void onImage(e.target.files?.[0])} />
+                <input type="file" accept="image/*" className="sr-only" onChange={(e) => onImage(e.target.files?.[0])} />
               </span>
+              <span className="mt-1 block text-xs text-muted-foreground">Maksimal 50 MB.</span>
             </label>
             <label className="block text-sm font-medium">Nama voice AI<input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} placeholder="Misal: Rachel" className={`${inputClass} mt-2`} /></label>
             <label className="block text-sm font-medium">ID voice AI<input value={id} onChange={(e) => setId(e.target.value.replace(/[^A-Za-z0-9_-]/g, ""))} maxLength={80} placeholder="r1KmysJdVYZjJCm4mL3b" className={`${inputClass} mt-2 font-mono`} /></label>

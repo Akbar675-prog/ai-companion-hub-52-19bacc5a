@@ -7,7 +7,7 @@ create table if not exists public.ai_voice_agents (
   user_id uuid not null,
   voice_id text not null check (voice_id ~ '^[A-Za-z0-9_-]{8,80}$'),
   name text not null check (char_length(name) between 1 and 60),
-  image_data text not null default '' check (char_length(image_data) <= 2000000),
+  image_data text not null default '' check (char_length(image_data) <= 70000000),
   is_selected boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
