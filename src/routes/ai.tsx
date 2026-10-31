@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowDown } from "lucide-react";
-import { PromptBox } from "@/components/ui/chatgpt-prompt-input";
+import { PromptInput } from "@/components/ui/ai-chat-input";
 import { ShimmeringText } from "@/components/ui/shimmering-text";
 import { AiAvatar } from "@/components/ui/plasma-shader";
 import { AiHeader } from "@/components/AiHistorySidebar";
@@ -1123,7 +1123,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             </div>
           )}
 
-          <PromptBox
+          <PromptInput
             ref={boxRef}
             value={input}
             isLoading={loading || imaging}

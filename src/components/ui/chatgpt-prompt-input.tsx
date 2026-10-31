@@ -351,7 +351,9 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
     return (
       <div
         className={cn(
-          "m3-shadow-1 relative flex cursor-text flex-col rounded-[28px] border border-border/60 bg-card p-2 transition-colors",
+          "m3-shadow-1 relative mx-auto flex w-full cursor-text flex-col rounded-[24px] border border-border/60 bg-card p-2 transition-[max-width,box-shadow,border-color] duration-300",
+          hasValue ? "max-w-[30rem]" : "max-w-[20rem]",
+          "hover:border-border/90 focus-within:border-ring/50 focus-within:shadow-md",
           className,
         )}
       >
@@ -452,6 +454,12 @@ export const PromptBox = React.forwardRef<HTMLTextAreaElement, PromptBoxProps>(
           placeholder="Tulis pesan..."
           className="min-h-12 w-full resize-none border-0 bg-transparent p-3 text-foreground outline-none placeholder:text-muted-foreground focus:ring-0 focus-visible:outline-none"
           {...props}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && value.trim() === "" && !imagePreview && !document) {
+              setPluginMenuOpen(false);
+            }
+            props.onKeyDown?.(event);
+          }}
         />
 
         <div className="mt-0.5 p-1 pt-0">
