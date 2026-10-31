@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { ArrowDown } from "lucide-react";
 import { PromptBox } from "@/components/ui/chatgpt-prompt-input";
-import { ShiningText } from "@/components/ui/shining-text";
+import { ShimmeringText } from "@/components/ui/shimmering-text";
 import { AiAvatar } from "@/components/ui/plasma-shader";
 import { AiHeader } from "@/components/AiHistorySidebar";
 import { AiMessage } from "@/components/AiMessage";
@@ -58,6 +59,40 @@ const SUGGESTIONS = [
   "Cara install APK di Android 14",
   "Tips biar HP nggak lag",
 ];
+
+const LOADING_PHRASES = [
+  "Memikirkan langkah...",
+  "Menyiapkan jawaban...",
+  "Sedang berpikir...",
+];
+
+function ChatLoadingText({ status }: { status: string | null }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (status) return;
+    const interval = window.setInterval(() => {
+      setCurrentIndex((previous) => (previous + 1) % LOADING_PHRASES.length);
+    }, 3000);
+    return () => window.clearInterval(interval);
+  }, [status]);
+
+  const text = status ?? LOADING_PHRASES[currentIndex];
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.span
+        key={text}
+        className="inline-block"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.3 }}
+      >
+        <ShimmeringText text={text} />
+      </motion.span>
+    </AnimatePresence>
+  );
+}
 
 const IMAGE_REQUEST_RE =
   /\b(?:buat(?:kan|in)?|buatin|generate|hasilkan|gambarkan|lukis|render)\b[\s\S]{0,120}\b(?:gambar|image|ilustrasi|foto|poster|logo|wallpaper|artwork)\b|\b(?:buat|generate|hasilkan|gambarkan|lukis|render)\s+(?:sebuah\s+)?(?:gambar|image|ilustrasi|foto|poster|logo|wallpaper|artwork)\b/i;
@@ -1045,8 +1080,8 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
           {loading && !draft?.content && !draft?.reasoning && (
             <div className="flex gap-2">
               <AiAvatar className="mt-1 size-7" />
-              <span key={status ?? "preparing"} className="mt-1 inline-block animate-status-swap">
-                <ShiningText text={status ?? "Menyiapkan jawaban..."} />
+              <span className="mt-1 inline-block">
+                <ChatLoadingText status={status} />
               </span>
             </div>
           )}
