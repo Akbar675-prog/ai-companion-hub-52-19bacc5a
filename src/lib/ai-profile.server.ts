@@ -87,7 +87,13 @@ export async function writeAiProfile(userId: string, profile: Partial<AiProfile>
   };
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const body = new Blob(
-    [JSON.stringify({ nickname: clean.nickname, fullName: clean.fullName, age: clean.age, about: clean.about })],
+    [JSON.stringify({
+      nickname: clean.nickname,
+      fullName: clean.fullName,
+      age: clean.age,
+      about: clean.about,
+      selectedVoiceId: clean.selectedVoiceId,
+    })],
     { type: "application/json" },
   );
   const { error } = await supabaseAdmin.storage.from(BUCKET).upload(keyFor(userId), body, {
