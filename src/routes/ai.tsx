@@ -499,10 +499,25 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             needsReasoning = needsReasoning || !!pj.needsReasoning;
             queries = (pj.queries ?? []).filter(Boolean);
             query = queries[0] ?? pj.query ?? "";
-            title = pj.title ?? "";
           }
         } catch {
           /* planner opsional */
+        }
+
+        // Judul dibuat oleh endpoint khusus; planner hanya menentukan tools.
+        try {
+          const tr = await fetch("/api/ai-title", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: lastUser }),
+            signal: stepSignal(15_000),
+          });
+          if (tr.ok) {
+            const tj = (await tr.json()) as { title?: string };
+            title = tj.title?.trim() ?? "";
+          }
+        } catch {
+          /* judul opsional */
         }
         if (forceSearch && !query) query = lastUser;
         if (queries.length === 0 && query) queries = [query];
@@ -882,7 +897,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     }
 
     if (credits && credits.remaining <= 0) {
-      setError("Kredit chat harian kamu sudah habis. Direset lagi pukul 07:00 WIB.");
+      setError("Kredit chat bulan ini sudah habis. Direset pada tanggal 1 bulan depan.");
       return;
     }
 

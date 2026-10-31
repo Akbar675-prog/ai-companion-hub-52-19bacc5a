@@ -1,6 +1,6 @@
-// Kredit AI harian per pengguna (chat token + gambar).
+// Kredit AI bulanan per pengguna (chat token + gambar).
 // Disimpan di storage (bucket app-metadata) supaya tidak butuh tabel baru.
-// Reset otomatis setiap pukul 07:00 WIB = 00:00 UTC (kunci memakai tanggal UTC).
+// Reset otomatis pada tanggal 1 setiap bulan (kunci memakai bulan UTC).
 
 const BUCKET = "app-metadata";
 export const DAILY_CHAT_TOKENS = 100_000;
@@ -16,8 +16,8 @@ type Credits = {
   history: Record<string, number>;
 };
 
-function todayUtc() {
-  return new Date().toISOString().slice(0, 10);
+function periodUtc() {
+  return new Date().toISOString().slice(0, 7);
 }
 
 function keyFor(userId: string) {
@@ -25,7 +25,7 @@ function keyFor(userId: string) {
 }
 
 function empty(): Credits {
-  return { day: todayUtc(), used: 0, threads: {}, history: {} };
+  return { day: periodUtc(), used: 0, threads: {}, history: {} };
 }
 
 function trimHistory(history: Record<string, number>): Record<string, number> {
@@ -43,14 +43,14 @@ async function readCredits(userId: string): Promise<Credits> {
   try {
     const parsed = JSON.parse(await data.text()) as Partial<Credits>;
     const c: Credits = {
-      day: String(parsed.day ?? todayUtc()),
+      day: String(parsed.day ?? periodUtc()),
       used: Number(parsed.used) || 0,
       threads: parsed.threads ?? {},
       history: parsed.history ?? {},
     };
-    if (c.day !== todayUtc()) {
+    if (c.day !== periodUtc()) {
       const history = trimHistory({ ...c.history, [c.day]: c.used });
-      return { day: todayUtc(), used: 0, threads: {}, history };
+      return { day: periodUtc(), used: 0, threads: {}, history };
     }
     return c;
   } catch {
@@ -158,12 +158,14 @@ async function writeCredits(userId: string, c: Credits): Promise<void> {
   });
 }
 
-function toSeries(history: Record<string, number>, today: string, todayUsed: number): UsagePoint[] {
+function toSeries(history: Record<string, number>, period: string, periodUsed: number): UsagePoint[] {
   const out: UsagePoint[] = [];
-  const now = new Date(`${today}T00:00:00Z`);
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(now.getTime() - i * 86_400_000).toISOString().slice(0, 10);
-    out.push({ date: d, used: d === today ? todayUsed : (history[d] ?? 0) });
+  const [year, month] = period.split("-").map(Number);
+  const now = new Date(Date.UTC(year, month - 1, 1));
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    const key = d.toISOString().slice(0, 7);
+    out.push({ date: `${key}-01`, used: key === period ? periodUsed : (history[key] ?? 0) });
   }
   return out;
 }

@@ -4,11 +4,14 @@ export const Route = createFileRoute("/api/ai-title")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key = process.env["OPENROUTER_API_KEY"];
-        if (!key) return Response.json({ title: "" });
         const body = (await request.json().catch(() => ({}))) as { message?: string };
         const message = String(body.message ?? "").trim().slice(0, 6000);
         if (!message) return Response.json({ title: "" });
+        if (/^(hi|hai|halo|hello|hei|hey)[!.?,\s]*$/i.test(message)) {
+          return Response.json({ title: "Salam Pembuka" });
+        }
+        const key = process.env["OPENROUTER_API_KEY"];
+        if (!key) return Response.json({ title: "" });
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },

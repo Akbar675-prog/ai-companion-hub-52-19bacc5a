@@ -12,7 +12,7 @@ export const Route = createFileRoute("/ai_/credits")({
       {
         name: "description",
         content:
-          "Lihat sisa kredit chat dan kredit gambar GetrixAI, grafik pemakaian harian, dan rincian per percakapan.",
+          "Lihat sisa kredit chat dan kredit gambar GetrixAI, grafik pemakaian bulanan, dan rincian per percakapan.",
       },
       { property: "og:title", content: "Kredit AI — Galileo Mod APK" },
       {
@@ -30,6 +30,12 @@ type Usage = Awaited<ReturnType<typeof aiUsageFn>>;
 
 function num(n: number) {
   return new Intl.NumberFormat("id-ID").format(n);
+}
+
+function nextResetLabel() {
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  return new Intl.DateTimeFormat("id-ID", { day: "numeric", month: "long" }).format(next);
 }
 
 function AiCreditsPage() {
@@ -68,7 +74,7 @@ function AiCreditsPage() {
         </div>
 
         <p className="mt-3 text-sm text-muted-foreground">
-          Kredit direset otomatis setiap hari pukul 07:00 WIB.
+          Kredit akan direset pada: {nextResetLabel()}.
         </p>
 
         {!userId && !accountLoading ? (
@@ -94,7 +100,7 @@ function AiCreditsPage() {
               </div>
               <UsageGraph points={usage.chat.series} />
               <div className="mt-4 flex items-baseline justify-between">
-                <span className="text-sm font-medium">Terpakai hari ini</span>
+                <span className="text-sm font-medium">Terpakai bulan ini</span>
                 <span className="text-lg font-semibold">{num(usage.chat.used)} token</span>
               </div>
               <div className="mt-1 flex items-baseline justify-between text-muted-foreground">
@@ -116,7 +122,7 @@ function AiCreditsPage() {
                 <p className="text-sm font-medium">Dipakai di chat</p>
                 {usage.chat.threads.length === 0 ? (
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Belum ada pemakaian chat hari ini.
+                    Belum ada pemakaian chat bulan ini.
                   </p>
                 ) : (
                   <ul className="mt-2 space-y-2">
@@ -138,7 +144,7 @@ function AiCreditsPage() {
               </div>
               <UsageGraph points={usage.image.series} />
               <div className="mt-4 flex items-baseline justify-between">
-                <span className="text-sm font-medium">Terpakai hari ini</span>
+                <span className="text-sm font-medium">Terpakai bulan ini</span>
                 <span className="text-lg font-semibold">{usage.image.used} gambar</span>
               </div>
               <div className="mt-1 flex items-baseline justify-between text-muted-foreground">
