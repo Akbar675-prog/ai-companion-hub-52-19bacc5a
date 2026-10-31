@@ -666,9 +666,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             quran,
             apps,
             origin,
-            persona: modelById(modelId, models).realModel
-              ? ""
-              : modelById(modelId, models).persona,
+            persona: modelById(modelId, models).persona,
             modelLabel: modelById(modelId, models).name,
             uncensored: modelById(modelId, models).uncensored,
             catalogModelId: modelById(modelId, models).custom
