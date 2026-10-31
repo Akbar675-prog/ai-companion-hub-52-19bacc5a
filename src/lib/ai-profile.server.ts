@@ -31,12 +31,11 @@ function keyFor(userId: string) {
   return `ai-profile/${userId}.json`;
 }
 
-async function readVoiceAgents(userId: string): Promise<AiVoiceAgent[]> {
+export async function listAiVoiceAgents(): Promise<AiVoiceAgent[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await (supabaseAdmin as any)
     .from("ai_voice_agents")
     .select("voice_id, name, image_data, is_selected")
-    .eq("user_id", userId)
     .order("created_at", { ascending: true });
   if (error) throw new Error(`Gagal memuat voice agent: ${error.message}`);
   return (data ?? [])
@@ -44,7 +43,7 @@ async function readVoiceAgents(userId: string): Promise<AiVoiceAgent[]> {
     .map((v: any) => ({
       id: String(v.voice_id),
       name: String(v.name),
-      image: String(v.image_data ?? "").slice(0, 70_000_000),
+      image: String(v.image_data ?? "").slice(0, 2_000_000),
     }));
 }
 
@@ -61,7 +60,7 @@ export async function readAiProfile(userId: string): Promise<AiProfile> {
   }
   let voiceAgents: AiVoiceAgent[] = [];
   try {
-    voiceAgents = await readVoiceAgents(userId);
+    voiceAgents = await listAiVoiceAgents();
   } catch {
     // Voice table may not be migrated yet; the rest of the profile remains usable.
   }
@@ -104,17 +103,15 @@ export async function saveAiVoiceAgent(
   voice: AiVoiceAgent,
 ): Promise<AiProfile> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const existing = await readVoiceAgents(userId);
-  const shouldSelect = existing.length === 0;
+  const existing = await listAiVoiceAgents();
   const { error } = await (supabaseAdmin as any).from("ai_voice_agents").upsert(
     {
-      user_id: userId,
       voice_id: voice.id.trim().slice(0, 80),
       name: voice.name.trim().slice(0, 60),
-      image_data: voice.image.slice(0, 70_000_000),
-      is_selected: shouldSelect,
+      image_data: voice.image.trim().slice(0, 2_000_000),
+      is_selected: existing.length === 0,
     },
-    { onConflict: "user_id,voice_id" },
+    { onConflict: "voice_id" },
   );
   if (error) throw new Error(`Gagal menyimpan voice agent: ${error.message}`);
   return readAiProfile(userId);
@@ -125,28 +122,13 @@ export async function deleteAiVoiceAgent(userId: string, voiceId: string): Promi
   const { error } = await (supabaseAdmin as any)
     .from("ai_voice_agents")
     .delete()
-    .eq("user_id", userId)
     .eq("voice_id", voiceId);
   if (error) throw new Error(`Gagal menghapus voice agent: ${error.message}`);
-  const remaining = await readVoiceAgents(userId);
-  if (remaining.length > 0) {
-    await selectAiVoiceAgent(userId, remaining[0].id);
-  }
   return readAiProfile(userId);
 }
 
 export async function selectAiVoiceAgent(userId: string, voiceId: string): Promise<AiProfile> {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { error } = await (supabaseAdmin as any)
-    .from("ai_voice_agents")
-    .update({ is_selected: false })
-    .eq("user_id", userId);
-  if (error) throw new Error(`Gagal memperbarui voice agent: ${error.message}`);
-  const { error: selectError } = await (supabaseAdmin as any)
-    .from("ai_voice_agents")
-    .update({ is_selected: true })
-    .eq("user_id", userId)
-    .eq("voice_id", voiceId);
-  if (selectError) throw new Error(`Gagal memilih voice agent: ${selectError.message}`);
-  return readAiProfile(userId);
+  const voices = await listAiVoiceAgents();
+  if (!voices.some((voice) => voice.id === voiceId)) throw new Error("Voice agent tidak ditemukan.");
+  return writeAiProfile(userId, { selectedVoiceId: voiceId });
 }

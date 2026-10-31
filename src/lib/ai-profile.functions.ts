@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireAccountAuth } from "@/integrations/auth-supabase/auth-middleware";
 import {
   deleteAiVoiceAgent,
+  listAiVoiceAgents,
   readAiProfile,
   saveAiVoiceAgent,
   selectAiVoiceAgent,
@@ -13,6 +14,8 @@ export const getAiProfileFn = createServerFn({ method: "POST" })
   .middleware([requireAccountAuth])
   .handler(async ({ context }) => readAiProfile(context.userId));
 
+export const listAiVoiceAgentsFn = createServerFn({ method: "POST" }).handler(() => listAiVoiceAgents());
+
 export const saveAiVoiceAgentFn = createServerFn({ method: "POST" })
   .middleware([requireAccountAuth])
   .inputValidator((d: unknown) =>
@@ -20,7 +23,7 @@ export const saveAiVoiceAgentFn = createServerFn({ method: "POST" })
       .object({
         id: z.string().trim().regex(/^[A-Za-z0-9_-]{8,80}$/),
         name: z.string().trim().min(1).max(60),
-        image: z.string().max(70_000_000).default(""),
+        image: z.string().max(2_000_000).default(""),
       })
       .parse(d),
   )
