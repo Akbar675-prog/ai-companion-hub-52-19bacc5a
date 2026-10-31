@@ -38,8 +38,48 @@ function Close() {
   return <svg viewBox="0 0 14 14" className="size-3" fill="none" aria-hidden="true"><path d="m2.5 2.5 9 9m0-9-9 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>;
 }
 
-function Bars({ active }: { active: boolean }) {
-  return <span className="flex items-end gap-0.5" aria-hidden="true"><i className="h-2 w-0.5 rounded-full bg-current" /><i className={cn("w-0.5 rounded-full bg-current transition-all", active ? "h-3" : "h-2 opacity-40")} /><i className={cn("w-0.5 rounded-full bg-current transition-all", active ? "h-4" : "h-2 opacity-40")} /></span>;
+function MorphingText({ text }: { text: string }) {
+  const [width, setWidth] = React.useState<number | "auto">("auto");
+  const measureRef = React.useRef<HTMLSpanElement>(null);
+
+  React.useEffect(() => {
+    if (measureRef.current) setWidth(measureRef.current.offsetWidth);
+  }, [text]);
+
+  return (
+    <span
+      className="relative inline-flex items-center justify-center overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]"
+      style={{ width }}
+    >
+      <span ref={measureRef} className="invisible whitespace-nowrap px-1">{text}</span>
+      <span key={text} className="absolute inset-0 flex animate-in zoom-in-95 fade-in items-center justify-center whitespace-nowrap duration-300">
+        {text}
+      </span>
+    </span>
+  );
+}
+
+function ModelIcon({ model, className }: { model: AiModel | null; className?: string }) {
+  if (model?.logo) {
+    return <img src={model.logo} alt="" className={cn("size-4 shrink-0 rounded-full object-cover", className)} />;
+  }
+  return (
+    <svg viewBox="0 0 16 16" className={cn("size-4 shrink-0 text-primary", className)} fill="none" aria-hidden="true">
+      <path d="M8 1.5 9.8 6.2 14.5 8l-4.7 1.8L8 14.5l-1.8-4.7L1.5 8l4.7-1.8L8 1.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+function Bars({ level }: { level: string }) {
+  const mediumOrHigh = level === "Medium" || level === "Max Effort";
+  const high = level === "Max Effort";
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <rect x="1.5" y="8" width="2.5" height="4.5" rx="1" fill="currentColor" />
+      <rect x="5.75" y="5" width="2.5" height="7.5" rx="1" fill="currentColor" className="transition-opacity duration-300" opacity={mediumOrHigh ? 1 : 0.3} />
+      <rect x="10" y="2" width="2.5" height="10.5" rx="1" fill="currentColor" className="transition-opacity duration-300" opacity={high ? 1 : 0.3} />
+    </svg>
+  );
 }
 
 export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProps>(function PromptInput(
@@ -133,10 +173,10 @@ export const PromptInput = React.forwardRef<HTMLTextAreaElement, PromptInputProp
         <div className={cn("absolute bottom-2 left-3 right-12 flex items-center gap-1 transition-opacity", expanded ? "opacity-100" : "pointer-events-none opacity-0")}>
           <button type="button" onClick={() => fileRef.current?.click()} className="flex size-7 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground" aria-label="Lampirkan file"><Plus /></button>
           <div className="relative">
-            <button type="button" onClick={() => setModelOpen((open) => !open)} className="max-w-36 truncate rounded-full px-2 py-1 text-xs font-semibold text-foreground/60 hover:bg-accent hover:text-foreground">{activeModel?.name ?? (modelsLoading ? "Memuat model…" : "Pilih model")}</button>
-            {modelOpen && <div className="absolute bottom-full left-0 z-50 mb-2 max-h-64 w-64 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">{models.map((model) => <button key={model.id} type="button" onClick={() => { onModelChange?.(model.id); setModelOpen(false); }} className={cn("flex w-full items-center rounded-xl px-3 py-2 text-left text-xs hover:bg-accent", model.id === activeModel?.id && "bg-primary/10")}>{model.name}</button>)}</div>}
+            <button type="button" onClick={() => setModelOpen((open) => !open)} className="flex max-w-40 items-center gap-1.5 truncate rounded-full px-2 py-1 text-xs font-semibold text-foreground/60 hover:bg-accent hover:text-foreground"><ModelIcon model={activeModel ?? null} /><MorphingText text={activeModel?.name ?? (modelsLoading ? "Memuat model…" : "Pilih model")} /></button>
+            {modelOpen && <div className="absolute bottom-full left-0 z-50 mb-2 max-h-64 w-64 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">{models.map((model) => <button key={model.id} type="button" onClick={() => { onModelChange?.(model.id); setModelOpen(false); }} className={cn("flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-xs hover:bg-accent", model.id === activeModel?.id && "bg-primary/10")}><ModelIcon model={model} />{model.name}</button>)}</div>}
           </div>
-          <button type="button" onClick={() => setEffort((current) => (current + 1) % efforts.length)} className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-foreground/60 hover:bg-accent" aria-label={`Effort ${efforts[effort]}`}><Bars active={effort > 0} />{efforts[effort]}</button>
+          <button type="button" onClick={() => setEffort((current) => (current + 1) % efforts.length)} className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-foreground/60 hover:bg-accent" aria-label={`Effort ${efforts[effort]}`}><Bars level={efforts[effort]} /><MorphingText text={efforts[effort]} /></button>
           <div className="relative ml-auto"><button type="button" onClick={() => setToolOpen((open) => !open)} className="rounded-full px-2 py-1 text-xs text-muted-foreground hover:bg-accent">Tools</button>{toolOpen && <div className="absolute bottom-full right-0 z-50 mb-2 w-48 rounded-2xl border border-border bg-card p-1 shadow-xl">{tools.map((tool) => <button key={tool.id} type="button" onClick={() => { onToolChange?.(tool.id); setToolOpen(false); }} className="block w-full rounded-xl px-3 py-2 text-left text-xs hover:bg-accent">{tool.label}</button>)}</div>}</div>
         </div>
         <button type={isLoading ? "button" : "submit"} onClick={isLoading ? onStop : undefined} disabled={!isLoading && !hasContent} className="absolute bottom-2 right-2 z-20 flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition hover:opacity-90 disabled:opacity-40" aria-label={isLoading ? "Hentikan" : "Kirim pesan"}>
