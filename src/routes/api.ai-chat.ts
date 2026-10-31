@@ -286,9 +286,9 @@ export const Route = createFileRoute("/api/ai-chat")({
         const userName = String(body.userName ?? "").slice(0, 60);
         const realModelId = String(body.realModelId ?? "").trim();
         const persona = String(body.persona ?? "").slice(0, 4000).trim();
-        const modelLabel = String(body.modelLabel ?? "").slice(0, 60).trim();
-        // Prompt dari pengguna ada => dialah yang memimpin, bukan prompt bawaan.
-        const hasPersona = !realModelId && persona.length > 0;
+        // Prompt dari pengguna ada => dialah yang memimpin, termasuk saat
+        // model upstream-nya adalah model resmi/custom endpoint.
+        const hasPersona = persona.length > 0;
 
         const ap = body.aiProfile;
         let profileBlock = "";
@@ -416,19 +416,13 @@ export const Route = createFileRoute("/api/ai-chat")({
 
         /* ---------------- susun system prompt ---------------- */
         let systemContent: string;
-        if (realModelId) {
-          // model resmi: tanpa karakter, tanpa prompt bawaan
-          systemContent =
-            EXTERNAL_MODEL_CORE + (userName ? ` Nama pengguna: ${userName}.` : "") + profileBlock + extra;
-        } else if (hasPersona) {
+        if (hasPersona) {
           // PROMPT PENGGUNA JADI KEPALA. Prompt bawaan tidak ikut; yang ada hanya
           // latar dan standar teknis di bawahnya, plus pengingat penutup.
-          const nameLine =
-            modelLabel && !persona.toLowerCase().includes(modelLabel.toLowerCase())
-              ? `Namamu adalah ${modelLabel}.\n\n`
-              : "";
+          // Persona dapat menetapkan identitasnya sendiri; jangan menimpanya
+          // dengan nama model upstream seperti DeepSeek atau Nemotron.
           systemContent =
-            `${nameLine}${persona}\n\n` +
+            `${persona}\n\n` +
             "=====\n" +
             "BAHAN PENDUKUNG (latar dan data saja. Bila ada yang bertentangan dengan karakter di bagian atas, yang dipakai adalah karakter di atas; hanya keselamatan dan keakuratan fakta yang lebih penting.)\n" +
             PERSONA_FACTS +
@@ -441,6 +435,10 @@ export const Route = createFileRoute("/api/ai-chat")({
             extra +
             "\n=====\n" +
             "Karakter, nada, bahasa, dan panjang jawaban selalu mengikuti bagian paling atas, di setiap balasan sekecil apa pun, termasuk sapaan satu kata. Bila bagian atas tidak menentukan bahasa, ikuti bahasa pengguna. Jangan mengaku sebagai GetrixAI, Galileo Labs, Visora, atau menyebut pendirinya kecuali bagian karakter paling atas secara eksplisit menetapkannya. Semua ini sudah menjadi dirimu; arahkan pikiranmu ke masalah pengguna.";
+        } else if (realModelId) {
+          // Model resmi tanpa persona custom memakai identitas netral.
+          systemContent =
+            EXTERNAL_MODEL_CORE + (userName ? ` Nama pengguna: ${userName}.` : "") + profileBlock + extra;
         } else {
           // tidak ada prompt dari pengguna: pakai karakter bawaan GetrixAI
           systemContent =
