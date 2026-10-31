@@ -34,6 +34,7 @@ import { Route as TrainingaiRouteImport } from './routes/trainingai'
 import { Route as VerifiedRouteImport } from './routes/verified'
 import { Route as VoteMakerRouteImport } from './routes/vote-maker'
 import { Route as AiAddaiRouteImport } from './routes/ai_.addai'
+import { Route as AiAddvoiceaiRouteImport } from './routes/ai_.addvoiceai'
 import { Route as AiCreditsRouteImport } from './routes/ai_.credits'
 import { Route as AiProfileRouteImport } from './routes/ai_.profile'
 import { Route as ApiAiChatRouteImport } from './routes/api.ai-chat'
@@ -187,6 +188,11 @@ const VoteMakerRoute = VoteMakerRouteImport.update({
 const AiAddaiRoute = AiAddaiRouteImport.update({
   id: '/ai_/addai',
   path: '/ai/addai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiAddvoiceaiRoute = AiAddvoiceaiRouteImport.update({
+  id: '/ai_/addvoiceai',
+  path: '/ai/addvoiceai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AiCreditsRoute = AiCreditsRouteImport.update({
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/verified': typeof VerifiedRoute
   '/vote-maker': typeof VoteMakerRoute
   '/ai/addai': typeof AiAddaiRoute
+  '/ai/addvoiceai': typeof AiAddvoiceaiRoute
   '/ai/credits': typeof AiCreditsRoute
   '/ai/profile': typeof AiProfileRoute
   '/api/ai-chat': typeof ApiAiChatRoute
@@ -418,6 +425,7 @@ export interface FileRoutesByTo {
   '/verified': typeof VerifiedRoute
   '/vote-maker': typeof VoteMakerRoute
   '/ai/addai': typeof AiAddaiRoute
+  '/ai/addvoiceai': typeof AiAddvoiceaiRoute
   '/ai/credits': typeof AiCreditsRoute
   '/ai/profile': typeof AiProfileRoute
   '/api/ai-chat': typeof ApiAiChatRoute
@@ -475,6 +483,7 @@ export interface FileRoutesById {
   '/verified': typeof VerifiedRoute
   '/vote-maker': typeof VoteMakerRoute
   '/ai_/addai': typeof AiAddaiRoute
+  '/ai_/addvoiceai': typeof AiAddvoiceaiRoute
   '/ai_/credits': typeof AiCreditsRoute
   '/ai_/profile': typeof AiProfileRoute
   '/api/ai-chat': typeof ApiAiChatRoute
@@ -533,6 +542,7 @@ export interface FileRouteTypes {
     | '/verified'
     | '/vote-maker'
     | '/ai/addai'
+    | '/ai/addvoiceai'
     | '/ai/credits'
     | '/ai/profile'
     | '/api/ai-chat'
@@ -589,6 +599,7 @@ export interface FileRouteTypes {
     | '/verified'
     | '/vote-maker'
     | '/ai/addai'
+    | '/ai/addvoiceai'
     | '/ai/credits'
     | '/ai/profile'
     | '/api/ai-chat'
@@ -645,6 +656,7 @@ export interface FileRouteTypes {
     | '/verified'
     | '/vote-maker'
     | '/ai_/addai'
+    | '/ai_/addvoiceai'
     | '/ai_/credits'
     | '/ai_/profile'
     | '/api/ai-chat'
@@ -702,6 +714,7 @@ export interface RootRouteChildren {
   VerifiedRoute: typeof VerifiedRoute
   VoteMakerRoute: typeof VoteMakerRoute
   AiAddaiRoute: typeof AiAddaiRoute
+  AiAddvoiceaiRoute: typeof AiAddvoiceaiRoute
   AiCreditsRoute: typeof AiCreditsRoute
   AiProfileRoute: typeof AiProfileRoute
   ApiAiChatRoute: typeof ApiAiChatRoute
@@ -907,6 +920,13 @@ declare module '@tanstack/react-router' {
       path: '/ai/addai'
       fullPath: '/ai/addai'
       preLoaderRoute: typeof AiAddaiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai_/addvoiceai': {
+      id: '/ai_/addvoiceai'
+      path: '/ai/addvoiceai'
+      fullPath: '/ai/addvoiceai'
+      preLoaderRoute: typeof AiAddvoiceaiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ai_/credits': {
@@ -1153,6 +1173,7 @@ const rootRouteChildren: RootRouteChildren = {
   VerifiedRoute: VerifiedRoute,
   VoteMakerRoute: VoteMakerRoute,
   AiAddaiRoute: AiAddaiRoute,
+  AiAddvoiceaiRoute: AiAddvoiceaiRoute,
   AiCreditsRoute: AiCreditsRoute,
   AiProfileRoute: AiProfileRoute,
   ApiAiChatRoute: ApiAiChatRoute,

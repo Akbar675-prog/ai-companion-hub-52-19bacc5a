@@ -1,9 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Plus, Trash2 } from "lucide-react";
 import { AiAvatar } from "@/components/ui/plasma-shader";
 import { useAccount } from "@/lib/use-account";
-import { getAiProfileFn, saveAiProfileFn } from "@/lib/ai-profile.functions";
+import {
+  deleteAiVoiceAgentFn,
+  getAiProfileFn,
+  saveAiProfileFn,
+  selectAiVoiceAgentFn,
+} from "@/lib/ai-profile.functions";
+import type { AiProfile } from "@/lib/ai-profile.server";
 
 export const Route = createFileRoute("/ai_/profile")({
   head: () => ({
@@ -32,6 +38,8 @@ function AiProfilePage() {
   const [fullName, setFullName] = useState("");
   const [age, setAge] = useState("");
   const [about, setAbout] = useState("");
+  const [voiceAgents, setVoiceAgents] = useState<AiProfile["voiceAgents"]>([]);
+  const [selectedVoiceId, setSelectedVoiceId] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -51,6 +59,8 @@ function AiProfilePage() {
         setFullName(p.fullName);
         setAge(p.age ? String(p.age) : "");
         setAbout(p.about);
+        setVoiceAgents(p.voiceAgents);
+        setSelectedVoiceId(p.selectedVoiceId);
       })
       .catch(() => {})
       .finally(() => alive && setLoading(false));
@@ -58,6 +68,26 @@ function AiProfilePage() {
       alive = false;
     };
   }, [userId]);
+
+  async function selectVoice(id: string) {
+    try {
+      const next = await selectAiVoiceAgentFn({ data: { id } });
+      setVoiceAgents(next.voiceAgents);
+      setSelectedVoiceId(next.selectedVoiceId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal memilih voice.");
+    }
+  }
+
+  async function removeVoice(id: string) {
+    try {
+      const next = await deleteAiVoiceAgentFn({ data: { id } });
+      setVoiceAgents(next.voiceAgents);
+      setSelectedVoiceId(next.selectedVoiceId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal menghapus voice.");
+    }
+  }
 
   async function save() {
     setSaving(true);
@@ -163,6 +193,35 @@ function AiProfilePage() {
               />
               <p className="mt-1 text-right text-xs text-muted-foreground">{about.length}/600</p>
             </Field>
+
+            <section className="rounded-3xl bg-surface-variant p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-display text-lg">Voice agent</h2>
+                  <p className="text-xs text-muted-foreground">Dipakai tombol speaker pada jawaban AI.</p>
+                </div>
+                <Link to="/ai/addvoiceai" className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-xs font-medium text-primary-foreground">
+                  <Plus className="size-4" /> Tambah
+                </Link>
+              </div>
+              {voiceAgents.length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">Belum ada voice agent.</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {voiceAgents.map((voice) => (
+                    <div key={voice.id} className="flex items-center gap-3 rounded-2xl bg-background p-2">
+                      {voice.image ? <img src={voice.image} alt="" className="size-10 rounded-xl object-cover" /> : <div className="size-10 rounded-xl bg-primary/15" />}
+                      <button type="button" onClick={() => void selectVoice(voice.id)} className="min-w-0 flex-1 text-left">
+                        <span className="block truncate text-sm font-medium">{voice.name}</span>
+                        <span className="block truncate font-mono text-[11px] text-muted-foreground">{voice.id}</span>
+                      </button>
+                      <span className={`text-xs ${selectedVoiceId === voice.id ? "text-primary" : "text-muted-foreground"}`}>{selectedVoiceId === voice.id ? "Aktif" : "Pilih"}</span>
+                      <button type="button" onClick={() => void removeVoice(voice.id)} aria-label={`Hapus ${voice.name}`} className="rounded-full p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"><Trash2 className="size-4" /></button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
 
             {error && (
               <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</p>

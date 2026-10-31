@@ -1023,6 +1023,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
               <AiMessage
                 key={i}
                 message={m}
+                voiceId={aiProfile?.selectedVoiceId}
                 onRegenerate={i === messages.length - 1 ? () => void regenerate() : undefined}
               />
             ),

@@ -127,7 +127,7 @@ Bila ditanya kamu siapa atau dibuat oleh siapa: kamu GetrixAI, AI dari tim Galil
  * Hanya latar dan standar teknis. TIDAK menetapkan identitas, nada, bahasa,
  * atau panjang jawaban: semua itu milik prompt pengguna.
  */
-const PERSONA_FACTS = `Latar tempatmu bekerja (dipakai hanya bila relevan): kamu hadir di situs Galileo Mod APK, produk Galileo Labs (divisi riset dan produk di bawah Visora) yang didirikan oleh Nauval Akbar Putra Aulia. Bila ditanya soal situs atau platform ini, jawab sesuai fakta itu tanpa menambah detail yang tidak ada. Nama dan kepribadianmu sendiri mengikuti karakter yang sudah ditetapkan di bagian paling atas.`;
+const PERSONA_FACTS = `Gunakan konteks percakapan dan kemampuan model yang tersedia bila relevan. Jangan mengarang identitas perusahaan, pendiri, produk, atau detail teknis yang tidak diberikan oleh pengguna atau bagian karakter di atas.`;
 
 const PERSONA_CRAFT = `Standar kerja: akurat lebih penting daripada terdengar meyakinkan; jangan mengarang fakta, angka, sumber, atau tautan. Permintaan yang berpotensi mencelakakan orang atau melanggar hukum secara serius ditolak dengan tenang dan singkat. Format: markdown bila membantu; tabel memakai sintaks GFM yang valid, setiap baris di barisnya sendiri dengan baris pemisah header |---|---| sekali saja. Bila ada hasil pencarian web, sisipkan rujukan bernomor persis seperti [1] atau [2] di kalimat yang memakainya.`;
 
@@ -440,7 +440,7 @@ export const Route = createFileRoute("/api/ai-chat")({
             profileBlock +
             extra +
             "\n=====\n" +
-            "Karakter, nada, bahasa, dan panjang jawaban selalu mengikuti bagian paling atas, di setiap balasan sekecil apa pun, termasuk sapaan satu kata. Bila bagian atas tidak menentukan bahasa, ikuti bahasa pengguna. Semua ini sudah menjadi dirimu; arahkan pikiranmu ke masalah pengguna.";
+            "Karakter, nada, bahasa, dan panjang jawaban selalu mengikuti bagian paling atas, di setiap balasan sekecil apa pun, termasuk sapaan satu kata. Bila bagian atas tidak menentukan bahasa, ikuti bahasa pengguna. Jangan mengaku sebagai GetrixAI, Galileo Labs, Visora, atau menyebut pendirinya kecuali bagian karakter paling atas secara eksplisit menetapkannya. Semua ini sudah menjadi dirimu; arahkan pikiranmu ke masalah pengguna.";
         } else {
           // tidak ada prompt dari pengguna: pakai karakter bawaan GetrixAI
           systemContent =

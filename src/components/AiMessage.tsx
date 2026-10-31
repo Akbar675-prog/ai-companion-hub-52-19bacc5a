@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-import { Check, ChevronDown, Copy, Download, Globe, RefreshCw, ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { Check, ChevronDown, Copy, Download, Globe, RefreshCw, ThumbsDown, ThumbsUp, Volume2, VolumeX, X } from "lucide-react";
 import { AiAvatar } from "@/components/ui/plasma-shader";
 import { CodeBlock } from "@/components/CodeBlock";
 
 import { ShiningText } from "@/components/ui/shining-text";
 import { faviconOf, hostOf, type ChatMessage } from "@/lib/ai-history";
+import { speakAiTextFn } from "@/lib/ai-speech.functions";
 
 function SourcesSheet({
   sources,
@@ -368,16 +369,20 @@ function GeneratedImage({ url, prompt }: { url: string; prompt?: string }) {
 
 export function AiMessage({
   message,
-
   streaming,
+  voiceId,
   onRegenerate,
 }: {
   message: ChatMessage;
   streaming?: boolean;
+  voiceId?: string;
   onRegenerate?: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
   const [vote, setVote] = useState<"up" | "down" | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   async function copy() {
     try {
@@ -386,6 +391,39 @@ export function AiMessage({
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
       /* clipboard blocked */
+    }
+  }
+
+  async function toggleSpeech() {
+    if (!voiceId || !message.content) return;
+    setVoiceError(null);
+    if (speaking) {
+      audioRef.current?.pause();
+      audioRef.current = null;
+      setSpeaking(false);
+      return;
+    }
+    setSpeaking(true);
+    try {
+      const result = await speakAiTextFn({ data: { text: message.content, voiceId } });
+      if (!result.audio) {
+        setSpeaking(false);
+        return;
+      }
+      const audio = new Audio(result.audio);
+      audioRef.current = audio;
+      audio.onended = () => {
+        audioRef.current = null;
+        setSpeaking(false);
+      };
+      audio.onerror = () => {
+        setSpeaking(false);
+        setVoiceError("Audio voice gagal diputar.");
+      };
+      await audio.play();
+    } catch (e) {
+      setSpeaking(false);
+      setVoiceError(e instanceof Error ? e.message : "Gagal membaca pesan.");
     }
   }
 
@@ -425,6 +463,16 @@ export function AiMessage({
           <div className="flex items-center gap-1 pt-0.5 text-muted-foreground">
             <button
               type="button"
+              onClick={() => void toggleSpeech()}
+              disabled={!voiceId}
+              aria-label={speaking ? "Matikan pembaca suara" : "Baca pesan dengan suara"}
+              title={voiceId ? "Baca dengan ElevenLabs" : "Tambahkan voice agent di profil AI"}
+              className={`rounded-full p-2 transition-all duration-300 hover:bg-surface-variant hover:text-foreground disabled:cursor-not-allowed disabled:opacity-40 ${speaking ? "scale-110 text-primary" : ""}`}
+            >
+              {speaking ? <Volume2 className="size-4 animate-pulse" /> : <VolumeX className="size-4" />}
+            </button>
+            <button
+              type="button"
               onClick={() => void copy()}
               aria-label="Salin pesan"
               className="rounded-full p-2 transition-colors hover:bg-surface-variant hover:text-foreground"
@@ -451,6 +499,7 @@ export function AiMessage({
             >
               <ThumbsDown className="size-4" />
             </button>
+            {voiceError && <span className="self-center text-xs text-destructive">{voiceError}</span>}
             {onRegenerate && (
               <button
                 type="button"
