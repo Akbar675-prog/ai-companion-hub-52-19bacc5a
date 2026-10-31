@@ -22,6 +22,10 @@ const SHIMMER_STYLES = `
     animation: ai-shimmer 2.5s linear infinite, ai-shimmer-fade-in 0.3s ease-out forwards;
   }
 
+  :root:not(.dark) .ai-shimmer {
+    --base-color: color-mix(in oklch, var(--muted-foreground) 72%, var(--foreground));
+  }
+
   @keyframes ai-shimmer {
     0% { background-position: 100% center, 0 0; }
     80%, 100% { background-position: 0% center, 0 0; }

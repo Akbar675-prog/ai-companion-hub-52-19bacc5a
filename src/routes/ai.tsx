@@ -89,7 +89,7 @@ function ChatLoadingText({ status }: { status: string | null }) {
         exit={{ opacity: 0, y: -3 }}
         transition={{ duration: 0.55, ease: "easeInOut" }}
       >
-        <ShimmeringText text={text} className="opacity-80" />
+        <ShimmeringText text={text} />
       </motion.span>
     </AnimatePresence>
   );
