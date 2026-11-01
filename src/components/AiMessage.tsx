@@ -194,17 +194,19 @@ function CitationPill({
 function revealMarkdown(children: ReactNode, prefix = "reveal"): ReactNode {
   return Children.map(children, (child, index) => {
     if (typeof child === "string") {
-      return Array.from(child).map((character, characterIndex) => (
-        <motion.span
-          key={`${prefix}-${index}-${characterIndex}`}
-          className="inline-block whitespace-pre-wrap"
-          initial={{ opacity: 0, filter: "blur(4px)" }}
-          animate={{ opacity: 1, filter: "blur(0px)" }}
-          transition={{ duration: 0.38, ease: "easeOut" }}
-        >
-          {character}
-        </motion.span>
-      ));
+      return child.split(/(\s+)/).map((part, partIndex) =>
+        /^\s+$/.test(part) ? part : (
+          <motion.span
+            key={`${prefix}-${index}-${partIndex}`}
+            className="inline-block"
+            initial={{ opacity: 0, filter: "blur(3px)" }}
+            animate={{ opacity: 1, filter: "blur(0px)" }}
+            transition={{ duration: 0.24, ease: "easeOut" }}
+          >
+            {part}
+          </motion.span>
+        ),
+      );
     }
     if (!isValidElement<{ children?: ReactNode }>(child)) return child;
     if (child.type === "code" || child.type === "pre") return child;
@@ -242,7 +244,6 @@ function MarkdownBody({
     });
   const isQuran = clean.startsWith("<!-- quran -->");
   const markdown = isQuran ? clean.replace(/^<!-- quran -->\s*/, "") : clean;
-
   return (
     <div
       className={`${

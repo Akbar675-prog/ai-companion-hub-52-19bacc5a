@@ -180,17 +180,19 @@ export function CodeBlock({ code, lang, reveal = false }: { code: string; lang?:
               {tokens.map((t, i) => (
                 <span key={i} className={t.c}>
                   {reveal
-                    ? Array.from(t.t).map((character, characterIndex) => (
-                        <motion.span
-                          key={`${i}-${characterIndex}`}
-                          className="inline-block whitespace-pre-wrap"
-                          initial={{ opacity: 0, filter: "blur(4px)" }}
-                          animate={{ opacity: 1, filter: "blur(0px)" }}
-                          transition={{ duration: 0.38, ease: "easeOut" }}
-                        >
-                          {character}
-                        </motion.span>
-                      ))
+                    ? t.t.split(/(\s+)/).map((part, partIndex) =>
+                        /^\s+$/.test(part) ? part : (
+                          <motion.span
+                            key={`${i}-${partIndex}`}
+                            className="inline-block"
+                            initial={{ opacity: 0, filter: "blur(3px)" }}
+                            animate={{ opacity: 1, filter: "blur(0px)" }}
+                            transition={{ duration: 0.24, ease: "easeOut" }}
+                          >
+                            {part}
+                          </motion.span>
+                        ),
+                      )
                     : t.t}
                 </span>
               ))}
