@@ -26,6 +26,7 @@ export type AppListItem = {
   Has_apk?: boolean;
   Apk_url?: string;
   Apk_filename?: string | null;
+  Apk_password?: string | null;
   Is_exclusive?: boolean;
   Coming_soon?: boolean;
   Version: string | null;
@@ -659,6 +660,7 @@ export const updateAppFn = createServerFn({ method: "POST" })
       playLink?: string | null;
       sizeLabel?: string | null;
       packageName?: string | null;
+      apkPassword?: string | null;
       banner?: PreviewMeta | null;
     } = {};
     if (data.coming_soon !== undefined) metaPatch.comingSoon = data.coming_soon;
@@ -683,6 +685,8 @@ export const updateAppFn = createServerFn({ method: "POST" })
     if (data.apk_action === "remove") metaPatch.apkFilename = null;
     else if (data.apk_action === "replace" && data.apk_filename !== undefined)
       metaPatch.apkFilename = data.apk_filename;
+    if (data.apk_password !== undefined)
+      metaPatch.apkPassword = (data.apk_password ?? "").trim() || null;
     if (Object.keys(metaPatch).length > 0) await updateAppMeta(data.id, metaPatch);
 
     return { ok: true };

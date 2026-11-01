@@ -27,6 +27,7 @@ export type AppMeta = {
   sizeLabel?: string | null;
   banner?: PreviewMeta | null;
   packageName?: string | null;
+  apkPassword?: string | null;
 };
 
 export type AppMetaIndex = Record<string, AppMeta>;

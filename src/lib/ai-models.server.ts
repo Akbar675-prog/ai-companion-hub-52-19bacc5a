@@ -1,8 +1,22 @@
 import type { AiModel } from "./ai-models";
 
-export type StoredAiModel = AiModel;
+type StoredModelRow = {
+  id: string;
+  name: string;
+  tagline: string;
+  persona: string;
+  is_new: boolean;
+  logo: string | null;
+  custom: boolean;
+  real_model: boolean;
+  model_type: string | null;
+  uncensored: boolean;
+  abilities: string | null;
+  endpoint_url: string | null;
+  endpoint_key: string | null;
+};
 
-function toModel(row: StoredAiModel): AiModel {
+function toModel(row: StoredModelRow): AiModel {
   return {
     id: row.id,
     name: row.name,
@@ -25,21 +39,12 @@ export async function listStoredAiModels(): Promise<AiModel[]> {
   const { data, error } = await supabaseAdmin
     .from("ai_models")
     .select(
-      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, uncensored, abilities, endpoint_url",
+      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, uncensored, abilities, endpoint_url, endpoint_key",
     )
     .order("created_at", { ascending: true });
 
   if (error) throw new Error(`Gagal memuat AI: ${error.message}`);
-  return (data ?? []).map((row) =>
-    toModel({
-      ...row,
-      isNew: row.is_new,
-      realModel: row.real_model,
-      modelType: row.model_type,
-      endpointUrl: row.endpoint_url,
-      endpointKey: row.endpoint_key,
-    } as StoredAiModel),
-  );
+  return (data ?? []).map((row) => toModel(row as StoredModelRow));
 }
 
 export async function saveStoredAiModel(model: AiModel): Promise<AiModel> {
@@ -70,14 +75,7 @@ export async function saveStoredAiModel(model: AiModel): Promise<AiModel> {
     .single();
 
   if (error || !data) throw new Error(`Gagal menyimpan AI: ${error?.message ?? "data kosong"}`);
-  return toModel({
-    ...data,
-    isNew: data.is_new,
-    realModel: data.real_model,
-    modelType: data.model_type,
-    endpointUrl: data.endpoint_url,
-    endpointKey: data.endpoint_key,
-  } as StoredAiModel);
+  return toModel(data as StoredModelRow);
 }
 
 export async function getStoredAiModelConnection(id: string) {
