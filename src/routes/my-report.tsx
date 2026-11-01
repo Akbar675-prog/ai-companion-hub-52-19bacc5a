@@ -27,6 +27,18 @@ const STATUS: Record<string, { label: string; style: string }> = {
   closed: { label: "Ditutup", style: "bg-surface-variant text-foreground" },
 };
 
+type MyReportRow = {
+  id: string;
+  email: string;
+  subject: string;
+  message: string;
+  attachments?: unknown;
+  status: string;
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 function MyReportsPage() {
   const { userId, loading: accountLoading } = useAccount();
   const listReports = useServerFn(listMyReportsFn);
@@ -101,7 +113,7 @@ function MyReportsPage() {
           </div>
         ) : (
           <ul className="space-y-4">
-            {reports.map((report) => {
+            {(reports as MyReportRow[]).map((report) => {
               const status = STATUS[report.status] ?? STATUS.open;
               return (
                 <li key={report.id} className="m3-shadow-1 rounded-3xl bg-card p-5 sm:p-6">
@@ -128,10 +140,10 @@ function MyReportsPage() {
                       <span>Diperbarui {new Date(report.updated_at).toLocaleString("id-ID")}</span>
                     )}
                   </div>
-                  {report.attachments?.length > 0 && (
+                  {((report.attachments as { length: number } | null)?.length ?? 0) > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2" aria-label="Lampiran laporan">
-                      {report.attachments.map(
-                        (file: { path: string; name: string }, index: number) => (
+                      {((report.attachments ?? []) as Array<{ path: string; name: string }>).map(
+                        (file, index: number) => (
                           <span
                             key={`${file.path}-${index}`}
                             className="rounded-xl bg-surface-variant px-3 py-2 text-xs text-muted-foreground"
