@@ -140,10 +140,10 @@ function MyReportsPage() {
                       <span>Diperbarui {new Date(report.updated_at).toLocaleString("id-ID")}</span>
                     )}
                   </div>
-                  {report.attachments?.length > 0 && (
+                  {((report.attachments as { length: number } | null)?.length ?? 0) > 0 && (
                     <div className="mt-4 flex flex-wrap gap-2" aria-label="Lampiran laporan">
-                      {report.attachments.map(
-                        (file: { path: string; name: string }, index: number) => (
+                      {((report.attachments ?? []) as Array<{ path: string; name: string }>).map(
+                        (file, index: number) => (
                           <span
                             key={`${file.path}-${index}`}
                             className="rounded-xl bg-surface-variant px-3 py-2 text-xs text-muted-foreground"
