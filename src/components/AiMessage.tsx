@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { Children, cloneElement, isValidElement, useEffect, useRef, useState, type ReactNode } from "react";
+import { motion } from "motion/react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -190,14 +191,39 @@ function CitationPill({
   );
 }
 
+function revealMarkdown(children: ReactNode, prefix = "reveal"): ReactNode {
+  return Children.map(children, (child, index) => {
+    if (typeof child === "string") {
+      return Array.from(child).map((character, characterIndex) => (
+        <motion.span
+          key={`${prefix}-${index}-${characterIndex}`}
+          className="inline-block whitespace-pre-wrap"
+          initial={{ opacity: 0, filter: "blur(4px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          transition={{ duration: 0.38, ease: "easeOut" }}
+        >
+          {character}
+        </motion.span>
+      ));
+    }
+    if (!isValidElement<{ children?: ReactNode }>(child)) return child;
+    if (child.type === "code" || child.type === "pre") return child;
+    return cloneElement(child, {
+      children: revealMarkdown(child.props.children, `${prefix}-${index}`),
+    });
+  });
+}
+
 function MarkdownBody({
   text,
   sources,
   muted,
+  reveal = false,
 }: {
   text: string;
   sources?: ChatMessage["sources"];
   muted?: boolean;
+  reveal?: boolean;
 }) {
   // Rapikan keluaran model: hilangkan baris kosong berlebih dan spasi ekor
   // yang membuat jarak antar paragraf terlihat kepanjangan.
@@ -240,24 +266,23 @@ function MarkdownBody({
           tr: ({ children }) => <tr className="align-top">{children}</tr>,
           th: ({ children }) => (
             <th className="whitespace-nowrap px-3 py-2 font-semibold text-foreground">
-              {children}
+              {reveal ? revealMarkdown(children, "th") : children}
             </th>
           ),
-          td: ({ children }) => <td className="px-3 py-2">{children}</td>,
+          td: ({ children }) => <td className="px-3 py-2">{reveal ? revealMarkdown(children, "td") : children}</td>,
 
-
-          p: ({ children }) => <p className="my-0">{children}</p>,
+          p: ({ children }) => <p className="my-0">{reveal ? revealMarkdown(children, "p") : children}</p>,
           h1: ({ children }) => (
             <h3 className={isQuran ? "mt-1 text-center font-display text-3xl font-bold leading-tight" : "mt-1 font-display text-lg leading-snug"}>
-              {children}
+              {reveal ? revealMarkdown(children, "h1") : children}
             </h3>
           ),
           h2: ({ children }) => (
             <h3 className={isQuran ? "mt-1 text-center text-2xl leading-relaxed" : "mt-1 font-display text-base leading-snug"}>
-              {children}
+              {reveal ? revealMarkdown(children, "h2") : children}
             </h3>
           ),
-          h3: ({ children }) => <h4 className="mt-1 text-sm font-semibold">{children}</h4>,
+          h3: ({ children }) => <h4 className="mt-1 text-sm font-semibold">{reveal ? revealMarkdown(children, "h3") : children}</h4>,
           ul: ({ children }) => <ul className="my-0 list-disc space-y-1 pl-5">{children}</ul>,
           ol: ({ children }) => <ol className="my-0 list-decimal space-y-1 pl-5">{children}</ol>,
           li: ({ children }) => <li className="leading-relaxed">{children}</li>,
@@ -294,6 +319,7 @@ function MarkdownBody({
               <CodeBlock
                 code={String(children).replace(/\n$/, "")}
                 lang={/language-([\w-]+)/.exec(className)?.[1]}
+                reveal={reveal}
               />
             ) : (
               <code className="font-mono text-[0.9em] text-primary">
@@ -449,7 +475,7 @@ export function AiMessage({
         )}
 
         {message.content && (
-          <MarkdownBody text={message.content} sources={message.sources} />
+          <MarkdownBody text={message.content} sources={message.sources} reveal={streaming} />
         )}
 
 
