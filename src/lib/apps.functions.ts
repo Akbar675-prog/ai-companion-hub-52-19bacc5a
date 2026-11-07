@@ -803,6 +803,44 @@ export const addChangelogFn = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ ok: true }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const db = supabaseAdmin as unknown as { from: (t: string) => any };
+    const [{ data: app }, metaIndex, existingChangelogs] = await Promise.all([
+      supabaseAdmin
+        .from("apps")
+        .select("apk_id, download_url")
+        .eq("id", data.app_id)
+        .maybeSingle(),
+      readIndex(),
+      readChangelogs(db, data.app_id),
+    ]);
+    const previousVersion = metaIndex[data.app_id]?.version?.trim();
+    const alreadyArchived = existingChangelogs[data.app_id]?.some(
+      (item) => item.Version?.trim() === previousVersion,
+    );
+
+    // Preserve the current APK as a changelog version before advancing the app version.
+    if (app && previousVersion && previousVersion !== data.version.trim() && !alreadyArchived) {
+      const apkId = (app as { apk_id?: string | null }).apk_id;
+      let previousDownloadUrl = (app as { download_url?: string | null }).download_url?.trim() ?? "";
+      if (apkId) {
+        const archiveId = genId();
+        const { error: copyError } = await supabaseAdmin.storage
+          .from("app-files")
+          .copy(`GYPS/${apkId}`, `CHANGELOGS/${archiveId}`);
+        if (copyError) throw new Error(`Gagal mengarsipkan APK versi ${previousVersion}: ${copyError.message}`);
+        previousDownloadUrl = `supabase://changelog/${archiveId}`;
+      }
+      if (previousDownloadUrl) {
+        const { error: archiveError } = await db.from("app_changelogs").insert({
+          app_id: data.app_id,
+          version: previousVersion,
+          download_url: previousDownloadUrl,
+          title: "Versi sebelumnya",
+          notes: "",
+        });
+        if (archiveError) throw new Error(archiveError.message);
+      }
+    }
+
     const { error } = await db.from("app_changelogs").insert({
       app_id: data.app_id,
       version: data.version,
