@@ -723,7 +723,7 @@ function ChangelogSheet({
   onPick: (c: ChangelogItem) => void;
 }) {
   return (
-    <div role="dialog" aria-modal="true" aria-label="Pilih versi" className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-fade-in" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label="Pilih versi" className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 animate-dialog-backdrop" onClick={onClose}>
       <div
         className="m3-shadow-2 flex max-h-[85vh] w-full max-w-2xl flex-col rounded-t-4xl bg-card pb-[env(safe-area-inset-bottom)] animate-sheet-up"
         onClick={(e) => e.stopPropagation()}
