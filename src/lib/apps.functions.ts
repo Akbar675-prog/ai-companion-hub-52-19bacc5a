@@ -75,8 +75,8 @@ async function readChangelogs(
   }
 }
 
-// An app counts as "new" when its latest changelog is at most this old.
-const NEW_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+// Changelog updates keep the app marked new for one hour.
+const NEW_WINDOW_MS = 60 * 60 * 1000;
 
 function latestChangelogAt(items: ChangelogItem[] | undefined): number {
   if (!items || items.length === 0) return 0;
@@ -273,7 +273,17 @@ export const listAppsFn = createServerFn({ method: "GET" }).handler(
         Changelog: changelogs[r.id] ?? [],
         Is_new: isNewApp(changelogs[r.id]),
       };
-    }).sort((a, b) => Number(!!b.Is_new) - Number(!!a.Is_new) || (a.Is_new && b.Is_new ? latestChangelogAt(b.Changelog) - latestChangelogAt(a.Changelog) : 0));
+    }).sort((a, b) => {
+      const aRecentlyUploaded = !!a.Created_at && Date.now() - Date.parse(a.Created_at) <= NEW_WINDOW_MS;
+      const bRecentlyUploaded = !!b.Created_at && Date.now() - Date.parse(b.Created_at) <= NEW_WINDOW_MS;
+      // Put brand-new uploads first; recently changed apps follow, then the normal newest-first catalog.
+      const aPriority = aRecentlyUploaded ? 2 : a.Is_new ? 1 : 0;
+      const bPriority = bRecentlyUploaded ? 2 : b.Is_new ? 1 : 0;
+      return bPriority - aPriority ||
+        (aPriority === 1 && bPriority === 1
+          ? latestChangelogAt(b.Changelog) - latestChangelogAt(a.Changelog)
+          : (Date.parse(b.Created_at ?? "") || 0) - (Date.parse(a.Created_at ?? "") || 0));
+    });
   },
 );
 
