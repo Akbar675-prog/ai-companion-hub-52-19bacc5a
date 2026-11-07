@@ -52,6 +52,7 @@ import { Route as StatusSetRouteImport } from './routes/status_.set'
 import { Route as VoteIdRouteImport } from './routes/vote.$id'
 import { Route as AiCThreadIdRouteImport } from './routes/ai_.c.$threadId'
 import { Route as ApiV1LoginRouteImport } from './routes/api.v1.login'
+import { Route as AppsChangelogB64RouteImport } from './routes/apps.changelog.$b64'
 import { Route as AppsGypsB64RouteImport } from './routes/apps.gyps.$b64'
 import { Route as AppsIndexApplistDotjsonRouteImport } from './routes/apps.index.applist[.]json'
 import { Route as AppsPreviewIdRouteImport } from './routes/apps.preview.$id'
@@ -280,6 +281,11 @@ const ApiV1LoginRoute = ApiV1LoginRouteImport.update({
   path: '/api/v1/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppsChangelogB64Route = AppsChangelogB64RouteImport.update({
+  id: '/apps/changelog/$b64',
+  path: '/apps/changelog/$b64',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppsGypsB64Route = AppsGypsB64RouteImport.update({
   id: '/apps/gyps/$b64',
   path: '/apps/gyps/$b64',
@@ -386,6 +392,7 @@ export interface FileRoutesByFullPath {
   '/vote/$id': typeof VoteIdRoute
   '/ai/c/$threadId': typeof AiCThreadIdRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
+  '/apps/changelog/$b64': typeof AppsChangelogB64Route
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -443,6 +450,7 @@ export interface FileRoutesByTo {
   '/vote/$id': typeof VoteIdRoute
   '/ai/c/$threadId': typeof AiCThreadIdRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
+  '/apps/changelog/$b64': typeof AppsChangelogB64Route
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -501,6 +509,7 @@ export interface FileRoutesById {
   '/vote/$id': typeof VoteIdRoute
   '/ai_/c/$threadId': typeof AiCThreadIdRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
+  '/apps/changelog/$b64': typeof AppsChangelogB64Route
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -560,6 +569,7 @@ export interface FileRouteTypes {
     | '/vote/$id'
     | '/ai/c/$threadId'
     | '/api/v1/login'
+    | '/apps/changelog/$b64'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
     | '/broadcasts/image/$id'
@@ -617,6 +627,7 @@ export interface FileRouteTypes {
     | '/vote/$id'
     | '/ai/c/$threadId'
     | '/api/v1/login'
+    | '/apps/changelog/$b64'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
     | '/broadcasts/image/$id'
@@ -674,6 +685,7 @@ export interface FileRouteTypes {
     | '/vote/$id'
     | '/ai_/c/$threadId'
     | '/api/v1/login'
+    | '/apps/changelog/$b64'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
     | '/broadcasts/image/$id'
@@ -732,6 +744,7 @@ export interface RootRouteChildren {
   VoteIdRoute: typeof VoteIdRoute
   AiCThreadIdRoute: typeof AiCThreadIdRoute
   ApiV1LoginRoute: typeof ApiV1LoginRouteWithChildren
+  AppsChangelogB64Route: typeof AppsChangelogB64Route
   AppsGypsB64Route: typeof AppsGypsB64Route
   AppsPreviewIdRoute: typeof AppsPreviewIdRoute
   BroadcastsImageIdRoute: typeof BroadcastsImageIdRoute
@@ -1048,6 +1061,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiV1LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/apps/changelog/$b64': {
+      id: '/apps/changelog/$b64'
+      path: '/apps/changelog/$b64'
+      fullPath: '/apps/changelog/$b64'
+      preLoaderRoute: typeof AppsChangelogB64RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/apps/gyps/$b64': {
       id: '/apps/gyps/$b64'
       path: '/apps/gyps/$b64'
@@ -1191,6 +1211,7 @@ const rootRouteChildren: RootRouteChildren = {
   VoteIdRoute: VoteIdRoute,
   AiCThreadIdRoute: AiCThreadIdRoute,
   ApiV1LoginRoute: ApiV1LoginRouteWithChildren,
+  AppsChangelogB64Route: AppsChangelogB64Route,
   AppsGypsB64Route: AppsGypsB64Route,
   AppsPreviewIdRoute: AppsPreviewIdRoute,
   BroadcastsImageIdRoute: BroadcastsImageIdRoute,

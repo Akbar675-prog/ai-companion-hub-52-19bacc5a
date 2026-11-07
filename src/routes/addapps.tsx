@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient, useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft, Upload, Link as LinkIcon, Trash2, Package, Lock, X,
   Pencil, Save, Image as ImageIcon, Plus, Clock,
@@ -1085,12 +1086,15 @@ function ChangelogEditor({ appId }: { appId: string }) {
   const list = useServerFn(listChangelogsFn);
   const add = useServerFn(addChangelogFn);
   const del = useServerFn(deleteChangelogFn);
+  const createUpload = useServerFn(createUploadUrlFn);
   const [items, setItems] = useState<NonNullable<AppListItem["Changelog"]>>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [ver, setVer] = useState("");
   const [url, setUrl] = useState("");
+  const [downloadMode, setDownloadMode] = useState<"link" | "upload">("link");
+  const [downloadFile, setDownloadFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -1110,11 +1114,23 @@ function ChangelogEditor({ appId }: { appId: string }) {
   async function onAdd() {
     setErr("");
     if (!ver.trim()) return setErr("Versi wajib diisi.");
-    if (!/^https?:\/\//i.test(url.trim())) return setErr("Download link harus URL valid (https://...).");
+    if (downloadMode === "link" && !/^https?:\/\//i.test(url.trim())) return setErr("Download link harus URL valid (https://...).");
+    if (downloadMode === "upload" && !downloadFile) return setErr("Pilih file APK yang akan di-upload.");
     setBusy(true);
     try {
-      await add({ data: { app_id: appId, version: ver.trim(), download_url: url.trim(), title: title.trim() || null, notes: notes.trim() } });
-      setVer(""); setUrl(""); setTitle(""); setNotes("");
+      let downloadUrl = url.trim();
+      if (downloadMode === "upload" && downloadFile) {
+        const signed = await createUpload({ data: { kind: "changelog" } });
+        const { error } = await supabase.storage.from(signed.bucket).uploadToSignedUrl(signed.path, signed.token, downloadFile, {
+          contentType: downloadFile.type || "application/vnd.android.package-archive",
+          upsert: true,
+        });
+        if (error) throw new Error(`Upload gagal: ${error.message}`);
+        const encodedId = btoa(signed.id).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+        downloadUrl = `/apps/changelog/${encodedId}`;
+      }
+      await add({ data: { app_id: appId, version: ver.trim(), download_url: downloadUrl, title: title.trim() || null, notes: notes.trim() } });
+      setVer(""); setUrl(""); setDownloadFile(null); setTitle(""); setNotes("");
       await refresh();
       void qc.invalidateQueries({ queryKey: ["app", appId] });
       void qc.invalidateQueries({ queryKey: ["apps"] });
@@ -1147,8 +1163,16 @@ function ChangelogEditor({ appId }: { appId: string }) {
       </p>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <input value={ver} onChange={(e) => setVer(e.target.value)} placeholder="Versi, contoh: 1.2.0" maxLength={40} className="input" />
-        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Download link (https://...)" maxLength={2000} className="input" />
+        <select value={downloadMode} onChange={(e) => setDownloadMode(e.target.value as "link" | "upload")} className="input">
+          <option value="link">Pakai link download</option>
+          <option value="upload">Upload file APK ke Supabase</option>
+        </select>
       </div>
+      {downloadMode === "link" ? (
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Download link (https://...)" maxLength={2000} className="input mt-3" />
+      ) : (
+        <input type="file" accept=".apk,application/vnd.android.package-archive" onChange={(e) => setDownloadFile(e.target.files?.[0] ?? null)} className="input mt-3" />
+      )}
       <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Judul (opsional)" maxLength={120} className="input mt-3" />
       {err && <p className="mt-3 rounded-xl bg-destructive/10 px-3 py-2 text-sm text-destructive">{err}</p>}
       <PressButton

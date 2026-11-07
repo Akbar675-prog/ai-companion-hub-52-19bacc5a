@@ -369,7 +369,7 @@ export const createUploadUrlFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        kind: z.enum(["apk", "preview"]),
+        kind: z.enum(["apk", "preview", "changelog"]),
       })
       .parse(d),
   )
@@ -381,8 +381,8 @@ export const createUploadUrlFn = createServerFn({ method: "POST" })
         "@/integrations/supabase/client.server"
       );
       const id = genId();
-      const bucket = data.kind === "apk" ? "app-files" : "app-icons";
-      const path = data.kind === "apk" ? `GYPS/${id}` : `PREVIEWS/${id}`;
+      const bucket = data.kind === "apk" || data.kind === "changelog" ? "app-files" : "app-icons";
+      const path = data.kind === "apk" ? `GYPS/${id}` : data.kind === "changelog" ? `CHANGELOGS/${id}` : `PREVIEWS/${id}`;
       const { data: signed, error } = await supabaseAdmin.storage
         .from(bucket)
         .createSignedUploadUrl(path);
