@@ -274,15 +274,12 @@ export const listAppsFn = createServerFn({ method: "GET" }).handler(
         Is_new: isNewApp(changelogs[r.id]),
       };
     }).sort((a, b) => {
-      const aRecentlyUploaded = !!a.Created_at && Date.now() - Date.parse(a.Created_at) <= NEW_WINDOW_MS;
-      const bRecentlyUploaded = !!b.Created_at && Date.now() - Date.parse(b.Created_at) <= NEW_WINDOW_MS;
-      // Put brand-new uploads first; recently changed apps follow, then the normal newest-first catalog.
-      const aPriority = aRecentlyUploaded ? 2 : a.Is_new ? 1 : 0;
-      const bPriority = bRecentlyUploaded ? 2 : b.Is_new ? 1 : 0;
-      return bPriority - aPriority ||
-        (aPriority === 1 && bPriority === 1
-          ? latestChangelogAt(b.Changelog) - latestChangelogAt(a.Changelog)
-          : (Date.parse(b.Created_at ?? "") || 0) - (Date.parse(a.Created_at ?? "") || 0));
+      const aCreatedAt = Date.parse(a.Created_at ?? "") || 0;
+      const bCreatedAt = Date.parse(b.Created_at ?? "") || 0;
+      // Keep changelog updates in the catalog order after the one-hour badge expires.
+      const aActivityAt = Math.max(aCreatedAt, latestChangelogAt(a.Changelog));
+      const bActivityAt = Math.max(bCreatedAt, latestChangelogAt(b.Changelog));
+      return bActivityAt - aActivityAt || bCreatedAt - aCreatedAt;
     });
   },
 );
