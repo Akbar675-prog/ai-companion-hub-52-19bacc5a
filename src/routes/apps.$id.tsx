@@ -12,6 +12,7 @@ import {
   getAppFn,
   incrementDownloadFn,
   getApkDownloadUrlFn,
+  getChangelogDownloadUrlFn,
   listChangelogsFn,
   type ChangelogItem,
 } from "@/lib/apps.functions";
@@ -153,6 +154,7 @@ function AppDetail() {
   const { userId } = useAccount();
   const bypass = useServerFn(exclusiveBypassFn);
   const fetchChangelogs = useServerFn(listChangelogsFn);
+  const getChangelogUrl = useServerFn(getChangelogDownloadUrlFn);
   const [sheet, setSheet] = useState<ChangelogItem[] | null>(null);
 
   useEffect(() => {
@@ -537,7 +539,22 @@ function AppDetail() {
           onPick={(c) => {
             setSheet(null);
             increment.mutate();
-            window.location.href = c.Download_url!;
+            const popup = window.open("about:blank", "_blank");
+            void (async () => {
+              try {
+                let url = c.Download_url!;
+                if (url.startsWith("supabase://changelog/")) {
+                  const result = await getChangelogUrl({ data: { id: c.Id } });
+                  url = result.url ?? "";
+                }
+                if (!url) throw new Error("Link download tidak tersedia.");
+                if (!popup) throw new Error("Izinkan pop-up untuk mengunduh APK tanpa meninggalkan halaman aplikasi.");
+                popup.location.href = url;
+              } catch (error) {
+                popup?.close();
+                alert(error instanceof Error ? error.message : "Gagal memulai unduhan.");
+              }
+            })();
           }}
         />
       )}

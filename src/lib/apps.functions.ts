@@ -765,13 +765,36 @@ export const listChangelogsFn = createServerFn({ method: "GET" })
     return map[data.id] ?? [];
   });
 
+export const getChangelogDownloadUrlFn = createServerFn({ method: "GET" })
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data }): Promise<{ url: string | null }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const db = supabaseAdmin as unknown as { from: (table: string) => any };
+    const { data: row } = await db
+      .from("app_changelogs")
+      .select("download_url")
+      .eq("id", data.id)
+      .maybeSingle();
+    const value = (row as { download_url?: string } | null)?.download_url ?? "";
+    const match = /^supabase:\/\/changelog\/([A-Za-z0-9_-]{1,128})$/.exec(value);
+    if (!match) return { url: null };
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from("app-files")
+      .createSignedUrl(`CHANGELOGS/${match[1]}`, 3600, { download: true });
+    if (error) throw new Error(error.message);
+    return { url: signed?.signedUrl ?? null };
+  });
+
 export const addChangelogFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
         app_id: z.string().min(1).max(40),
         version: z.string().trim().min(1).max(40),
-        download_url: z.string().trim().url().max(2000),
+        download_url: z.union([
+          z.string().trim().url().max(2000),
+          z.string().trim().regex(/^supabase:\/\/changelog\/[A-Za-z0-9_-]{1,128}$/),
+        ]),
         title: z.string().trim().max(120).optional().nullable(),
         notes: z.string().trim().max(5000).default(""),
       })

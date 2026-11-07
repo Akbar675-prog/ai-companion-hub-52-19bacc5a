@@ -1126,8 +1126,7 @@ function ChangelogEditor({ appId }: { appId: string }) {
           upsert: true,
         });
         if (error) throw new Error(`Upload gagal: ${error.message}`);
-        const encodedId = btoa(signed.id).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
-        downloadUrl = `/apps/changelog/${encodedId}`;
+        downloadUrl = `supabase://changelog/${signed.id}`;
       }
       await add({ data: { app_id: appId, version: ver.trim(), download_url: downloadUrl, title: title.trim() || null, notes: notes.trim() } });
       setVer(""); setUrl(""); setDownloadFile(null); setTitle(""); setNotes("");
