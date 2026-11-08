@@ -254,13 +254,21 @@ function AppDetail() {
 
       {banner && (
         <div className="relative mx-auto mt-5 max-w-4xl px-4 sm:px-6">
-          <div className="overflow-hidden rounded-3xl bg-surface-variant/50 ring-1 ring-black/5 dark:ring-white/10">
+          <div className="relative isolate flex min-h-48 items-center justify-center overflow-hidden rounded-[2rem] bg-surface-variant/60 shadow-xl ring-1 ring-black/5 dark:ring-white/10 sm:min-h-64 md:min-h-80">
+            <img
+              src={banner}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 size-full scale-110 object-cover opacity-50 blur-2xl"
+            />
+            <div className="absolute inset-0 bg-gradient-to-br from-background/10 via-background/5 to-background/40" />
             <img
               src={banner}
               alt={`Banner ${app.App_name}`}
-              className="block h-auto max-h-[min(56vw,24rem)] w-full object-contain"
+              className="relative z-10 block max-h-[min(56vw,24rem)] max-w-full w-auto object-contain drop-shadow-[0_12px_28px_rgb(0_0_0/0.35)]"
               fetchPriority="high"
             />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-20 bg-gradient-to-t from-background/50 to-transparent" />
           </div>
         </div>
       )}
