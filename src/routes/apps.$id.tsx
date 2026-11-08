@@ -149,6 +149,7 @@ function AppDetail() {
   });
 
   const [gateOpen, setGateOpen] = useState(false);
+  const [expandedDescriptionId, setExpandedDescriptionId] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<{ url: string; contentType: string } | null>(null);
   const [downloading, setDownloading] = useState(false);
   const { userId } = useAccount();
@@ -168,6 +169,9 @@ function AppDetail() {
 
   const previews = app.Previews ?? [];
   const banner = app.Banner_url ?? null;
+  const description = app.Description || "Tidak ada deskripsi.";
+  const collapsibleDescription = description.length > 280;
+  const descriptionExpanded = expandedDescriptionId === app.ID;
   const fresh = isNew(app.Created_at);
 
   async function triggerDownload(directUrl?: string) {
@@ -458,12 +462,34 @@ function AppDetail() {
             <h2 className="flex items-center gap-2 font-display text-xl">
               <FileText className="size-5 text-primary" /> Deskripsi
             </h2>
-            <p
-              data-no-translate
-              className="mt-3 whitespace-pre-wrap text-base leading-relaxed text-foreground/90"
+            <div
+              className={`relative mt-3 ${collapsibleDescription && !descriptionExpanded ? "max-h-40 overflow-hidden" : ""}`}
             >
-              {app.Description || "Tidak ada deskripsi."}
-            </p>
+              <p
+                data-no-translate
+                className="whitespace-pre-wrap text-base leading-relaxed text-foreground/90"
+              >
+                {description}
+              </p>
+              {collapsibleDescription && !descriptionExpanded && (
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface-variant/50 via-surface-variant/30 to-transparent backdrop-blur-[2px]"
+                />
+              )}
+            </div>
+            {collapsibleDescription && (
+              <button
+                type="button"
+                aria-expanded={descriptionExpanded}
+                onClick={() =>
+                  setExpandedDescriptionId(descriptionExpanded ? null : app.ID)
+                }
+                className="mt-3 min-h-11 rounded-full px-4 text-sm font-semibold text-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {descriptionExpanded ? "Tampilkan lebih sedikit" : "Lihat semua"}
+              </button>
+            )}
           </section>
 
           {(app.Changelog?.length ?? 0) > 0 && (
