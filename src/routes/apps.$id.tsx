@@ -230,19 +230,6 @@ function AppDetail() {
 
   return (
     <div className="relative min-h-screen bg-background">
-      {banner && (
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[22rem] overflow-hidden">
-          <img
-            src={banner}
-            alt=""
-            aria-hidden="true"
-            className="size-full scale-110 object-cover blur-[2px]"
-          />
-          {/* keep the top readable but let the artwork show through */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/35 to-background" />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
-        </div>
-      )}
       {!banner && (
         <div
           aria-hidden="true"
@@ -261,11 +248,26 @@ function AppDetail() {
         <span className="text-sm font-medium text-muted-foreground">Detail aplikasi</span>
       </header>
 
-      <main className="relative mx-auto max-w-4xl px-4 pb-24 pt-5 sm:px-6 md:pt-6">
+      {banner && (
+        <div className="relative mx-auto mt-5 max-w-4xl px-4 sm:px-6">
+          <div className="overflow-hidden rounded-3xl bg-surface-variant/50 ring-1 ring-black/5 dark:ring-white/10">
+            <img
+              src={banner}
+              alt={`Banner ${app.App_name}`}
+              className="block h-auto max-h-[min(56vw,24rem)] w-full object-contain"
+              fetchPriority="high"
+            />
+          </div>
+        </div>
+      )}
+
+      <main
+        className={`relative mx-auto max-w-4xl px-4 pb-24 sm:px-6 ${banner ? "pt-0" : "pt-5 md:pt-6"}`}
+      >
         <div
           className={
             banner
-              ? "m3-shadow-2 rounded-4xl border border-white/25 bg-card/90 p-5 backdrop-blur-2xl sm:p-7 md:p-10"
+              ? "relative z-10 -mt-6 m3-shadow-2 rounded-4xl border border-white/25 bg-card/95 p-5 backdrop-blur-2xl sm:p-7 md:p-10"
               : "m3-shadow-1 m3-hairline rounded-4xl bg-card p-5 sm:p-7 md:p-10"
           }
         >
