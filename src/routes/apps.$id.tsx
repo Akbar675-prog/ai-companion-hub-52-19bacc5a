@@ -423,11 +423,7 @@ function AppDetail() {
                       type="button"
                       aria-label={`Buka pratinjau ${isVideo ? "video" : "gambar"} ${i + 1}`}
                       onClick={() => setLightbox(p)}
-                      style={{
-                        animationDelay: `${Math.min(i * 60, 400)}ms`,
-                        animationFillMode: "backwards",
-                      }}
-                      className="m3-shadow-1 relative inline-flex max-h-64 max-w-[min(85vw,28rem)] shrink-0 snap-start animate-fade-in overflow-hidden rounded-2xl bg-surface-variant transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="m3-shadow-1 relative inline-flex max-h-64 max-w-[min(85vw,28rem)] shrink-0 snap-start overflow-hidden rounded-2xl bg-surface-variant transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       {isVideo ? (
                         <video
@@ -435,13 +431,14 @@ function AppDetail() {
                           className="block h-auto max-h-64 max-w-[min(85vw,28rem)] w-auto object-contain"
                           muted
                           playsInline
-                          preload="metadata"
+                          preload="none"
                         />
                       ) : (
                         <img
                           src={p.url}
                           alt={`Preview ${i + 1}`}
                           loading="lazy"
+                          fetchPriority={i === 0 ? "high" : "auto"}
                           decoding="async"
                           className="block h-auto max-h-64 max-w-[min(85vw,28rem)] w-auto object-contain"
                         />

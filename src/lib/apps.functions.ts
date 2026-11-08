@@ -304,8 +304,33 @@ export const getAppFn = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     if (!row) return null;
     const hasApk = !!(row as { apk_id?: string | null }).apk_id;
-    const excl = await isExclusive(row.id);
     const meta = metaIndex[row.id];
+    const previewAssets = Array.from(
+      new Map((meta?.previews ?? []).map((asset) => [asset.id, asset])).values(),
+    );
+    const previewPaths = previewAssets.map((asset) => `PREVIEWS/${asset.id}`);
+    const [excl, signedPreviewData] = await Promise.all([
+      isExclusive(row.id),
+      (async () => {
+        if (previewPaths.length === 0) return [];
+        try {
+          const { data } = await supabaseAdmin.storage
+            .from("app-icons")
+            .createSignedUrls(previewPaths, 60 * 60 * 24 * 365);
+          return data ?? [];
+        } catch {
+          return [];
+        }
+      })(),
+    ]);
+    const signedPreviewUrls = new Map(
+      signedPreviewData.flatMap((asset) => {
+        const url = asset.signedUrl ?? asset.signedURL;
+        return asset.path && url ? [[asset.path, url] as const] : [];
+      }),
+    );
+    const previewUrl = (previewId: string) =>
+      signedPreviewUrls.get(`PREVIEWS/${previewId}`) ?? `/apps/preview/${previewId}`;
     return {
       ID: row.id,
       App_name: row.app_name,
@@ -327,7 +352,10 @@ export const getAppFn = createServerFn({ method: "GET" })
       Size_label: meta?.sizeLabel ?? null,
       Banner_url: meta?.banner?.id ? `/apps/preview/${meta.banner.id}` : null,
       Package_name: meta?.packageName ?? null,
-      Previews: previewUrls(meta?.previews),
+      Previews: (meta?.previews ?? []).map((preview) => ({
+        url: previewUrl(preview.id),
+        contentType: preview.contentType || "image/jpeg",
+      })),
       Changelog: (changelogs[row.id] ?? []).map((item) => ({
         ...item,
         Download_url: null,
