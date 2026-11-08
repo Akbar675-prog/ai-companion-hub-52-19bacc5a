@@ -149,6 +149,7 @@ function AppDetail() {
   });
 
   const [gateOpen, setGateOpen] = useState(false);
+  const [previewAspects, setPreviewAspects] = useState<Record<string, number>>({});
   const [lightbox, setLightbox] = useState<{ url: string; contentType: string } | null>(null);
   const [downloading, setDownloading] = useState(false);
   const { userId } = useAccount();
@@ -411,6 +412,16 @@ function AppDetail() {
               <div className="mt-3 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-3">
                 {previews.map((p, i) => {
                   const isVideo = (p.contentType || "").startsWith("video/");
+                  const aspect = previewAspects[p.url] ?? 9 / 16;
+                  const previewWidth = Math.min(Math.max(aspect * 256, 144), 448);
+                  const setPreviewAspect = (width: number, height: number) => {
+                    if (width && height) {
+                      setPreviewAspects((current) => ({
+                        ...current,
+                        [p.url]: width / height,
+                      }));
+                    }
+                  };
                   return (
                     <button
                       key={p.url}
@@ -420,16 +431,23 @@ function AppDetail() {
                       style={{
                         animationDelay: `${Math.min(i * 60, 400)}ms`,
                         animationFillMode: "backwards",
+                        width: `${previewWidth}px`,
                       }}
-                      className="m3-shadow-1 relative aspect-[9/16] h-64 shrink-0 snap-start animate-fade-in overflow-hidden rounded-2xl bg-surface-variant transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      className="m3-shadow-1 relative h-64 shrink-0 snap-start animate-fade-in overflow-hidden rounded-2xl bg-surface-variant transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     >
                       {isVideo ? (
                         <video
                           src={p.url}
-                          className="size-full object-cover"
+                          className="size-full object-contain"
                           muted
                           playsInline
                           preload="metadata"
+                          onLoadedMetadata={(event) =>
+                            setPreviewAspect(
+                              event.currentTarget.videoWidth,
+                              event.currentTarget.videoHeight,
+                            )
+                          }
                         />
                       ) : (
                         <img
@@ -437,7 +455,13 @@ function AppDetail() {
                           alt={`Preview ${i + 1}`}
                           loading="lazy"
                           decoding="async"
-                          className="size-full object-cover"
+                          className="size-full object-contain"
+                          onLoad={(event) =>
+                            setPreviewAspect(
+                              event.currentTarget.naturalWidth,
+                              event.currentTarget.naturalHeight,
+                            )
+                          }
                         />
                       )}
                       {isVideo && (
