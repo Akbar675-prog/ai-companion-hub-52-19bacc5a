@@ -207,7 +207,9 @@ function AppForm({
   type ExistingPreview = { url: string; id: string; contentType: string; keep: boolean };
   const [existingPreviews, setExistingPreviews] = useState<ExistingPreview[]>(
     (existing?.Previews ?? []).map((p) => {
-      const id = p.url.split("/").pop() ?? "";
+      const id = decodeURIComponent(
+        new URL(p.url, "https://preview.local").pathname.split("/").filter(Boolean).at(-1) ?? "",
+      );
       return { url: p.url, id, contentType: p.contentType || "image/jpeg", keep: true };
     }),
   );
