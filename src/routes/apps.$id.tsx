@@ -170,6 +170,7 @@ function AppDetail() {
   const previews = app.Previews ?? [];
   const banner = app.Banner_url ?? null;
   const description = app.Description || "Tidak ada deskripsi.";
+  const latestReleaseDate = app.Changelog?.[0]?.Released_at ?? app.Created_at;
   const collapsibleDescription = description.length > 280;
   const descriptionExpanded = expandedDescriptionId === app.ID;
   const fresh = isNew(app.Created_at);
@@ -358,8 +359,8 @@ function AppDetail() {
                 <CalendarDays className="size-5" />
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Diunggah</p>
-                <p className="font-semibold">{formatDate(app.Created_at)}</p>
+                <p className="text-xs text-muted-foreground">Rilis terbaru</p>
+                <p className="font-semibold">{formatDate(latestReleaseDate)}</p>
               </div>
             </div>
             <div className="m3-hairline flex items-center gap-3 rounded-2xl bg-surface-variant/50 p-4">
