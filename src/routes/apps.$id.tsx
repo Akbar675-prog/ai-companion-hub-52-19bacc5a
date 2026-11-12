@@ -236,15 +236,15 @@ function AppDetail() {
   return (
     <div className="relative min-h-screen bg-background">
       {banner ? (
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[22rem] overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[min(56.25vw,26.25rem)] overflow-hidden bg-neutral-900">
           <img
             src={banner}
             alt=""
             aria-hidden="true"
-            className="size-full scale-110 object-cover blur-[2px]"
+            className="size-full object-cover"
+            fetchPriority="high"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/35 to-background" />
-          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/40 to-background" />
         </div>
       ) : (
         <div
@@ -264,7 +264,9 @@ function AppDetail() {
         <span className="text-sm font-medium text-muted-foreground">Detail aplikasi</span>
       </header>
 
-      <main className="relative mx-auto max-w-4xl px-4 pb-24 pt-5 sm:px-6 md:pt-6">
+      <main
+        className={`relative mx-auto max-w-4xl px-4 pb-24 sm:px-6 ${banner ? "pt-[max(9rem,calc(56.25vw-4.5rem))] md:pt-[11.25rem]" : "pt-5 md:pt-6"}`}
+      >
         <div
           className={
             banner
