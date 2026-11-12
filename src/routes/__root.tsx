@@ -99,7 +99,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Download Mod APK terbaik di GMA dengan keamanan terjamin dan update berkala.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "https://galileomodapk.visora.my.id" },
       { property: "og:image", content: "https://galileomodapk.visora.my.id/banner-gma.png" },
       { property: "og:image:width", content: "1847" },
       { property: "og:image:height", content: "1080" },
@@ -120,7 +119,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
-      { rel: "canonical", href: "https://galileomodapk.visora.my.id" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",

@@ -26,6 +26,10 @@ export const Route = createFileRoute("/")({
   },
   loader: ({ context }) => context.queryClient.ensureQueryData(appsQuery),
   component: Home,
+  head: () => ({
+    meta: [{ property: "og:url", content: "https://galileomodapk.visora.my.id" }],
+    links: [{ rel: "canonical", href: "https://galileomodapk.visora.my.id/" }],
+  }),
   errorComponent: ({ error }) => (
     <div className="p-8 text-destructive">Gagal memuat: {error instanceof Error ? error.message : String(error)}</div>
   ),
