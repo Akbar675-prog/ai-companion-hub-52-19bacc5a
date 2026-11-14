@@ -58,7 +58,7 @@ function isNew(iso?: string): boolean {
   if (!iso) return false;
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return false;
-  return Date.now() - t < 60 * 60 * 1000; // < 1 hour
+  return Date.now() - t <= 72 * 60 * 60 * 1000;
 }
 
 function Home() {
@@ -211,7 +211,8 @@ function StatTile({
 
 function AppCard({ app, index }: { app: AppListItem; index: number }) {
   const t = useT();
-  const fresh = !!app.Is_new || isNew(app.Created_at);
+  const updated = !!app.Is_new;
+  const fresh = !updated && isNew(app.Created_at);
   return (
     <Link
       to="/apps/$id"
@@ -245,6 +246,12 @@ function AppCard({ app, index }: { app: AppListItem; index: number }) {
             {app.Description || "Tidak ada deskripsi."}
           </p>
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+            {updated && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-orange-400 to-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-950">
+                <Sparkles className="size-3" />
+                Update
+              </span>
+            )}
             {fresh && (
               <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-950">
                 <Sparkles className="size-3" />

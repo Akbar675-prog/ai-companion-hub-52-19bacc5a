@@ -37,7 +37,7 @@ export type AppListItem = {
   Package_name?: string | null;
   Previews?: PreviewItem[]; // list of preview media (image or video)
   Changelog?: ChangelogItem[];
-  Is_new?: boolean; // true when the app got a fresh changelog recently
+  Is_new?: boolean; // true when the app got a fresh changelog recently (72 hours)
 };
 
 export type PreviewItem = { url: string; contentType: string };
@@ -75,8 +75,8 @@ async function readChangelogs(
   }
 }
 
-// Changelog updates keep the app marked new for one hour.
-const NEW_WINDOW_MS = 60 * 60 * 1000;
+// Changelog updates keep the app marked updated for 72 hours.
+const NEW_WINDOW_MS = 72 * 60 * 60 * 1000;
 
 function latestChangelogAt(items: ChangelogItem[] | undefined): number {
   if (!items || items.length === 0) return 0;
