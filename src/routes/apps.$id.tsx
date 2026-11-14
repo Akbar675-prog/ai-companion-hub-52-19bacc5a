@@ -131,7 +131,7 @@ function isNew(iso?: string): boolean {
   if (!iso) return false;
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return false;
-  return Date.now() - t < 60 * 60 * 1000;
+  return Date.now() - t <= 72 * 60 * 60 * 1000;
 }
 
 function AppDetail() {
@@ -173,7 +173,8 @@ function AppDetail() {
   const latestReleaseDate = app.Changelog?.[0]?.Released_at ?? app.Created_at;
   const collapsibleDescription = description.length > 280;
   const descriptionExpanded = expandedDescriptionId === app.ID;
-  const fresh = isNew(app.Created_at);
+  const updated = !!app.Is_new;
+  const fresh = !updated && isNew(app.Created_at);
 
   async function triggerDownload(directUrl?: string) {
     setDownloading(true);
@@ -297,6 +298,11 @@ function AppDetail() {
                 ID: {app.ID}
               </p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
+                {updated && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-400 to-amber-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-orange-950 shadow-sm animate-fade-in">
+                    <Sparkles className="size-3.5" /> Update
+                  </span>
+                )}
                 {fresh && (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-950 shadow-sm animate-fade-in">
                     <Sparkles className="size-3.5" /> Baru
