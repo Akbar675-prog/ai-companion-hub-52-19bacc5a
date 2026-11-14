@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Download, CalendarDays, Users, Lock, Gem, Cpu, Tag, Sparkles, Images, Clock, HardDrive, Play, ExternalLink, FileText, X } from "lucide-react";
+import { ArrowLeft, Download, CalendarDays, Users, Lock, Gem, Cpu, Tag, Sparkles, Images, Clock, HardDrive, Play, ExternalLink, FileText, X, Send, CheckCircle2 } from "lucide-react";
 import {
   getAppFn,
   incrementDownloadFn,
@@ -21,6 +21,7 @@ import { AppIcon } from "@/components/AppIcon";
 import { verifyExclusiveFn, exclusiveBypassFn } from "@/lib/exclusive.functions";
 import { useAccount } from "@/lib/use-account";
 import { PressButton } from "@/components/Pressable";
+import { createRequestFn } from "@/lib/requests.functions";
 
 const WHATSAPP_REDIRECT =
   "https://whatsapp.com/channel/0029VbDY5dR29753oLbbVc1c";
@@ -152,6 +153,10 @@ function AppDetail() {
   const [expandedDescriptionId, setExpandedDescriptionId] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<{ url: string; contentType: string } | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [requestingUpdate, setRequestingUpdate] = useState(false);
+  const [updateRequested, setUpdateRequested] = useState(false);
+  const [updateRequestError, setUpdateRequestError] = useState<string | null>(null);
+  const createRequest = useServerFn(createRequestFn);
   const { userId } = useAccount();
   const bypass = useServerFn(exclusiveBypassFn);
   const fetchChangelogs = useServerFn(listChangelogsFn);
@@ -192,6 +197,27 @@ function AppDetail() {
       alert(err instanceof Error ? err.message : "Gagal memulai unduhan.");
     } finally {
       setTimeout(() => setDownloading(false), 1500);
+    }
+  }
+
+  async function onRequestUpdate() {
+    setRequestingUpdate(true);
+    setUpdateRequestError(null);
+    try {
+      const currentVersion = versionLabel(app.Version);
+      await createRequest({
+        data: {
+          app_name: app.App_name,
+          version: app.Version,
+          note: `official report on web: Request Update on app name: ${app.App_name}, current version: ${currentVersion}`,
+          contact: "",
+        },
+      });
+      setUpdateRequested(true);
+    } catch (err) {
+      setUpdateRequestError(err instanceof Error ? err.message : "Gagal mengirim request update.");
+    } finally {
+      setRequestingUpdate(false);
     }
   }
 
@@ -354,6 +380,26 @@ function AppDetail() {
                     ? "Memulai..."
                     : "Unduh APK"}
               </PressButton>
+              <PressButton
+                type="button"
+                onClick={() => void onRequestUpdate()}
+                disabled={requestingUpdate || updateRequested}
+                className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-border bg-surface-variant px-6 py-3 font-semibold text-foreground transition-colors hover:bg-primary-container focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+              >
+                {requestingUpdate ? (
+                  <m3e-loading-indicator className="m3-loading-sm" aria-label="Mengirim request update" />
+                ) : updateRequested ? (
+                  <CheckCircle2 aria-hidden="true" className="size-5" />
+                ) : (
+                  <Send aria-hidden="true" className="size-5" />
+                )}
+                {requestingUpdate ? "Mengirim…" : updateRequested ? "Request Terkirim" : "Request Update"}
+              </PressButton>
+              {updateRequestError && (
+                <p role="alert" className="mt-2 text-sm text-destructive">
+                  {updateRequestError}
+                </p>
+              )}
             </div>
           </div>
 
