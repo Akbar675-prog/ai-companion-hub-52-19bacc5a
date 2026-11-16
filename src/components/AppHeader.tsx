@@ -1,7 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Menu, X, Search, Download, Info, MessageCircle, Settings as SettingsIcon, Gem, Trophy, Send, Activity, LogIn, ChevronRight, Bot, Bug, FileText, ShieldCheck } from "lucide-react";
+import { Menu, X, Search, Download, Info, MessageCircle, Settings as SettingsIcon, Gem, Trophy, Send, Activity, LogIn, ChevronRight, Bot, Bug, FileText, ShieldCheck, Mail } from "lucide-react";
 import { listAppsFn, type AppListItem } from "@/lib/apps.functions";
 import { versionLabel } from "@/lib/metadata.functions";
 import { AppIcon } from "@/components/AppIcon";
@@ -218,6 +218,12 @@ export function AppHeader() {
                   <DrawerLink to="/ai" icon={<Bot className="size-4" />} label="AI Chat" />
                   <DrawerLink to="/leaderboard" icon={<Trophy className="size-4" />} label="Papan peringkat" />
                   <DrawerLink to="/request" icon={<Send className="size-4" />} label="Ajukan APK" />
+                  <a href="/temp-mail.php?v=1" className="flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition-colors hover:bg-primary-container">
+                    <span className="inline-flex size-9 items-center justify-center rounded-xl bg-surface-variant">
+                      <Mail className="size-4" aria-hidden="true" />
+                    </span>
+                    Temp Mail Generator
+                  </a>
                   <DrawerLink to="/report" icon={<Bug className="size-4" />} label="Laporan Tiket Masalah" />
                   <DrawerLink to="/my-report" icon={<Bug className="size-4" />} label="Laporan saya" />
                   <DrawerLink to="/status" icon={<Activity className="size-4" />} label="Status" />

@@ -1,0 +1,357 @@
+> [33m3980359[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m Animate streaming Markdown answer reveal
+> [33mb00cae3[m Match chat input model and effort animations
+> [33m97c6a23[m Integrate beta chat input component
+> [33m6ce715c[m Beta testing
+> [33m2e4703d[m Improve shimmer contrast in light theme
+> [33mfe26a37[m Use refined shimmer text animation
+> [33ma9871ca[m Fix chat enter behavior and shimmer animation
+> [33m01f64d1[m Smooth chat loading and collapse reasoning
+> [33m002a263[m Send custom persona to external models
+> [33m0b7f9f6[m Honor custom persona for external models
+> [33m3f3e5b9[m Add animated chat loading shimmer
+> [33ma2069f0[m Persist selected voice agent
+> [33mcf22378[m Manage global voice agent catalog
+> [33m1ecabce[m Allow larger voice agent image uploads
+> [33m58af16d[m Add ElevenLabs voice agents and isolate custom personas
+> [33ma2d1c51[m Keep image credits on daily reset
+> [33m0fa3aa0[m Fix monthly AI credits and chat titles
+> [33md04870b[m Polish Quran surah presentation
+> [33mda13dc3[m Add Quran surah markdown context
+> [33mc69b216[m Revert "Add email OTP verification"
+> [33m11a2367[m Revert "Improve Resend OTP error diagnostics"
+> [33mca12cf2[m Improve Resend OTP error diagnostics
+> [33m9cfb3ba[m Add email OTP verification
+>   [33m388a188[m Merge pull request #27 from Akbar675-prog/ui-polish-site-pages
+[32m|[m[33m\[m  
+[32m|[m > [33m2fdb46f[m[33m ([m[1;31morigin/ui-polish-site-pages[m[33m)[m Fix stalled AI chat streams
+> [33m|[m [33mefcf500[m Update README.md
+> [33m|[m [33mae28092[m Merge pull request #26 from Akbar675-prog/ui-polish-site-pages
+[34m|[m[33m\[m[33m|[m 
+[34m|[m > [33mb15c0e8[m Fix image generation in chat threads
+> [35m|[m [33m3aed2ef[m Merge pull request #25 from Akbar675-prog/ui-polish-site-pages
+[36m|[m[35m\[m[35m|[m 
+[36m|[m > [33m96b8bc4[m Improve chat markdown and latest-answer navigation
+[36m|[m > [33m683a432[m Auto-detect image generation requests
+> [1;31m|[m [33m7ee3337[m Merge pull request #24 from Akbar675-prog/ui-polish-site-pages
+[1;32m|[m[1;31m\[m[1;31m|[m 
+[1;32m|[m > [33m01d8779[m Remove post-stream chat title delay
+> [1;33m|[m [33mda2b82b[m Merge pull request #23 from Akbar675-prog/ui-polish-site-pages
+[1;34m|[m[1;33m\[m[1;33m|[m 
+[1;34m|[m > [33m39bc4cf[m Enable creative prompt mode for AI models
+> [1;35m|[m [33m34d50f8[m Merge pull request #22 from Akbar675-prog/ui-polish-site-pages
+[1;36m|[m[1;35m\[m[1;35m|[m 
+[1;36m|[m > [33m450aac3[m Add prompt mode switch for custom AI
+[1;36m|[m > [33m6e4ceae[m Improve Google crawl and SEO metadata
+> [31m|[m [33mcf5589e[m Merge pull request #21 from Akbar675-prog/ui-polish-site-pages
+[32m|[m[31m\[m[31m|[m 
+[32m|[m > [33m614da06[m Run AI response from chat thread route
+> [33m|[m [33m7fde7c1[m Merge pull request #20 from Akbar675-prog/ui-polish-site-pages
+[34m|[m[33m\[m[33m|[m 
+[34m|[m > [33m6ef6f1f[m Queue first AI message while model loads
+> [35m|[m [33m772a3fa[m Merge pull request #19 from Akbar675-prog/ui-polish-site-pages
+[36m|[m[35m\[m[35m|[m 
+[36m|[m > [33m70618d1[m Keep AI streaming alive before route change
+[36m|[m[36m/[m  
+>   [33m11b66ad[m Merge pull request #18 from Akbar675-prog/ui-polish-site-pages
+[1;32m|[m[1;33m\[m  
+[1;32m|[m > [33m42aa477[m Fix AI chat thread navigation race
+> [1;33m|[m [33ma1d1841[m Merge pull request #17 from Akbar675-prog/ui-polish-site-pages
+[1;34m|[m[1;33m\[m[1;33m|[m 
+[1;34m|[m > [33mcfd4bb2[m Add legal navigation and AI chat improvements
+> [1;35m|[m [33m1ee1d31[m Merge pull request #16 from Akbar675-prog/ui-polish-site-pages
+[1;36m|[m[1;35m\[m[1;35m|[m 
+[1;36m|[m > [33mccba3b3[m Show signed-in avatars in AI chat
+> [31m|[m [33mc4ae9e8[m Merge pull request #15 from Akbar675-prog/ui-polish-site-pages
+[32m|[m[31m\[m[31m|[m 
+[32m|[m > [33mb8853c2[m Add privacy policy and terms pages
+> [33m|[m [33m9445eb6[m Merge pull request #14 from Akbar675-prog/ui-polish-site-pages
+[34m|[m[33m\[m[33m|[m 
+[34m|[m > [33mf8a0c03[m Handle Google OAuth on app domain
+> [35m|[m [33m5120f9f[m feat: claude.com
+[36m|[m[35m\[m[35m|[m 
+[36m|[m > [33m3e6ba9e[m Redirect Google login through Supabase OAuth
+> [1;31m|[m [33m37a4bb6[m Merge pull request #12 from Akbar675-prog/ui-polish-site-pages
+[1;32m|[m[1;31m\[m[1;31m|[m 
+[1;32m|[m > [33mb5f1fcc[m Center green Google login loading indicator
+> [1;33m|[m [33m5b2197a[m feat: claude.com
+[1;34m|[m[1;33m\[m[1;33m|[m 
+[1;34m|[m > [33mf1c7103[m Add loading gateway for Google login
+> [1;35m|[m [33m428e725[m feat: claude.com
+[1;36m|[m[1;35m\[m[1;35m|[m 
+[1;36m|[m > [33m9c00403[m Simplify Google sign-in completion
+> [31m|[m [33m1d69580[m feat: claude.com
+[32m|[m[31m\[m[31m|[m 
+[32m|[m > [33m27022e5[m Add one-time Google login request flow
+> [33m|[m [33m721213f[m Merge pull request #8 from Akbar675-prog/ui-polish-site-pages
+[34m|[m[33m\[m[33m|[m 
+[34m|[m > [33m309384e[m Use Google Identity token for Supabase sign-in
+> [35m|[m [33m510e813[m Merge pull request #7 from Akbar675-prog/ui-polish-site-pages
+[36m|[m[35m\[m[35m|[m 
+[36m|[m > [33m32e11e7[m feat: add authenticated issue report tickets
+> [1;31m|[m [33m5ba1612[m feat: claude.com
+[1;32m|[m[1;31m\[m[1;31m|[m 
+[1;32m|[m > [33maf822b4[m Serve preview media without redirects
+> [1;33m|[m [33m2f395d7[m feat: claude.com
+[1;34m|[m[1;33m\[m[1;33m|[m 
+[1;34m|[m > [33m835a86a[m Use app banners in social previews
+> [1;35m|[m [33m797fb9e[m feat: claude.com
+[1;36m|[m[1;35m\[m[1;35m|[m 
+[1;36m|[m > [33m6e8cd74[m Add global download link announcement
+> [31m|[m [33m628e6db[m feat: claude.com
+[32m|[m[31m\[m[31m|[m 
+[32m|[m > [33mad754a2[m Preserve original app names and descriptions
+> [33m|[m [33m37c12bd[m Merge pull request #2 from Akbar675-prog/ui-polish-site-pages
+[34m|[m[33m\[m[33m|[m 
+[34m|[m > [33m29bca21[m Hide download URLs from app detail payload
+> [35m|[m [33m8711f31[m Merge pull request #1 from Akbar675-prog/ui-polish-site-pages
+[36m|[m[35m\[m[35m|[m 
+[36m|[m > [33m97ce115[m Polish catalog and app page UI
+[36m|[m[36m/[m  
+> [33m83f69b6[m feat: show only Supabase AI models in chat
+> [33m8ad3a33[m fix: restore auth import for AI model actions
+> [33m9bedeb9[m fix: some potential issues
+> [33md5139c6[m fix: hapus dependency user_id dari katalog AI global
+> [33m66fc39a[m fix: hapus dependency user_id dari katalog AI global
+> [33md818ee3[m Persist global AI catalog in Supabase
+> [33m997efe4[m Update ai.tsx
+> [33m959396f[m Update ai-models.ts
+> [33m8751f0e[m Refactor AiModel type and update related functions
+> [33m643f074[m Update client.ts
+> [33mb837464[m Update client.ts
+> [33me8ec21e[m Refactor AI chat component layout and styles
+> [33m2c4a381[m Refactor AI chat component layout and styles
+> [33mc508740[m Implement fallback models for AI chat requests
+> [33mdd76256[m Update api.ai-chat.ts
+> [33m3ad71c2[m Add realModel and modelType state management
+> [33mf01a781[m Refactor AI model form by removing realModel state
+> [33mcba5e36[m Update AI chat route with enhanced prompts and filters
+> [33m88e1384[m Refactor timeout settings and max_tokens for responses
+> [33m7b99d37[m Enhance timeouts and max tokens for AI responses
+> [33m91dec39[m Update image-gen.server.ts
+> [33m940efca[m Update image-gen.server.ts
+> [33mbaa6ef2[m Update image-gen.server.ts
+> [33m6e82313[m Update image-gen.server.ts
+> [33m17e4c2e[m Update image-gen.server.ts
+> [33m7c3154c[m Update image-gen.server.ts
+> [33mf0a1018[m Update image-gen.server.ts
+> [33m5a6424e[m Update image generation to use Cloudflare Workers AI
+> [33m8949a90[m Update AI vision model to 'nvidia/nemotron-3.5-super-vl'
+> [33m1fbfb47[m Update api.ai-title.ts
+> [33m242b7d6[m Change AI model from 'stealth/space-bunny-alpha' to 'nvidia/nemotron-3.5-super-vl:free'
+> [33m2879187[m Update api.ai-chat.ts
+>   [33m760260b[m Added changelog New label
+[1;32m|[m[1;33m\[m  
+[1;32m|[m > [33mdae89f4[m Changes
+[1;32m|[m > [33m4116f51[m Changes
+[1;32m|[m[1;32m/[m  
+>   [33m3d425d6[m Added changelog versioning
+[1;34m|[m[1;35m\[m  
+[1;34m|[m > [33mb4fa987[m Changes
+[1;34m|[m[1;34m/[m  
+>   [33m2e23ffd[m Tampilkan changelog di bawah
+[1;36m|[m[31m\[m  
+[1;36m|[m > [33m2f39e9c[m Changes
+[1;36m|[m > [33me592c16[m Changes
+[1;36m|[m > [33m136a735[m Changes
+[1;36m|[m > [33m153e735[m Work in progress
+[1;36m|[m[1;36m/[m  
+>   [33m0197b79[m Setup changelog Supabase
+[32m|[m[33m\[m  
+[32m|[m > [33m6aa4642[m Changes
+[32m|[m > [33m0e1cbe6[m Changes
+[32m|[m[32m/[m  
+>   [33m59d037b[m Perbaiki crop foto profil
+[34m|[m[35m\[m  
+[34m|[m > [33m77cfb5e[m Changes
+[34m|[m > [33m7e04310[m Changes
+[34m|[m[34m/[m  
+>   [33m92df26c[m Haruskan banner putih ke bawah
+[36m|[m[1;31m\[m  
+[36m|[m > [33mf5f93fe[m Changes
+[36m|[m > [33me1afd0b[m Changes
+[36m|[m > [33mcbfe0eb[m Changes
+[36m|[m[36m/[m  
+>   [33mdf397ff[m Menambahkan banner profil
+[1;32m|[m[1;33m\[m  
+[1;32m|[m > [33mb85791e[m Changes
+[1;32m|[m > [33mba67c72[m Changes
+[1;32m|[m > [33m148388c[m Changes
+[1;32m|[m > [33m2f8e64b[m Changes
+[1;32m|[m > [33m22497b6[m Changes
+[1;32m|[m > [33mc200532[m Changes
+[1;32m|[m > [33m8e19491[m Changes
+[1;32m|[m > [33m82139a6[m Changes
+[1;32m|[m > [33mea32229[m Changes
+[1;32m|[m > [33m82176a7[m Changes
+[1;32m|[m > [33mcd34959[m Changes
+[1;32m|[m[1;32m/[m  
+>   [33ma5ebf26[m Sama palet warna loading
+[1;34m|[m[1;35m\[m  
+[1;34m|[m > [33m96baa84[m Changes
+[1;34m|[m[1;34m/[m  
+>   [33meb8ed28[m Ganti spinner ke Material 3
+[1;36m|[m[31m\[m  
+[1;36m|[m > [33m560213c[m Changes
+[1;36m|[m > [33madd0d38[m Changes
+[1;36m|[m > [33mdff4b80[m Changes
+[1;36m|[m[1;36m/[m  
+>   [33m412d749[m Ganti loading jadi M3
+[32m|[m[33m\[m  
+[32m|[m > [33mfe59a69[m Changes
+[32m|[m > [33me62ec04[m Changes
+[32m|[m > [33m5c8cf74[m Changes
+[32m|[m > [33m9048fce[m Changes
+[32m|[m[32m/[m  
+>   [33m8e422fd[m Mengganti ke M3 loading
+[34m|[m[35m\[m  
+[34m|[m > [33m08ef22d[m Changes
+[34m|[m > [33mecfc3ad[m Changes
+[34m|[m[34m/[m  
+>   [33m889e7f4[m Added AI endpoint & fixed key
+[36m|[m[1;31m\[m  
+[36m|[m > [33me08711e[m Changes
+[36m|[m > [33m9300520[m Changes
+[36m|[m > [33m16bff8f[m Changes
+[36m|[m > [33m2435797[m Changes
+[36m|[m > [33m29a1c93[m Changes
+[36m|[m > [33me96f08c[m Changes
+[36m|[m > [33m279906b[m Changes
+[36m|[m > [33m91ebf07[m Changes
+[36m|[m > [33mca07f4d[m Changes
+[36m|[m[36m/[m  
+> [33m1344f8d[m Change model in API request to space-bunny-alpha
+> [33md44a61c[m Change AI model from deepseek to stealth
+> [33m0436480[m Update api.ai-title.ts
+> [33m0c2aabe[m Update api.ai-vision.ts
+> [33mc2aaa75[m Update api.ai-chat.ts
+>   [33m17122a3[m Tentukan model AI & kemampuan
+[1;32m|[m[1;33m\[m  
+[1;32m|[m > [33m149f3bd[m Changes
+[1;32m|[m > [33m2b2e48a[m Changes
+[1;32m|[m > [33m650049e[m Work in progress
+[1;32m|[m[1;32m/[m  
+>   [33mb3c327b[m Ditambahkan kemampuan AGI
+[1;34m|[m[1;35m\[m  
+[1;34m|[m > [33mfe92e79[m Changes
+[1;34m|[m > [33m4d35944[m Changes
+[1;34m|[m > [33m71aa954[m Changes
+[1;34m|[m > [33mc5fb773[m Changes
+[1;34m|[m > [33mdf7e16e[m Changes
+[1;34m|[m > [33m0c1e97c[m Changes
+[1;34m|[m > [33ma4f7c6c[m Changes
+[1;34m|[m > [33mb17a8e2[m Changes
+[1;34m|[m[1;34m/[m  
+> [33m22cd95c[m Change chat model from deepseek to nex-agi
+>   [33m929bfda[m Fixed model name aliasing
+[1;36m|[m[31m\[m  
+[1;36m|[m > [33m70006db[m Changes
+[1;36m|[m > [33md0b14de[m Changes
+[1;36m|[m > [33m7facaa2[m Changes
+[1;36m|[m > [33m020a6f0[m Changes
+[1;36m|[m[1;36m/[m  
+>   [33m1c55e70[m Pakai bawaan model real
+[32m|[m[33m\[m  
+[32m|[m > [33m11dd736[m Changes
+[32m|[m > [33m18464af[m Changes
+[32m|[m > [33m5451671[m Changes
+[32m|[m > [33mb2739f6[m Changes
+[32m|[m > [33m6251767[m Changes
+[32m|[m[32m/[m  
+>   [33mb57bfc9[m Added form UI to `/ai
+[34m|[m[35m\[m  
+[34m|[m > [33m389264c[m Changes
+[34m|[m > [33m86895c6[m Changes
+[34m|[m > [33mca6ca66[m Changes
+[34m|[m > [33m13887c6[m Changes
+[34m|[m > [33m4f290f1[m Changes
+[34m|[m[34m/[m  
+>   [33med73c28[m Ditambahkan CRUD & prompt clean
+[36m|[m[1;31m\[m  
+[36m|[m > [33m90c8e5f[m Changes
+[36m|[m > [33mf3153ca[m Changes
+[36m|[m > [33m648e339[m Changes
+[36m|[m[36m/[m  
+>   [33mca2c37b[m Hapus tombol "+ Tambah AI
+[1;32m|[m[1;33m\[m  
+[1;32m|[m > [33m21bc00a[m Changes
+[1;32m|[m[1;32m/[m  
+>   [33m49e42ba[m Tambahkan model & addai AI
+[1;34m|[m[1;35m\[m  
+[1;34m|[m > [33md06f84a[m Changes
+[1;34m|[m > [33m3f37469[m Changes
+[1;34m|[m > [33m2f9be1a[m Changes
+[1;34m|[m > [33m5d50424[m Changes
+[1;34m|[m > [33mcd556de[m Changes
+[1;34m|[m > [33m61faad8[m Changes
+[1;34m|[m > [33mb2c5cea[m Changes
+[1;34m|[m > [33m09783d9[m Changes
+[1;34m|[m > [33mfcc2f59[m Changes
+[1;34m|[m > [33m8ba4798[m Changes
+[1;34m|[m > [33m303346e[m Changes
+[1;34m|[m > [33m8d204dd[m Changes
+[1;34m|[m > [33m9a1438a[m Changes
+[1;34m|[m > [33m63d1f60[m Changes
+[1;34m|[m > [33m77a17e4[m Changes
+[1;34m|[m > [33mb89049f[m Changes
+[1;34m|[m[1;34m/[m  
+>   [33m56af1db[m Tampilin model & tambahin addai
+[1;36m|[m[31m\[m  
+[1;36m|[m > [33m9900cc1[m Changes
+[1;36m|[m[1;36m/[m  
+>   [33mfe870fc[m Perbaiki logika fetch AI
+[32m|[m[33m\[m  
+[32m|[m > [33m496ce5a[m Changes
+[32m|[m > [33m64e5ca5[m Changes
+[32m|[m > [33m41f7070[m Changes
+[32m|[m > [33m4bc48db[m Changes
+[32m|[m > [33m42ebaf2[m Changes
+[32m|[m > [33m228c1c0[m Changes
+[32m|[m > [33mf460232[m Changes
+[32m|[m > [33mbb3504c[m Changes
+[32m|[m > [33mce3e180[m Changes
+[32m|[m[32m/[m  
+>   [33m178f1ca[m Added account_data endpoint
+[34m|[m[35m\[m  
+[34m|[m > [33mdbf6f09[m Changes
+[34m|[m > [33md7af0c8[m Changes
+[34m|[m[34m/[m  
+>   [33m3c8ad38[m Perbaiki halaman beranda dan detail
+[36m|[m[1;31m\[m  
+[36m|[m > [33m57a04b3[m Changes
+[36m|[m > [33mc3f1659[m Changes
+[36m|[m > [33mf81e231[m Changes
+[36m|[m > [33mecad22c[m Changes
+[36m|[m > [33m50c394a[m Changes
+[36m|[m > [33m58d1b1f[m Changes
+[36m|[m > [33m19b67e8[m Changes
+[36m|[m[36m/[m  
+>   [33m046aebe[m Fixed bearer token fallback
+[1;32m|[m[1;33m\[m  
+[1;32m|[m > [33meecc0e1[m Changes
+[1;32m|[m > [33m97d45c8[m Changes
+[1;32m|[m[1;32m/[m  
+>   [33m55bce8e[m Tersedia endpoint AI chat
+[1;34m|[m[1;35m\[m  
+[1;34m|[m > [33m5f502ab[m Changes
+[1;34m|[m > [33mabc0046[m Changes
+[1;34m|[m[1;34m/[m  
+>   [33ma4c185b[m Added Package_name to json
+[1;36m|[m[31m\[m  
+[1;36m|[m > [33mb095ed5[m Changes
+[1;36m|[m > [33md0bfafd[m Changes
+[1;36m|[m > [33m4f3a2e7[m Changes
+[1;36m|[m[1;36m/[m  
+>   [33m3a5af9d[m Fixed admin panel credit types
+[32m|[m[33m\[m  
+[32m|[m > [33m8ec9a14[m Work in progress
+[32m|[m[32m/[m  
+>   [33m6262c38[m Pindahkan repo jadi proyek
+[34m|[m[35m\[m  
+[34m|[m > [33mf5e7c9c[m Changes
+[34m|[m > [33m0fa8d5c[m Changes
+[34m|[m > [33ma890476[m Changes
+[34m|[m > [33m4c186ac[m Changes
+[34m|[m > [33m9f7dd65[m Changes
+[34m|[m > [33m6e81a6e[m Changes
+[34m|[m[34m/[m  
+> [33m6b4c0f2[m template: tanstack_start_ts_current-fc5e412f7061

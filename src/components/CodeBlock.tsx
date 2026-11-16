@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { motion } from "motion/react";
 
 /* ---------- Ikon (dikonversi dari vector drawable) ---------- */
 
@@ -85,7 +84,7 @@ function tokenize(code: string): Tok[] {
 
 /* ---------- Komponen utama ---------- */
 
-export function CodeBlock({ code, lang, reveal = false }: { code: string; lang?: string; reveal?: boolean }) {
+export function CodeBlock({ code, lang }: { code: string; lang?: string }) {
   const [copied, setCopied] = useState(false);
   const [mode, setMode] = useState<"code" | "preview">("code");
   const language = (lang || "").toLowerCase();
@@ -179,21 +178,7 @@ export function CodeBlock({ code, lang, reveal = false }: { code: string; lang?:
             <code className="font-mono">
               {tokens.map((t, i) => (
                 <span key={i} className={t.c}>
-                  {reveal
-                    ? t.t.split(/(\s+)/).map((part, partIndex) =>
-                        /^\s+$/.test(part) ? part : (
-                          <motion.span
-                            key={`${i}-${partIndex}`}
-                            className="inline-block"
-                            initial={{ opacity: 0, filter: "blur(3px)" }}
-                            animate={{ opacity: 1, filter: "blur(0px)" }}
-                            transition={{ duration: 0.24, ease: "easeOut" }}
-                          >
-                            {part}
-                          </motion.span>
-                        ),
-                      )
-                    : t.t}
+                  {t.t}
                 </span>
               ))}
             </code>

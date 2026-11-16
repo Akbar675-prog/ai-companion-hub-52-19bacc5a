@@ -29,6 +29,7 @@ import { Route as RequestRouteImport } from './routes/request'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as TempMailDotphpRouteImport } from './routes/temp-mail[.]php'
 import { Route as TermOfServicesRouteImport } from './routes/term-of-services'
 import { Route as TrainingaiRouteImport } from './routes/trainingai'
 import { Route as VerifiedRouteImport } from './routes/verified'
@@ -47,10 +48,15 @@ import { Route as ApiAiVisionRouteImport } from './routes/api.ai-vision'
 import { Route as AppsIdRouteImport } from './routes/apps.$id'
 import { Route as CheckReportRouteImport } from './routes/check.report'
 import { Route as DataGetVerifiedRouteImport } from './routes/data.get-verified'
+import { Route as MellowmodsWinkRouteImport } from './routes/mellowmods.wink'
 import { Route as RequestDataRouteImport } from './routes/request_.data'
 import { Route as StatusSetRouteImport } from './routes/status_.set'
 import { Route as VoteIdRouteImport } from './routes/vote.$id'
 import { Route as AiCThreadIdRouteImport } from './routes/ai_.c.$threadId'
+import { Route as ApiTempMailCreateRouteImport } from './routes/api.temp-mail.create'
+import { Route as ApiTempMailInboxRouteImport } from './routes/api.temp-mail.inbox'
+import { Route as ApiTempMailSendRouteImport } from './routes/api.temp-mail.send'
+import { Route as ApiTempMailWebhookRouteImport } from './routes/api.temp-mail.webhook'
 import { Route as ApiV1LoginRouteImport } from './routes/api.v1.login'
 import { Route as AppsGypsB64RouteImport } from './routes/apps.gyps.$b64'
 import { Route as AppsIndexApplistDotjsonRouteImport } from './routes/apps.index.applist[.]json'
@@ -165,6 +171,11 @@ const StatusRoute = StatusRouteImport.update({
   path: '/status',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TempMailDotphpRoute = TempMailDotphpRouteImport.update({
+  id: '/temp-mail.php',
+  path: '/temp-mail.php',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermOfServicesRoute = TermOfServicesRouteImport.update({
   id: '/term-of-services',
   path: '/term-of-services',
@@ -255,6 +266,11 @@ const DataGetVerifiedRoute = DataGetVerifiedRouteImport.update({
   path: '/data/get-verified',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MellowmodsWinkRoute = MellowmodsWinkRouteImport.update({
+  id: '/mellowmods/wink',
+  path: '/mellowmods/wink',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RequestDataRoute = RequestDataRouteImport.update({
   id: '/request_/data',
   path: '/request/data',
@@ -273,6 +289,26 @@ const VoteIdRoute = VoteIdRouteImport.update({
 const AiCThreadIdRoute = AiCThreadIdRouteImport.update({
   id: '/ai_/c/$threadId',
   path: '/ai/c/$threadId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTempMailCreateRoute = ApiTempMailCreateRouteImport.update({
+  id: '/api/temp-mail/create',
+  path: '/api/temp-mail/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTempMailInboxRoute = ApiTempMailInboxRouteImport.update({
+  id: '/api/temp-mail/inbox',
+  path: '/api/temp-mail/inbox',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTempMailSendRoute = ApiTempMailSendRouteImport.update({
+  id: '/api/temp-mail/send',
+  path: '/api/temp-mail/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTempMailWebhookRoute = ApiTempMailWebhookRouteImport.update({
+  id: '/api/temp-mail/webhook',
+  path: '/api/temp-mail/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiV1LoginRoute = ApiV1LoginRouteImport.update({
@@ -363,6 +399,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
+  '/temp-mail.php': typeof TempMailDotphpRoute
   '/term-of-services': typeof TermOfServicesRoute
   '/trainingai': typeof TrainingaiRoute
   '/verified': typeof VerifiedRoute
@@ -381,10 +418,15 @@ export interface FileRoutesByFullPath {
   '/apps/$id': typeof AppsIdRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
+  '/mellowmods/wink': typeof MellowmodsWinkRoute
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
   '/ai/c/$threadId': typeof AiCThreadIdRoute
+  '/api/temp-mail/create': typeof ApiTempMailCreateRoute
+  '/api/temp-mail/inbox': typeof ApiTempMailInboxRoute
+  '/api/temp-mail/send': typeof ApiTempMailSendRoute
+  '/api/temp-mail/webhook': typeof ApiTempMailWebhookRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
@@ -420,6 +462,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
+  '/temp-mail.php': typeof TempMailDotphpRoute
   '/term-of-services': typeof TermOfServicesRoute
   '/trainingai': typeof TrainingaiRoute
   '/verified': typeof VerifiedRoute
@@ -438,10 +481,15 @@ export interface FileRoutesByTo {
   '/apps/$id': typeof AppsIdRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
+  '/mellowmods/wink': typeof MellowmodsWinkRoute
   '/request/data': typeof RequestDataRoute
   '/status/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
   '/ai/c/$threadId': typeof AiCThreadIdRoute
+  '/api/temp-mail/create': typeof ApiTempMailCreateRoute
+  '/api/temp-mail/inbox': typeof ApiTempMailInboxRoute
+  '/api/temp-mail/send': typeof ApiTempMailSendRoute
+  '/api/temp-mail/webhook': typeof ApiTempMailWebhookRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
@@ -478,6 +526,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
+  '/temp-mail.php': typeof TempMailDotphpRoute
   '/term-of-services': typeof TermOfServicesRoute
   '/trainingai': typeof TrainingaiRoute
   '/verified': typeof VerifiedRoute
@@ -496,10 +545,15 @@ export interface FileRoutesById {
   '/apps/$id': typeof AppsIdRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
+  '/mellowmods/wink': typeof MellowmodsWinkRoute
   '/request_/data': typeof RequestDataRoute
   '/status_/set': typeof StatusSetRoute
   '/vote/$id': typeof VoteIdRoute
   '/ai_/c/$threadId': typeof AiCThreadIdRoute
+  '/api/temp-mail/create': typeof ApiTempMailCreateRoute
+  '/api/temp-mail/inbox': typeof ApiTempMailInboxRoute
+  '/api/temp-mail/send': typeof ApiTempMailSendRoute
+  '/api/temp-mail/webhook': typeof ApiTempMailWebhookRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
@@ -537,6 +591,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sitemap.xml'
     | '/status'
+    | '/temp-mail.php'
     | '/term-of-services'
     | '/trainingai'
     | '/verified'
@@ -555,10 +610,15 @@ export interface FileRouteTypes {
     | '/apps/$id'
     | '/check/report'
     | '/data/get-verified'
+    | '/mellowmods/wink'
     | '/request/data'
     | '/status/set'
     | '/vote/$id'
     | '/ai/c/$threadId'
+    | '/api/temp-mail/create'
+    | '/api/temp-mail/inbox'
+    | '/api/temp-mail/send'
+    | '/api/temp-mail/webhook'
     | '/api/v1/login'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
@@ -594,6 +654,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sitemap.xml'
     | '/status'
+    | '/temp-mail.php'
     | '/term-of-services'
     | '/trainingai'
     | '/verified'
@@ -612,10 +673,15 @@ export interface FileRouteTypes {
     | '/apps/$id'
     | '/check/report'
     | '/data/get-verified'
+    | '/mellowmods/wink'
     | '/request/data'
     | '/status/set'
     | '/vote/$id'
     | '/ai/c/$threadId'
+    | '/api/temp-mail/create'
+    | '/api/temp-mail/inbox'
+    | '/api/temp-mail/send'
+    | '/api/temp-mail/webhook'
     | '/api/v1/login'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
@@ -651,6 +717,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/sitemap.xml'
     | '/status'
+    | '/temp-mail.php'
     | '/term-of-services'
     | '/trainingai'
     | '/verified'
@@ -669,10 +736,15 @@ export interface FileRouteTypes {
     | '/apps/$id'
     | '/check/report'
     | '/data/get-verified'
+    | '/mellowmods/wink'
     | '/request_/data'
     | '/status_/set'
     | '/vote/$id'
     | '/ai_/c/$threadId'
+    | '/api/temp-mail/create'
+    | '/api/temp-mail/inbox'
+    | '/api/temp-mail/send'
+    | '/api/temp-mail/webhook'
     | '/api/v1/login'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
@@ -709,6 +781,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StatusRoute: typeof StatusRoute
+  TempMailDotphpRoute: typeof TempMailDotphpRoute
   TermOfServicesRoute: typeof TermOfServicesRoute
   TrainingaiRoute: typeof TrainingaiRoute
   VerifiedRoute: typeof VerifiedRoute
@@ -727,10 +800,15 @@ export interface RootRouteChildren {
   AppsIdRoute: typeof AppsIdRoute
   CheckReportRoute: typeof CheckReportRoute
   DataGetVerifiedRoute: typeof DataGetVerifiedRoute
+  MellowmodsWinkRoute: typeof MellowmodsWinkRoute
   RequestDataRoute: typeof RequestDataRoute
   StatusSetRoute: typeof StatusSetRoute
   VoteIdRoute: typeof VoteIdRoute
   AiCThreadIdRoute: typeof AiCThreadIdRoute
+  ApiTempMailCreateRoute: typeof ApiTempMailCreateRoute
+  ApiTempMailInboxRoute: typeof ApiTempMailInboxRoute
+  ApiTempMailSendRoute: typeof ApiTempMailSendRoute
+  ApiTempMailWebhookRoute: typeof ApiTempMailWebhookRoute
   ApiV1LoginRoute: typeof ApiV1LoginRouteWithChildren
   AppsGypsB64Route: typeof AppsGypsB64Route
   AppsPreviewIdRoute: typeof AppsPreviewIdRoute
@@ -887,6 +965,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/temp-mail.php': {
+      id: '/temp-mail.php'
+      path: '/temp-mail.php'
+      fullPath: '/temp-mail.php'
+      preLoaderRoute: typeof TempMailDotphpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/term-of-services': {
       id: '/term-of-services'
       path: '/term-of-services'
@@ -1013,6 +1098,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DataGetVerifiedRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mellowmods/wink': {
+      id: '/mellowmods/wink'
+      path: '/mellowmods/wink'
+      fullPath: '/mellowmods/wink'
+      preLoaderRoute: typeof MellowmodsWinkRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/request_/data': {
       id: '/request_/data'
       path: '/request/data'
@@ -1039,6 +1131,34 @@ declare module '@tanstack/react-router' {
       path: '/ai/c/$threadId'
       fullPath: '/ai/c/$threadId'
       preLoaderRoute: typeof AiCThreadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/temp-mail/create': {
+      id: '/api/temp-mail/create'
+      path: '/api/temp-mail/create'
+      fullPath: '/api/temp-mail/create'
+      preLoaderRoute: typeof ApiTempMailCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/temp-mail/inbox': {
+      id: '/api/temp-mail/inbox'
+      path: '/api/temp-mail/inbox'
+      fullPath: '/api/temp-mail/inbox'
+      preLoaderRoute: typeof ApiTempMailInboxRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/temp-mail/send': {
+      id: '/api/temp-mail/send'
+      path: '/api/temp-mail/send'
+      fullPath: '/api/temp-mail/send'
+      preLoaderRoute: typeof ApiTempMailSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/temp-mail/webhook': {
+      id: '/api/temp-mail/webhook'
+      path: '/api/temp-mail/webhook'
+      fullPath: '/api/temp-mail/webhook'
+      preLoaderRoute: typeof ApiTempMailWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/v1/login': {
@@ -1168,6 +1288,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StatusRoute: StatusRoute,
+  TempMailDotphpRoute: TempMailDotphpRoute,
   TermOfServicesRoute: TermOfServicesRoute,
   TrainingaiRoute: TrainingaiRoute,
   VerifiedRoute: VerifiedRoute,
@@ -1186,10 +1307,15 @@ const rootRouteChildren: RootRouteChildren = {
   AppsIdRoute: AppsIdRoute,
   CheckReportRoute: CheckReportRoute,
   DataGetVerifiedRoute: DataGetVerifiedRoute,
+  MellowmodsWinkRoute: MellowmodsWinkRoute,
   RequestDataRoute: RequestDataRoute,
   StatusSetRoute: StatusSetRoute,
   VoteIdRoute: VoteIdRoute,
   AiCThreadIdRoute: AiCThreadIdRoute,
+  ApiTempMailCreateRoute: ApiTempMailCreateRoute,
+  ApiTempMailInboxRoute: ApiTempMailInboxRoute,
+  ApiTempMailSendRoute: ApiTempMailSendRoute,
+  ApiTempMailWebhookRoute: ApiTempMailWebhookRoute,
   ApiV1LoginRoute: ApiV1LoginRouteWithChildren,
   AppsGypsB64Route: AppsGypsB64Route,
   AppsPreviewIdRoute: AppsPreviewIdRoute,

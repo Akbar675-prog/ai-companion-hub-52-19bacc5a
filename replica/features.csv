@@ -1,0 +1,41 @@
+feature,area,priority,original,clone,notes
+Email signup and sign-in,onboarding,must,yes,no,Original authentication and account recovery; no Duolingo branding
+Set daily learning goal,onboarding,must,yes,no,Allow learner to defer or change goal
+Choose beginner start or placement,onboarding,must,yes,no,Placement content must be original and low-stakes
+Responsive course path,learning path,must,yes,no,Original Mandarin course structure; web-first responsive UI
+Short guided lesson with immediate feedback,lesson loop,must,yes,no,One prompt at a time with correct/incorrect/retry states
+Simplified character recognition exercises,Chinese curriculum,must,yes,no,Character-to-meaning and meaning/audio-to-character
+Pinyin and tone support,Chinese curriculum,must,yes,no,Correct tone-mark typography and learner-controlled support
+Mandarin listening with replay controls,Chinese curriculum,must,yes,no,Use original or licensed recordings; playback speed/replay
+Lesson completion and persisted progress,progress,must,yes,no,Idempotent completion and resume behavior
+XP or equivalent lesson reward,gamification,must,yes,no,Use original terminology and reward design
+Daily streak tracking,gamification,must,yes,no,Timezone-aware day boundary and privacy-respecting reminders
+Mistake review,practice,must,yes,no,Queue errors with corrective feedback
+Vocabulary flashcards,practice,must,yes,no,Due-state review; optional pinyin reveal
+Character component and stroke-order practice,Chinese curriculum,should,yes,no,Original stroke data/animation; separate recognition from writing mastery
+Tone contrast drills,Chinese curriculum,should,yes,no,Listening discrimination with cautious scoring
+Optional speech practice,Chinese curriculum,should,yes,no,Mic permission and non-speech alternative; never overstate accuracy
+Unit checkpoint review,learning path,should,yes,no,Mixed retrieval practice before unlocking next unit
+Practice hub,practice,should,yes,no,Entry point for mistakes, vocabulary, characters, listening and speaking
+Daily quests,engagement,should,yes,no,Original goals/rewards; no copied Duolingo quest text
+Progress dashboard,progress,should,yes,no,Study history and mastery indicators; clear empty state
+Email or browser study reminders,notifications,should,yes,no,Opt-in only and timezone aware; handle denied browser permission
+Original contextual reading stories,content,should,yes,no,Create original stories and comprehension questions
+Leaderboard opt-in,social,could,yes,no,Requires privacy controls and enough users; not needed for core learning
+Friends / shared learning goals,social,could,yes,no,Consent-based social connection; avoid importing an existing social graph
+Achievement collection,gamification,could,yes,no,Original badges and visual assets
+Weekly challenge,gamification,could,yes,no,Original challenge rules and rewards
+Subscription tier and checkout,payments,could,yes,no,Independent pricing, processor, and terms; no copied entitlements
+AI conversation or roleplay,AI practice,could,yes,no,Requires separate safety/quality evaluation and cost model
+Speech recognition scoring,AI practice,could,yes,no,Only after validation across accents/devices; uncertainty feedback
+Offline lesson caching,platform,could,yes,no,Future web/PWA enhancement
+Accessibility preferences,settings,could,yes,no,Keyboard operation, reduced motion, audio alternatives, text sizing
+Export or delete learning data,privacy,could,yes,no,Clear data controls and retention policy
+Native iOS and Android apps,platform,could,yes,no,Outside web-first first release
+Duolingo brand,logo,skip,yes,skip,Trademark and branding are not part of the build
+Duolingo owl, mascot,skip,yes,skip,Create no lookalike mascot; use original identity if needed
+Duolingo proprietary course content,content,skip,yes,skip,Do not copy prompts, translations, sequence, or lesson data
+Duolingo stories and audio,content,skip,yes,skip,Use original content or properly licensed material
+Duolingo users,network,skip,yes,skip,No access to or reproduction of user accounts, social graph, or data
+Duolingo private APIs and source code,technology,skip,yes,skip,No reverse engineering, scraping, binaries, or undocumented endpoints
+Duolingo paid plans and exact feature gates,commercial,skip,yes,skip,Set independent tiers, prices, and terms
