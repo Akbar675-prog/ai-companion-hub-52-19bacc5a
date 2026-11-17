@@ -21,6 +21,7 @@ import {
   loadSelectedModelId,
   modelById,
   saveSelectedModelId,
+  OFFICIAL_GPT6,                 // ← TAMBAHAN
   type AiModel,
 } from "@/lib/ai-models";
 
@@ -131,7 +132,6 @@ function mergeThreads(...lists: ChatThread[][]): ChatThread[] {
   return [...byId.values()].sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
-/** Katalog aplikasi dibaca dari endpoint publik /apps/index/applist.json. */
 async function fetchAppCatalog(signal?: AbortSignal): Promise<CatalogApp[]> {
   if (catalogCache && Date.now() - catalogCache.at < 5 * 60_000) return catalogCache.list;
   try {
@@ -169,7 +169,6 @@ async function fetchQuranContext(query: string, signal: AbortSignal): Promise<Qu
     return null;
   }
 }
-
 
 export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string } = {}) {
   const navigate = useNavigate();
@@ -241,26 +240,33 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     };
   }, [requestedThreadId, userId]);
 
-  // Hanya tampilkan model yang dimuat dari katalog Supabase.
+  // ================= MODIFIED: selalu sertakan GPT-6 =================
   useEffect(() => {
     let alive = true;
     setModels([]);
     setModelId("");
     setModelsLoading(true);
+
+    const official = OFFICIAL_GPT6 as unknown as AiModel;
+
     void listAiModelsFn()
       .then((storedModels) => {
         if (!alive) return;
-        const list = allModels(storedModels).filter((model) => model.custom);
+        const custom = allModels(storedModels).filter((model) => model.custom);
+        const list = [official, ...custom];
         const saved = loadSelectedModelId();
         setModels(list);
-        setModelId(list.some((model) => model.id === saved) ? saved : (list[0]?.id ?? ""));
+        setModelId(list.some((model) => model.id === saved) ? saved : official.id);
         setModelsLoading(false);
       })
       .catch(() => {
         if (!alive) return;
-        setModels([]);
+        // Walau katalog Supabase gagal, GPT-6 tetap bisa dipakai.
+        setModels([official]);
+        setModelId(official.id);
         setModelsLoading(false);
       });
+
     return () => {
       alive = false;
     };
@@ -271,7 +277,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     const pending = pendingSendRef.current;
     pendingSendRef.current = null;
     void send(pending);
-  // `send` is intentionally resolved from the latest render after models finish loading.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelsLoading]);
 
@@ -292,7 +297,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     }
   }, [imaging, loading, modelsLoading, requestedThreadId, threads, userId]);
 
-  // Profil GetrixAI + kredit chat (khusus pengguna yang login).
   useEffect(() => {
     if (!userId) {
       setAiProfile(null);
@@ -311,7 +315,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     };
   }, [userId]);
 
-
   const messages = useMemo<ChatMessage[]>(
     () => threads.find((t) => t.id === activeId)?.messages ?? [],
     [threads, activeId],
@@ -321,8 +324,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     (next: ChatThread[]) => {
       const limited = next.slice(0, 60);
       setThreads(limited);
-      // Cache lokal menjaga pesan baru tetap tampil saat route thread melakukan mount
-      // sebelum penyimpanan server selesai.
       saveThreads(userId ?? null, limited);
       if (userId) {
         void saveAiChatHistoryFn({ data: { threads: limited } }).catch(() => {});
@@ -331,8 +332,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     [userId],
   );
 
-  // Auto-scroll hanya kalau pengguna memang sedang berada di dasar percakapan,
-  // dan tidak dipicu setiap karakter yang diketik AI.
   const atBottomRef = useRef(true);
   useEffect(() => {
     const onScroll = () => {
@@ -364,7 +363,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }
 
-
   function startNewChat() {
     setActiveId(null);
     if (userId) void navigate({ to: "/ai" });
@@ -379,6 +377,193 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     abortRef.current?.abort();
   }
 
+  // ================= NEW: pihak ketiga GPT-6 (streaming) =================
+  async function runThirdParty(
+    history: ChatMessage[],
+    _attached: string | null,
+    threadIdIn: string | null,
+    baseIn: ChatThread[],
+  ) {
+    const lastUser = history[history.length - 1]?.content ?? "";
+    let threadId = threadIdIn;
+    let base = baseIn;
+    const createdThread = !threadId;
+
+    if (!threadId) {
+      threadId = newThreadId();
+      base = [
+        { id: threadId, title: lastUser.slice(0, 40), updatedAt: Date.now(), messages: history },
+        ...baseIn,
+      ];
+      setActiveId(threadId);
+    } else {
+      base = baseIn.map((t) =>
+        t.id === threadId ? { ...t, updatedAt: Date.now(), messages: history } : t,
+      );
+    }
+    runningThreadRef.current = threadId;
+    persist(base);
+
+    setInput("");
+    setImage(null);
+    setError(null);
+    setLoading(true);
+    setDraft({ content: "", reasoning: "" });
+    setStatus("Meminta jawaban dari GPT-6...");
+
+    const started = Date.now();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    let acc = "";
+    let painting = true;
+    let revealed = 0;
+    let rafId: number | undefined;
+
+    const paint = () => {
+      const target = acc.length;
+      if (revealed < target) {
+        revealed = Math.min(
+          target,
+          revealed + Math.max(24, Math.ceil((target - revealed) / 2)),
+        );
+      }
+      setDraft({ content: acc.slice(0, revealed), reasoning: "" });
+      if (painting) rafId = requestAnimationFrame(paint);
+    };
+    const stopPaint = () => {
+      painting = false;
+      if (rafId !== undefined) cancelAnimationFrame(rafId);
+      revealed = acc.length;
+      setDraft({ content: acc, reasoning: "" });
+    };
+    rafId = requestAnimationFrame(paint);
+
+    try {
+      const res = await fetch("/api/openai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // systemPrompt sengaja TIDAK dikirim → pakai DEFAULT_SYSTEM_PROMPT (netral)
+        body: JSON.stringify({ message: lastUser, stream: true }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok || !res.body) {
+        const errBody = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(errBody?.error || `HTTP ${res.status}`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let finished = false;
+
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const parts = buffer.split("\n\n");
+          buffer = parts.pop() ?? "";
+
+          for (const part of parts) {
+            const line = part.trim();
+            if (!line.startsWith("data:")) continue;
+
+            let evt: {
+              type?: string;
+              v?: string;
+              complete?: boolean;
+              error?: string;
+            };
+            try {
+              evt = JSON.parse(line.slice(5).trim());
+            } catch {
+              continue;
+            }
+
+            if (evt.type === "done") {
+              finished = evt.complete === true;
+            } else if (evt.type === "error") {
+              throw new Error(evt.error || "Stream error");
+            } else if (evt.type === "text" && evt.v) {
+              acc += evt.v;
+            }
+          }
+        }
+      } finally {
+        await reader.cancel().catch(() => {});
+      }
+
+      if (!finished && !acc.trim()) {
+        throw new Error("Stream berakhir tanpa jawaban");
+      }
+
+      stopPaint();
+
+      const reply: ChatMessage = {
+        role: "assistant",
+        content: acc,
+        thoughtSeconds: Math.max(1, Math.round((Date.now() - started) / 1000)),
+      };
+
+      const withReply = [...history, reply];
+      const completed = base.map((t) =>
+        t.id === threadId
+          ? {
+              ...t,
+              title: t.title || lastUser.slice(0, 40) || "Chat baru",
+              updatedAt: Date.now(),
+              messages: withReply,
+            }
+          : t,
+      );
+      persist(completed);
+
+      if (createdThread && userId) {
+        void navigate({ to: "/ai/c/$threadId", params: { threadId } });
+      }
+    } catch (e) {
+      stopPaint();
+
+      // Simpan partial — kalau AI sudah sempat ngetik, jangan dibuang.
+      if (acc.trim()) {
+        const withReply = [
+          ...history,
+          {
+            role: "assistant" as const,
+            content: acc,
+            thoughtSeconds: Math.max(1, Math.round((Date.now() - started) / 1000)),
+          },
+        ];
+        persist(
+          base.map((t) =>
+            t.id === threadId
+              ? {
+                  ...t,
+                  title: t.title || lastUser.slice(0, 40) || "Chat baru",
+                  updatedAt: Date.now(),
+                  messages: withReply,
+                }
+              : t,
+          ),
+        );
+        if (!(e instanceof DOMException && e.name === "AbortError")) {
+          setError("Jawaban terputus. Tekan ulangi kalau mau versi lengkapnya.");
+        }
+      } else if (!(e instanceof DOMException && e.name === "AbortError")) {
+        setError(e instanceof Error ? e.message : "Gagal menghubungi GPT-6.");
+      }
+    } finally {
+      abortRef.current = null;
+      if (runningThreadRef.current === threadId) runningThreadRef.current = null;
+      setLoading(false);
+      setStatus(null);
+      setDraft(null);
+    }
+  }
+
   async function run(
     history: ChatMessage[],
     attached: string | null,
@@ -391,6 +576,14 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     }
 
     const lastUser = history[history.length - 1]?.content ?? "";
+
+    // ================= NEW: route GPT-6 ke pihak ketiga =================
+    const activeModel = modelById(modelId, models);
+    if (activeModel?.id === "gpt-6") {
+      return runThirdParty(history, attached, threadIdIn, baseIn);
+    }
+    // ====================================================================
+
     let threadId = threadIdIn;
     let base = baseIn;
     const createdThread = !threadId;
@@ -417,8 +610,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     const controller = new AbortController();
     abortRef.current = controller;
 
-    // Watchdog: stall hanya memutus percobaan saat ini (bisa disambung ulang),
-    // sedangkan MAX_MS memutus semuanya.
     const STALL_MS = 45_000;
     const MAX_MS = 300_000;
 
@@ -434,15 +625,11 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     const maxTimer = setTimeout(() => controller.abort(), MAX_MS);
     bumpWatchdog();
 
-    // Langkah pra-jawaban (planner/vision/search) dibatasi sendiri supaya
-    // tidak pernah menahan jawaban utama.
     const stepSignal = (ms: number) =>
       AbortSignal.any([controller.signal, AbortSignal.timeout(ms)]);
 
     let acc: Draft = { content: "", reasoning: "" };
 
-    // Teks dimunculkan bertahap lewat rAF supaya burst chunk saat sinyal lag
-    // tetap terlihat mengalir mulus, bukan patah-patah.
     let revealed = 0;
     let painting = true;
     let rafId: number | undefined;
@@ -461,9 +648,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     };
     rafId = requestAnimationFrame(paint);
 
-
-
-
     try {
       let title = "";
       let query = "";
@@ -476,16 +660,13 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       let vision = "";
       let quran: QuranContext | null = null;
 
-      // Katalog aplikasi + judul chat diambil paralel sejak awal supaya tidak
-      // menahan jawaban utama.
       let catalogDone = false;
       const catalogPromise = fetchAppCatalog(controller.signal).then((list) => {
         catalogDone = true;
         return list;
       });
-      // Deteksi dan ambil surah paralel dengan planner; request non-surah akan cepat 404 lokal.
       const quranPromise = fetchQuranContext(lastUser, stepSignal(12_000));
-      // 1. Gambar → analisis visual dulu, lalu cari info akurat di web.
+
       if (attached) {
         setStatus("Menganalisis gambar...");
         try {
@@ -511,7 +692,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
           /* lanjut tanpa analisis */
         }
       } else {
-        // 2. Planner: perlu cari? perlu reasoning? judul chat.
         setStatus("Memikirkan langkah...");
         try {
           const pr = await fetch("/api/ai-plan", {
@@ -540,7 +720,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
           /* planner opsional */
         }
 
-        // Judul dibuat oleh endpoint khusus; planner hanya menentukan tools.
         try {
           const tr = await fetch("/api/ai-title", {
             method: "POST",
@@ -561,7 +740,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
 
       quran = await quranPromise;
 
-      // Query pencarian dibuat AI spesialis terpisah agar ejaan & kualitas query terjaga.
       if (needsSearch) {
         const specialized = await fetch("/api/ai-query", {
           method: "POST",
@@ -578,8 +756,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         }
       }
 
-
-      // 3. Pencarian web nyata via Serper.
       let search: { query?: string; direct?: string; results?: ChatSource[] } | null = null;
       if (needsSearch && query) {
         setStatus(
@@ -618,7 +794,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
 
       if (attached) acc = { ...acc, analyzedImage: true };
 
-      // Katalog aplikasi situs: tampilkan indikator hanya bila memang belum siap.
       if (!catalogDone) setStatus("Fetching data...");
       const apps = await Promise.race([
         catalogPromise,
@@ -626,8 +801,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       ]);
       const origin = typeof window !== "undefined" ? window.location.origin : "";
 
-      // 4. Jawaban streaming — dengan sambung-ulang otomatis kalau koneksi
-      //    putus di tengah jalan (sinyal lag), supaya jawaban tidak patah.
       setStatus(null);
       bumpWatchdog();
 
@@ -638,10 +811,8 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         attempt.ctrl = ctrl;
         const signal = AbortSignal.any([controller.signal, ctrl.signal]);
 
-        // Cek apakah ada konten yang sudah terisi dari usaha sebelumnya (untuk penyambungan)
         const resume = acc.content.trim();
 
-        // Membangun ulang pesan jika sedang melanjutkan
         const messages = resume
           ? [
               ...baseMessages,
@@ -688,7 +859,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         });
 
         if (!res.ok || !res.body) {
-          // Jika gagal fetch, lempar error agar mekanisme retry mengambil alih
           throw new Error("Gagal menghubungi AI.");
         }
 
@@ -717,8 +887,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
                   complete?: boolean;
                 };
                 if (evt.type === "done") {
-                  // Server bisa menutup stream setelah timeout tanpa pernah
-                  // mengirim teks. Anggap itu gagal supaya retry berjalan.
                   closed = evt.complete === true;
                 } else if (evt.type === "reasoning")
                   acc = { ...acc, reasoning: acc.reasoning + (evt.v ?? "") };
@@ -729,8 +897,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             }
             if (closed) return true;
           }
-          // EOF tanpa event done berarti koneksi putus di tengah jawaban.
-          // Lempar ke mekanisme retry agar jawaban tidak berhenti diam-diam.
           return false;
         } finally {
           await reader.cancel().catch(() => {});
@@ -744,7 +910,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
           if (!finished) throw new Error("Stream jawaban terputus.");
         } catch (err) {
           attempt.ctrl = null;
-          // Pengguna menekan stop / batas total tercapai → jangan sambung ulang.
           if (controller.signal.aborted) throw err;
           if (tries === 2) throw err;
           setStatus(acc.content.trim() ? "Menyambung ulang jawaban..." : "Menyambung ulang...");
@@ -797,9 +962,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         void navigate({ to: "/ai/c/$threadId", params: { threadId } });
       }
     } catch (e) {
-      // Jangan pernah membuang jawaban yang sudah terlanjur diketik AI:
-      // apa pun penyebab putusnya (abort, watchdog, jaringan), simpan bagian
-      // yang sudah masuk sebagai jawaban.
       if (acc.content.trim()) {
         const withReply = [
           ...history,
@@ -834,7 +996,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         setError(e instanceof Error ? e.message : "Gagal menghubungi AI.");
       }
     } finally {
-
       stopPaint();
       if (stallTimer) clearTimeout(stallTimer);
       clearTimeout(maxTimer);
@@ -843,9 +1004,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       setLoading(false);
       setStatus(null);
       setDraft(null);
-      // Jangan fokus ulang: itu membuat keyboard/input terbuka sendiri.
     }
-
   }
 
   function respondImageLoginRequired(prompt: string) {
@@ -972,7 +1131,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     await run(history, attached, activeId, threads);
   }
 
-
   async function regenerate() {
     if (loading) return;
     const lastUserIdx = [...messages].map((m) => m.role).lastIndexOf("user");
@@ -1030,7 +1188,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             </div>
           )}
 
-
           {messages.map((m, i) =>
             m.role === "user" ? (
               <div key={i} className="flex justify-end gap-2 md:gap-3">
@@ -1052,7 +1209,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
                   className="mt-1 size-7 shrink-0 rounded-full bg-surface-variant object-cover md:size-8"
                 />
               </div>
-
             ) : (
               <AiMessage
                 key={i}
@@ -1086,7 +1242,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
           )}
 
           {imaging && <GeneratingImageCard />}
-
 
           {error && (
             <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -1141,7 +1296,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
               setModelId(id);
               saveSelectedModelId(id);
             }}
-
             onValueChange={setInput}
             onStop={stop}
             onChange={(e) => setInput(e.target.value)}

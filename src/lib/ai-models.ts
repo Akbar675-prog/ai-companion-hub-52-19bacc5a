@@ -28,7 +28,6 @@ export type AiModel = {
   endpointKey?: string;
 };
 
-
 export const BUILTIN_MODELS: AiModel[] = [
   {
     id: "getrix-core",
@@ -63,6 +62,26 @@ export const BUILTIN_MODELS: AiModel[] = [
   },
 ];
 
+/* ═══════════════════════════════════════════════════════════════════════
+ *  MODEL RESMI — dipanggil langsung ke /api/openai (pihak ke-3)
+ *  Di-route di ai.tsx: kalau modelId === "gpt-6" → runThirdParty()
+ *  (bukan lewat /api/ai-chat)
+ * ═══════════════════════════════════════════════════════════════════════ */
+export const OFFICIAL_GPT6: AiModel = {
+  id: "gpt-6",
+  name: "GPT-6",
+  tagline:
+    "Model resmi OpenAI generasi terbaru — jawaban netral, profesional, cepat, dan seimbang.",
+  persona: "", // diisi oleh DEFAULT_SYSTEM_PROMPT di api.openai.ts
+  isNew: true,
+  logo: "https://openrouter.ai/images/icons/OpenAI.svg",
+  custom: true,     // supaya lolos filter .filter(m => m.custom) di ai.tsx
+  realModel: false, // TIDAK lewat jalur realModel — short-circuit sebelum itu
+  modelType: "gpt-6",
+  uncensored: false,
+  abilities: "",
+};
+
 export const DEFAULT_MODEL_ID = BUILTIN_MODELS[0]!.id;
 
 const CUSTOM_KEY = "gma:ai:custom-models";
@@ -77,7 +96,6 @@ type Override = Partial<
     | "endpointUrl" | "endpointKey" | "uncensored"
   >
 >;
-
 
 function readJson<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
