@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { LogOut, AtSign, User, Image as ImageIcon, Upload, BadgeCheck, ExternalLink } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
 import { authSupabase } from "@/integrations/auth-supabase/client";
 import { DEFAULT_AVATAR, useAccount } from "@/lib/use-account";
@@ -264,9 +265,10 @@ function EditAvatar({ onDone }: { onDone: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function handleFile(file: File) {
+  async function uploadCroppedFile(file: File) {
     setBusy(true); setError(null); setOk(null);
     try {
       const buf = new Uint8Array(await file.arrayBuffer());
@@ -317,7 +319,7 @@ function EditAvatar({ onDone }: { onDone: () => void }) {
         hidden
         onChange={(e) => {
           const f = e.target.files?.[0];
-          if (f) void handleFile(f);
+          if (f) setCropFile(f);
           e.target.value = "";
         }}
       />
@@ -330,6 +332,17 @@ function EditAvatar({ onDone }: { onDone: () => void }) {
         {t("Upload dari perangkat")}
       </button>
       <Msg error={error} ok={ok} />
+      {cropFile && (
+        <ImageCropDialog
+          file={cropFile}
+          shape="circle"
+          onCancel={() => setCropFile(null)}
+          onConfirm={(cropped) => {
+            setCropFile(null);
+            void uploadCroppedFile(cropped);
+          }}
+        />
+      )}
     </Card>
   );
 }
@@ -340,9 +353,10 @@ function EditBanner({ current, onDone }: { current: string | null; onDone: () =>
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  async function handleFile(file: File) {
+  async function uploadCroppedFile(file: File) {
     setBusy(true); setError(null); setOk(null);
     try {
       const buf = new Uint8Array(await file.arrayBuffer());
@@ -400,7 +414,7 @@ function EditBanner({ current, onDone }: { current: string | null; onDone: () =>
         hidden
         onChange={(e) => {
           const f = e.target.files?.[0];
-          if (f) void handleFile(f);
+          if (f) setCropFile(f);
           e.target.value = "";
         }}
       />
@@ -413,6 +427,17 @@ function EditBanner({ current, onDone }: { current: string | null; onDone: () =>
         {t("Upload dari perangkat")}
       </button>
       <Msg error={error} ok={ok} />
+      {cropFile && (
+        <ImageCropDialog
+          file={cropFile}
+          shape="rectangle"
+          onCancel={() => setCropFile(null)}
+          onConfirm={(cropped) => {
+            setCropFile(null);
+            void uploadCroppedFile(cropped);
+          }}
+        />
+      )}
     </Card>
   );
 }

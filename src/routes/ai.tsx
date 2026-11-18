@@ -413,8 +413,9 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     abortRef.current = controller;
 
     let acc = "";
-    let painting = true;
+
     let revealed = 0;
+    let painting = true;
     let rafId: number | undefined;
 
     const paint = () => {
@@ -424,15 +425,18 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         revealed += diff > 80 ? Math.ceil(diff / 4) : Math.max(1, Math.ceil(diff / 6));
         if (revealed > target) revealed = target;
       }
-      setDraft({ content: acc.slice(0, revealed), reasoning: "" });
+      const candidate = acc.slice(0, revealed);
+      const completeWords = candidate.match(/[\s\S]*\s/)?.[0] ?? "";
+      setDraft({ content: completeWords, reasoning: "" });
       if (painting) rafId = requestAnimationFrame(paint);
     };
+
     const stopPaint = () => {
       painting = false;
       if (rafId !== undefined) cancelAnimationFrame(rafId);
-      revealed = acc.length;
       setDraft({ content: acc, reasoning: "" });
     };
+
     rafId = requestAnimationFrame(paint);
 
     try {

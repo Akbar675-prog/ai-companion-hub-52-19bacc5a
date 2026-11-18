@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import type { Root } from "hast";
 
 import { Check, ChevronDown, Copy, Download, Globe, RefreshCw, ThumbsDown, ThumbsUp, Volume2, VolumeX, X } from "lucide-react";
 import { AiAvatar } from "@/components/ui/plasma-shader";
@@ -190,14 +191,51 @@ function CitationPill({
   );
 }
 
+type AnimatedMarkdownNode = {
+  type: string;
+  tagName?: string;
+  value?: string;
+  properties?: Record<string, string[]>;
+  children?: AnimatedMarkdownNode[];
+};
+
+function rehypeFadeStreamWords() {
+  return (tree: Root) => {
+    function visit(node: AnimatedMarkdownNode, inCode = false) {
+      if (!node.children) return;
+      const skipWords = inCode || node.tagName === "code" || node.tagName === "pre";
+      node.children = node.children.flatMap((child) => {
+        if (!skipWords && child.type === "text" && child.value) {
+          return child.value.split(/(\s+)/).filter(Boolean).map((part) =>
+            /^\s+$/.test(part)
+              ? { type: "text", value: part }
+              : {
+                  type: "element",
+                  tagName: "span",
+                  properties: { className: ["ai-stream-word"] },
+                  children: [{ type: "text", value: part }],
+                },
+          );
+        }
+        visit(child, skipWords);
+        return [child];
+      });
+    }
+
+    visit(tree as unknown as AnimatedMarkdownNode);
+  };
+}
+
 function MarkdownBody({
   text,
   sources,
   muted,
+  streaming,
 }: {
   text: string;
   sources?: ChatMessage["sources"];
   muted?: boolean;
+  streaming?: boolean;
 }) {
   // Rapikan keluaran model: hilangkan baris kosong berlebih dan spasi ekor
   // yang membuat jarak antar paragraf terlihat kepanjangan.
@@ -227,6 +265,7 @@ function MarkdownBody({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
+        rehypePlugins={streaming ? [rehypeFadeStreamWords] : []}
         components={{
           table: ({ children }) => (
             <div className="my-1 w-full overflow-x-auto rounded-2xl border border-border/70">
@@ -449,7 +488,7 @@ export function AiMessage({
         )}
 
         {message.content && (
-          <MarkdownBody text={message.content} sources={message.sources} />
+          <MarkdownBody text={message.content} sources={message.sources} streaming={streaming} />
         )}
 
 
