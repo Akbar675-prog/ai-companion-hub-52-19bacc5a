@@ -131,6 +131,7 @@ function CreatedAtLocation({
   return (
     <section className="m3-shadow-1 mt-4 rounded-3xl bg-card p-5">
       <h2 className="font-display text-lg font-semibold">This account was created at:</h2>
+      <p className="mt-1 text-xs text-muted-foreground">Country is an approximate location based on the IP address used at signup.</p>
       <time dateTime={createdAt} className="mt-1 block text-sm text-muted-foreground">
         {new Intl.DateTimeFormat(undefined, { dateStyle: "long", timeStyle: "short" }).format(createdDate)}
       </time>

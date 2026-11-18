@@ -36,7 +36,11 @@
           const collection = { type: "FeatureCollection", features };
           const projection = d3.geoMercator().fitSize([WIDTH, HEIGHT], collection);
           const path = d3.geoPath(projection);
-          const selected = features.filter((feature) => feature.properties.name === COUNTRY);
+          const countryAliases = { "United States": "united states of america" };
+          const selectedName = (countryAliases[COUNTRY] || COUNTRY).toLowerCase().replace(/[’‘]/g, "'");
+          const selected = features.filter((feature) =>
+            feature.properties.name.toLowerCase().replace(/[’‘]/g, "'") === selectedName,
+          );
 
           for (const feature of features) {
             const shape = document.createElementNS(NS, "path");

@@ -96,6 +96,10 @@ function RegisterPage() {
           </p>
         </div>
 
+        <p className="mt-4 text-xs text-muted-foreground">
+          {t("Negara perkiraan berdasarkan IP saat mendaftar akan ditampilkan di profil publik. Admin dapat mengubahnya.")}
+        </p>
+
         <form onSubmit={onSubmit} className="m3-shadow-1 mt-5 space-y-4 rounded-3xl bg-card p-5">
           <Field label={t("Nama (panggilan / alias)")}>
             <input

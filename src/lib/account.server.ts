@@ -31,6 +31,25 @@ export function validateUsername(u: string): string | null {
   return null;
 }
 
+function countryLocation(countryCode?: string | null) {
+  const code = countryCode?.toUpperCase();
+  if (!code || !/^[A-Z]{2}$/.test(code) || code === "XX") return null;
+  const countryName = new Intl.DisplayNames(["en"], { type: "region" }).of(code);
+  if (!countryName || countryName === code || countryName === "Unknown Region") return null;
+  return { country_name: countryName, country_code: code };
+}
+
+async function saveCreatedAtLocation(db: any, userNo: number, countryCode?: string | null) {
+  const location = countryLocation(countryCode);
+  if (location) {
+    try {
+      await db.from("Created_At_Locations").upsert({ user_no: userNo, ...location });
+    } catch {
+      // Location is optional; do not block account creation if storage is unavailable.
+    }
+  }
+}
+
 async function followerCounts(db: any, id: string, fake: number) {
   const [{ count: followers }, { count: following }] = await Promise.all([
     db.from("follows").select("*", { count: "exact", head: true }).eq("following_id", id),
@@ -69,7 +88,7 @@ export async function registerAccount(input: {
   username: string;
   email: string;
   password: string;
-}) {
+}, countryCode?: string | null) {
   const db = await admin();
   const username = normalizeUsername(input.username);
 
@@ -100,6 +119,7 @@ export async function registerAccount(input: {
     await db.auth.admin.deleteUser(created.user.id);
     throw new Error(/duplicate/i.test(pErr.message) ? "Username telah digunakan." : pErr.message);
   }
+  await saveCreatedAtLocation(db, Number(profile.user_no), countryCode);
 
   // First ever account owns the site.
   if (Number(profile.user_no) === 1) {
@@ -125,7 +145,7 @@ export async function emailForIdentifier(identifier: string) {
 }
 
 /** Create a profile row for a user that signed in via OAuth (no register form). */
-async function ensureProfile(userId: string) {
+async function ensureProfile(userId: string, countryCode?: string | null) {
   const db = await admin();
   const { data: user } = await db.auth.admin.getUserById(userId);
   const meta = (user?.user?.user_metadata ?? {}) as Record<string, unknown>;
@@ -151,6 +171,7 @@ async function ensureProfile(userId: string) {
       .select("*")
       .single();
     if (!error && profile) {
+      await saveCreatedAtLocation(db, Number(profile.user_no), countryCode);
       // Google/OAuth avatars: copy the provider picture into our own storage
       // so it is served from galileouserscontent.visora.my.id.
       const picture =
@@ -173,10 +194,10 @@ async function ensureProfile(userId: string) {
   return null;
 }
 
-export async function getMyProfile(userId: string) {
+export async function getMyProfile(userId: string, countryCode?: string | null) {
   const db = await admin();
   let { data } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
-  if (!data) data = await ensureProfile(userId);
+  if (!data) data = await ensureProfile(userId, countryCode);
   if (!data) return null;
   const counts = await followerCounts(db, userId, data.fake_followers);
   const banner = await bannerFor(db, userId);

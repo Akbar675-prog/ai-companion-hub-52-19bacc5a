@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireAccountAuth } from "@/integrations/auth-supabase/auth-middleware";
 import {
@@ -23,6 +24,11 @@ import {
 
 export type { PublicProfile } from "./account.server";
 
+function requestCountryCode() {
+  const headers = getRequest()?.headers;
+  return headers?.get("x-vercel-ip-country") ?? headers?.get("cf-ipcountry") ?? null;
+}
+
 export const registerAccountFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
@@ -34,7 +40,7 @@ export const registerAccountFn = createServerFn({ method: "POST" })
       })
       .parse(d),
   )
-  .handler(async ({ data }) => registerAccount(data));
+  .handler(async ({ data }) => registerAccount(data, requestCountryCode()));
 
 export const resolveLoginEmailFn = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ identifier: z.string().trim().min(1).max(255) }).parse(d))
@@ -42,7 +48,7 @@ export const resolveLoginEmailFn = createServerFn({ method: "POST" })
 
 export const myProfileFn = createServerFn({ method: "GET" })
   .middleware([requireAccountAuth])
-  .handler(async ({ context }) => getMyProfile(context.userId));
+  .handler(async ({ context }) => getMyProfile(context.userId, requestCountryCode()));
 
 export const userProfileFn = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ userNo: z.number().int().positive() }).parse(d))
