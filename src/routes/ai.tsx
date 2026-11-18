@@ -21,7 +21,7 @@ import {
   loadSelectedModelId,
   modelById,
   saveSelectedModelId,
-  OFFICIAL_GPT6,                 // ← TAMBAHAN
+  OFFICIAL_GPT6,
   type AiModel,
 } from "@/lib/ai-models";
 
@@ -240,14 +240,13 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     };
   }, [requestedThreadId, userId]);
 
-  // ================= MODIFIED: selalu sertakan GPT-6 =================
   useEffect(() => {
     let alive = true;
     setModels([]);
     setModelId("");
     setModelsLoading(true);
 
-    const official = OFFICIAL_GPT6 as unknown as AiModel;
+    const official = OFFICIAL_GPT6 as AiModel;
 
     void listAiModelsFn()
       .then((storedModels) => {
@@ -261,7 +260,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       })
       .catch(() => {
         if (!alive) return;
-        // Walau katalog Supabase gagal, GPT-6 tetap bisa dipakai.
         setModels([official]);
         setModelId(official.id);
         setModelsLoading(false);
@@ -377,7 +375,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     abortRef.current?.abort();
   }
 
-  // ================= NEW: pihak ketiga GPT-6 (streaming) =================
   async function runThirdParty(
     history: ChatMessage[],
     _attached: string | null,
@@ -409,7 +406,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     setError(null);
     setLoading(true);
     setDraft({ content: "", reasoning: "" });
-    setStatus("Meminta jawaban dari GPT-6...");
+    setStatus("Menyiapkan jawaban...");
 
     const started = Date.now();
     const controller = new AbortController();
@@ -423,10 +420,9 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     const paint = () => {
       const target = acc.length;
       if (revealed < target) {
-        revealed = Math.min(
-          target,
-          revealed + Math.max(24, Math.ceil((target - revealed) / 2)),
-        );
+        const diff = target - revealed;
+        revealed += diff > 80 ? Math.ceil(diff / 4) : Math.max(1, Math.ceil(diff / 6));
+        if (revealed > target) revealed = target;
       }
       setDraft({ content: acc.slice(0, revealed), reasoning: "" });
       if (painting) rafId = requestAnimationFrame(paint);
@@ -443,7 +439,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       const res = await fetch("/api/openai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        // systemPrompt sengaja TIDAK dikirim → pakai DEFAULT_SYSTEM_PROMPT (netral)
         body: JSON.stringify({ message: lastUser, stream: true }),
         signal: controller.signal,
       });
@@ -527,7 +522,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     } catch (e) {
       stopPaint();
 
-      // Simpan partial — kalau AI sudah sempat ngetik, jangan dibuang.
       if (acc.trim()) {
         const withReply = [
           ...history,
@@ -577,12 +571,10 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
 
     const lastUser = history[history.length - 1]?.content ?? "";
 
-    // ================= NEW: route GPT-6 ke pihak ketiga =================
     const activeModel = modelById(modelId, models);
     if (activeModel?.id === "gpt-6") {
       return runThirdParty(history, attached, threadIdIn, baseIn);
     }
-    // ====================================================================
 
     let threadId = threadIdIn;
     let base = baseIn;
@@ -636,7 +628,9 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     const paint = () => {
       const target = acc.content.length;
       if (revealed < target) {
-        revealed = Math.min(target, revealed + Math.max(24, Math.ceil((target - revealed) / 2)));
+        const diff = target - revealed;
+        revealed += diff > 80 ? Math.ceil(diff / 4) : Math.max(1, Math.ceil(diff / 6));
+        if (revealed > target) revealed = target;
       }
       setDraft({ ...acc, content: acc.content.slice(0, revealed) });
       if (painting) rafId = requestAnimationFrame(paint);
