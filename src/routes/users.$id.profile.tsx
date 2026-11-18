@@ -106,8 +106,58 @@ function UserProfilePage() {
         </section>
 
         <FollowBox userNo={userNo} signedIn={!!userId} />
+        <CreatedAtLocation
+          createdAt={profile.created_at}
+          location={profile.created_at_location ?? null}
+        />
       </main>
     </div>
+  );
+}
+
+function CreatedAtLocation({
+  createdAt,
+  location,
+}: {
+  createdAt: string;
+  location: { country_name: string; country_code: string } | null;
+}) {
+  const createdDate = new Date(createdAt);
+  const mapUrl = location
+    ? `/created-at-location-map.html?country=${encodeURIComponent(location.country_name)}`
+    : null;
+  const flagCode = location?.country_code.toLowerCase();
+
+  return (
+    <section className="m3-shadow-1 mt-4 rounded-3xl bg-card p-5">
+      <h2 className="font-display text-lg font-semibold">This account was created at:</h2>
+      <time dateTime={createdAt} className="mt-1 block text-sm text-muted-foreground">
+        {new Intl.DateTimeFormat(undefined, { dateStyle: "long", timeStyle: "short" }).format(createdDate)}
+      </time>
+      {location && mapUrl && flagCode ? (
+        <>
+          <iframe
+            title={`Map showing account creation location in ${location.country_name}`}
+            src={mapUrl}
+            loading="lazy"
+            className="mt-4 h-60 w-full overflow-hidden rounded-2xl border-0"
+          />
+          <div className="mt-3 flex items-center justify-center gap-2 text-sm font-medium">
+            <img
+              src={`https://flagcdn.com/${flagCode}.svg`}
+              alt={`${location.country_name} flag`}
+              loading="lazy"
+              className="h-5 w-8 rounded-sm object-cover"
+            />
+            <span>{location.country_name}</span>
+          </div>
+        </>
+      ) : (
+        <p className="mt-3 text-sm text-muted-foreground">
+          Account creation location has not been added yet.
+        </p>
+      )}
+    </section>
   );
 }
 

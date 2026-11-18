@@ -11,6 +11,7 @@ export type PublicProfile = {
   followers: number;
   following: number;
   created_at: string;
+  created_at_location?: { country_name: string; country_code: string } | null;
 };
 
 const AVATAR_BUCKET = "user-avatars";
@@ -199,6 +200,11 @@ export async function getProfileByUserNo(userNo: number, viewerId?: string) {
   if (!data) return null;
   const counts = await followerCounts(db, data.id, data.fake_followers);
   const banner = await bannerFor(db, data.id);
+  const { data: createdAtLocation } = await db
+    .from("Created_At_Locations")
+    .select("country_name, country_code")
+    .eq("user_no", userNo)
+    .maybeSingle();
   let isFollowing = false;
   if (viewerId && viewerId !== data.id) {
     const { data: f } = await db
@@ -209,7 +215,12 @@ export async function getProfileByUserNo(userNo: number, viewerId?: string) {
       .maybeSingle();
     isFollowing = !!f;
   }
-  return { ...toPublic(data, counts, banner), is_self: viewerId === data.id, is_following: isFollowing };
+  return {
+    ...toPublic(data, counts, banner),
+    created_at_location: createdAtLocation ?? null,
+    is_self: viewerId === data.id,
+    is_following: isFollowing,
+  };
 }
 
 export async function changeUsername(userId: string, next: string) {
