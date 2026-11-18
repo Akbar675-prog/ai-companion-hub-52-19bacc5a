@@ -201,21 +201,24 @@ type AnimatedMarkdownNode = {
 
 function rehypeFadeStreamWords() {
   return (tree: Root) => {
+    const latestWord: { node?: AnimatedMarkdownNode } = {};
+
     function visit(node: AnimatedMarkdownNode, inCode = false) {
       if (!node.children) return;
       const skipWords = inCode || node.tagName === "code" || node.tagName === "pre";
       node.children = node.children.flatMap((child) => {
         if (!skipWords && child.type === "text" && child.value) {
-          return child.value.split(/(\s+)/).filter(Boolean).map((part) =>
-            /^\s+$/.test(part)
-              ? { type: "text", value: part }
-              : {
-                  type: "element",
-                  tagName: "span",
-                  properties: { className: ["ai-stream-word"] },
-                  children: [{ type: "text", value: part }],
-                },
-          );
+          return child.value.split(/(\s+)/).filter(Boolean).map((part) => {
+            if (/^\s+$/.test(part)) return { type: "text", value: part };
+            const word: AnimatedMarkdownNode = {
+              type: "element",
+              tagName: "span",
+              properties: {},
+              children: [{ type: "text", value: part }],
+            };
+            latestWord.node = word;
+            return word;
+          });
         }
         visit(child, skipWords);
         return [child];
@@ -223,6 +226,7 @@ function rehypeFadeStreamWords() {
     }
 
     visit(tree as unknown as AnimatedMarkdownNode);
+    if (latestWord.node) latestWord.node.properties = { className: ["ai-stream-word"] };
   };
 }
 
