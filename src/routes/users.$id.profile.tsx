@@ -148,7 +148,7 @@ function CreatedAtLocation({
               src={`https://flagcdn.com/${flagCode}.svg`}
               alt={`${location.country_name} flag`}
               loading="lazy"
-              className="size-8 object-cover"
+              className="h-6 w-9 object-cover"
             />
             <span>{location.country_name}</span>
           </div>
