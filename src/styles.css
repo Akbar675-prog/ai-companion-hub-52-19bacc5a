@@ -377,3 +377,19 @@ body.no-ripple [data-ripple] {
     animation-duration: 1ms;
   }
 }
+
+.profile-image-skeleton {
+  display: block;
+  background: linear-gradient(90deg, var(--muted) 25%, var(--background) 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: profile-image-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes profile-image-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-image-skeleton { animation: none; }
+}

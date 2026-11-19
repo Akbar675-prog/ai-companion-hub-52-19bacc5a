@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { authSupabase } from "@/integrations/auth-supabase/client";
 import { DEFAULT_AVATAR, useAccount } from "@/lib/use-account";
 import {
@@ -38,15 +37,13 @@ function ProfilePage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { profile, loading, userId, refetch } = useAccount();
-  const [profileUpdating, setProfileUpdating] = useState(false);
+  const [imageUpdating, setImageUpdating] = useState<"avatar" | "banner" | null>(null);
 
-  async function refreshProfile() {
+  async function refreshProfile(image?: "avatar" | "banner") {
     if (profile) await qc.invalidateQueries({ queryKey: ["user-profile", profile.user_no] });
     const result = await refetch();
-    await Promise.all([
-      waitForImage(result.data?.avatar_url),
-      waitForImage(result.data?.banner_url),
-    ]);
+    if (image === "avatar") await waitForImage(result.data?.avatar_url);
+    if (image === "banner") await waitForImage(result.data?.banner_url);
   }
 
   useEffect(() => {
@@ -57,11 +54,9 @@ function ProfilePage() {
     return (
       <div className="min-h-screen bg-background">
         <AppHeader />
-        <main className="mx-auto mt-6 w-full max-w-2xl space-y-4 px-4" aria-label="Memuat profil">
-          <ProfileHeaderSkeleton />
-          <Skeleton className="h-28 rounded-3xl" />
-          <Skeleton className="h-40 rounded-3xl" />
-        </main>
+        <div className="mt-20 flex justify-center">
+          <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat profil" />
+        </div>
       </div>
     );
   }
@@ -84,12 +79,11 @@ function ProfilePage() {
     <div className="min-h-screen bg-background pb-16">
       <AppHeader />
       <main className="mx-auto mt-6 w-full max-w-2xl px-4">
-        {profileUpdating ? (
-          <ProfileHeaderSkeleton />
-        ) : (
-          <section className="m3-shadow-1 overflow-hidden rounded-3xl bg-card">
-            <div className="relative">
-              {profile.banner_url ? (
+        <section className="m3-shadow-1 overflow-hidden rounded-3xl bg-card">
+          <div className="relative">
+            {imageUpdating === "banner" ? (
+              <span aria-hidden="true" className="profile-image-skeleton block h-24 w-full" />
+            ) : profile.banner_url ? (
                 <img
                   src={profile.banner_url}
                   alt={`Banner ${profile.name}`}
@@ -104,11 +98,15 @@ function ProfilePage() {
               />
             </div>
             <div className="relative z-10 px-5 pb-5">
-              <img
-                src={profile.avatar_url || DEFAULT_AVATAR}
-                alt={`Foto profil ${profile.name}`}
-                className="-mt-12 size-24 rounded-full border-4 border-card bg-surface-variant object-cover"
-              />
+              {imageUpdating === "avatar" ? (
+                <span aria-hidden="true" className="profile-image-skeleton -mt-12 size-24 rounded-full border-4 border-card" />
+              ) : (
+                <img
+                  src={profile.avatar_url || DEFAULT_AVATAR}
+                  alt={`Foto profil ${profile.name}`}
+                  className="-mt-12 size-24 rounded-full border-4 border-card bg-surface-variant object-cover"
+                />
+              )}
               <div className="mt-3 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h1 className="truncate font-display text-2xl">{profile.name}</h1>
@@ -125,8 +123,7 @@ function ProfilePage() {
                 </div>
               </div>
             </div>
-          </section>
-        )}
+        </section>
 
         <p className="mt-3 px-1 text-xs text-muted-foreground">
           {t("Profil publik kamu:")}{" "}
@@ -139,10 +136,10 @@ function ProfilePage() {
           </Link>
         </p>
 
-        <EditName current={profile.name} remaining={5 - profile.name_changes_today} onDone={refreshProfile} onUpdating={setProfileUpdating} />
-        <EditUsername current={profile.username} cooldownLeft={cooldownLeft} onDone={refreshProfile} onUpdating={setProfileUpdating} />
-        <EditAvatar onDone={refreshProfile} onUpdating={setProfileUpdating} />
-        <EditBanner current={profile.banner_url} onDone={refreshProfile} onUpdating={setProfileUpdating} />
+        <EditName current={profile.name} remaining={5 - profile.name_changes_today} onDone={refreshProfile} />
+        <EditUsername current={profile.username} cooldownLeft={cooldownLeft} onDone={refreshProfile} />
+        <EditAvatar onDone={refreshProfile} onUpdating={setImageUpdating} />
+        <EditBanner current={profile.banner_url} onDone={refreshProfile} onUpdating={setImageUpdating} />
 
         <section className="m3-shadow-1 mt-4 rounded-3xl bg-card p-5">
           <h2 className="flex items-center gap-2 font-display text-lg">
@@ -171,23 +168,6 @@ function ProfilePage() {
         </button>
       </main>
     </div>
-  );
-}
-
-function ProfileHeaderSkeleton() {
-  return (
-    <section className="m3-shadow-1 overflow-hidden rounded-3xl bg-card" aria-hidden="true">
-      <Skeleton className="h-24 rounded-none" />
-      <div className="px-5 pb-5">
-        <Skeleton className="-mt-12 size-24 rounded-full border-4 border-card" />
-        <Skeleton className="mt-4 h-7 w-40" />
-        <Skeleton className="mt-2 h-4 w-28" />
-        <div className="mt-3 flex gap-2">
-          <Skeleton className="h-6 w-24 rounded-full" />
-          <Skeleton className="h-6 w-24 rounded-full" />
-        </div>
-      </div>
-    </section>
   );
 }
 
@@ -224,7 +204,7 @@ const inputCls =
 const btnCls =
   "inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition active:scale-95 disabled:opacity-60";
 
-function EditName({ current, remaining, onDone, onUpdating }: { current: string; remaining: number; onDone: () => Promise<void>; onUpdating: (updating: boolean) => void }) {
+function EditName({ current, remaining, onDone }: { current: string; remaining: number; onDone: () => Promise<void> }) {
   const t = useT();
   const [name, setName] = useState(current);
   const [busy, setBusy] = useState(false);
@@ -241,14 +221,14 @@ function EditName({ current, remaining, onDone, onUpdating }: { current: string;
         <button
           disabled={busy || remaining <= 0}
           onClick={async () => {
-            onUpdating(true); setBusy(true); setError(null); setOk(null);
+            setBusy(true); setError(null); setOk(null);
             try {
               await changeNameFn({ data: { name } });
               setOk(t("Nama diperbarui."));
               await onDone();
             } catch (e) {
               setError(e instanceof Error ? e.message : "Gagal.");
-            } finally { setBusy(false); onUpdating(false); }
+            } finally { setBusy(false); }
           }}
           className={btnCls}
         >
@@ -260,7 +240,7 @@ function EditName({ current, remaining, onDone, onUpdating }: { current: string;
   );
 }
 
-function EditUsername({ current, cooldownLeft, onDone, onUpdating }: { current: string; cooldownLeft: number; onDone: () => Promise<void>; onUpdating: (updating: boolean) => void }) {
+function EditUsername({ current, cooldownLeft, onDone }: { current: string; cooldownLeft: number; onDone: () => Promise<void> }) {
   const t = useT();
   const [username, setUsername] = useState(current);
   const [busy, setBusy] = useState(false);
@@ -285,14 +265,14 @@ function EditUsername({ current, cooldownLeft, onDone, onUpdating }: { current: 
         <button
           disabled={busy || cooldownLeft > 0}
           onClick={async () => {
-            onUpdating(true); setBusy(true); setError(null); setOk(null);
+            setBusy(true); setError(null); setOk(null);
             try {
               await changeUsernameFn({ data: { username } });
               setOk(t("Username diperbarui."));
               await onDone();
             } catch (e) {
               setError(e instanceof Error ? e.message : "Gagal.");
-            } finally { setBusy(false); onUpdating(false); }
+            } finally { setBusy(false); }
           }}
           className={btnCls}
         >
@@ -304,7 +284,7 @@ function EditUsername({ current, cooldownLeft, onDone, onUpdating }: { current: 
   );
 }
 
-function EditAvatar({ onDone, onUpdating }: { onDone: () => Promise<void>; onUpdating: (updating: boolean) => void }) {
+function EditAvatar({ onDone, onUpdating }: { onDone: (image?: "avatar" | "banner") => Promise<void>; onUpdating: (image: "avatar" | "banner" | null) => void }) {
   const t = useT();
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -314,17 +294,17 @@ function EditAvatar({ onDone, onUpdating }: { onDone: () => Promise<void>; onUpd
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function uploadCroppedFile(file: File) {
-    onUpdating(true); setBusy(true); setError(null); setOk(null);
+    onUpdating("avatar"); setBusy(true); setError(null); setOk(null);
     try {
       const buf = new Uint8Array(await file.arrayBuffer());
       let bin = "";
       for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
       await uploadAvatarFn({ data: { base64: btoa(bin), contentType: file.type || "image/png" } });
       setOk(t("Foto profil diperbarui."));
-      await onDone();
+      await onDone("avatar");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal upload.");
-    } finally { setBusy(false); onUpdating(false); }
+    } finally { setBusy(false); onUpdating(null); }
   }
 
   return (
@@ -342,15 +322,15 @@ function EditAvatar({ onDone, onUpdating }: { onDone: () => Promise<void>; onUpd
         <button
           disabled={busy || !url}
           onClick={async () => {
-            onUpdating(true); setBusy(true); setError(null); setOk(null);
+            onUpdating("avatar"); setBusy(true); setError(null); setOk(null);
             try {
               await setAvatarUrlFn({ data: { url } });
               setOk(t("Foto profil diperbarui."));
               setUrl("");
-              await onDone();
+              await onDone("avatar");
             } catch (e) {
               setError(e instanceof Error ? e.message : "Gagal.");
-            } finally { setBusy(false); onUpdating(false); }
+            } finally { setBusy(false); onUpdating(null); }
           }}
           className={btnCls}
         >
@@ -392,7 +372,7 @@ function EditAvatar({ onDone, onUpdating }: { onDone: () => Promise<void>; onUpd
   );
 }
 
-function EditBanner({ current, onDone, onUpdating }: { current: string | null; onDone: () => Promise<void>; onUpdating: (updating: boolean) => void }) {
+function EditBanner({ current, onDone, onUpdating }: { current: string | null; onDone: (image?: "avatar" | "banner") => Promise<void>; onUpdating: (image: "avatar" | "banner" | null) => void }) {
   const t = useT();
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -402,17 +382,17 @@ function EditBanner({ current, onDone, onUpdating }: { current: string | null; o
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function uploadCroppedFile(file: File) {
-    onUpdating(true); setBusy(true); setError(null); setOk(null);
+    onUpdating("banner"); setBusy(true); setError(null); setOk(null);
     try {
       const buf = new Uint8Array(await file.arrayBuffer());
       let bin = "";
       for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
       await uploadBannerFn({ data: { base64: btoa(bin), contentType: file.type || "image/png" } });
       setOk(t("Banner diperbarui."));
-      await onDone();
+      await onDone("banner");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal upload.");
-    } finally { setBusy(false); onUpdating(false); }
+    } finally { setBusy(false); onUpdating(null); }
   }
 
   return (
@@ -421,7 +401,7 @@ function EditBanner({ current, onDone, onUpdating }: { current: string | null; o
         {t("Gambar latar di bagian atas profil publik kamu. Upload gambar atau tempel URL gambar.")}
       </p>
       {busy ? (
-        <Skeleton className="mt-3 h-24 w-full rounded-2xl" />
+        <span aria-hidden="true" className="profile-image-skeleton mt-3 block h-24 w-full rounded-2xl" />
       ) : current ? (
         <img
           src={current}
@@ -439,15 +419,15 @@ function EditBanner({ current, onDone, onUpdating }: { current: string | null; o
         <button
           disabled={busy || !url}
           onClick={async () => {
-            onUpdating(true); setBusy(true); setError(null); setOk(null);
+            onUpdating("banner"); setBusy(true); setError(null); setOk(null);
             try {
               await setBannerUrlFn({ data: { url } });
               setOk(t("Banner diperbarui."));
               setUrl("");
-              await onDone();
+              await onDone("banner");
             } catch (e) {
               setError(e instanceof Error ? e.message : "Gagal.");
-            } finally { setBusy(false); onUpdating(false); }
+            } finally { setBusy(false); onUpdating(null); }
           }}
           className={btnCls}
         >
