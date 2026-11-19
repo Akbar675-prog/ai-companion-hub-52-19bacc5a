@@ -5,6 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { VerifiedBadge } from "@/components/VerifiedBadge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { authSupabase } from "@/integrations/auth-supabase/client";
 import { DEFAULT_AVATAR, useAccount } from "@/lib/use-account";
 import {
@@ -37,6 +38,16 @@ function ProfilePage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const { profile, loading, userId, refetch } = useAccount();
+  const [profileUpdating, setProfileUpdating] = useState(false);
+
+  async function refreshProfile() {
+    if (profile) await qc.invalidateQueries({ queryKey: ["user-profile", profile.user_no] });
+    const result = await refetch();
+    await Promise.all([
+      waitForImage(result.data?.avatar_url),
+      waitForImage(result.data?.banner_url),
+    ]);
+  }
 
   useEffect(() => {
     if (!loading && !userId) navigate({ to: "/login" });
@@ -46,9 +57,11 @@ function ProfilePage() {
     return (
       <div className="min-h-screen bg-background">
         <AppHeader />
-        <div className="mt-20 flex justify-center">
-          <m3e-loading-indicator className="m3-loading-md" aria-label="Memuat profil" />
-        </div>
+        <main className="mx-auto mt-6 w-full max-w-2xl space-y-4 px-4" aria-label="Memuat profil">
+          <ProfileHeaderSkeleton />
+          <Skeleton className="h-28 rounded-3xl" />
+          <Skeleton className="h-40 rounded-3xl" />
+        </main>
       </div>
     );
   }
@@ -71,45 +84,49 @@ function ProfilePage() {
     <div className="min-h-screen bg-background pb-16">
       <AppHeader />
       <main className="mx-auto mt-6 w-full max-w-2xl px-4">
-        <section className="m3-shadow-1 overflow-hidden rounded-3xl bg-card">
-          <div className="relative">
-            {profile.banner_url ? (
-              <img
-                src={profile.banner_url}
-                alt={`Banner ${profile.name}`}
-                className="h-24 w-full object-cover"
+        {profileUpdating ? (
+          <ProfileHeaderSkeleton />
+        ) : (
+          <section className="m3-shadow-1 overflow-hidden rounded-3xl bg-card">
+            <div className="relative">
+              {profile.banner_url ? (
+                <img
+                  src={profile.banner_url}
+                  alt={`Banner ${profile.name}`}
+                  className="h-24 w-full object-cover"
+                />
+              ) : (
+                <div className="h-24 bg-gradient-to-r from-primary/80 via-primary/40 to-surface-variant" />
+              )}
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-b from-transparent via-card/40 to-card"
               />
-            ) : (
-              <div className="h-24 bg-gradient-to-r from-primary/80 via-primary/40 to-surface-variant" />
-            )}
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-b from-transparent via-card/40 to-card"
-            />
-          </div>
-          <div className="relative z-10 px-5 pb-5">
-            <img
-              src={profile.avatar_url || DEFAULT_AVATAR}
-              alt={`Foto profil ${profile.name}`}
-              className="-mt-12 size-24 rounded-full border-4 border-card bg-surface-variant object-cover"
-            />
-            <div className="mt-3 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h1 className="truncate font-display text-2xl">{profile.name}</h1>
-                {profile.verified && <VerifiedBadge className="size-6 shrink-0" />}
-              </div>
-              <p className="text-sm text-muted-foreground">@{profile.username}</p>
-              <div className="mt-3 flex gap-2">
-                <span className="rounded-full bg-surface-variant px-3 py-1 text-xs">
-                  <b>{profile.followers.toLocaleString("id-ID")}</b> {t("pengikut")}
-                </span>
-                <span className="rounded-full bg-surface-variant px-3 py-1 text-xs">
-                  <b>{profile.following.toLocaleString("id-ID")}</b> {t("mengikuti")}
-                </span>
+            </div>
+            <div className="relative z-10 px-5 pb-5">
+              <img
+                src={profile.avatar_url || DEFAULT_AVATAR}
+                alt={`Foto profil ${profile.name}`}
+                className="-mt-12 size-24 rounded-full border-4 border-card bg-surface-variant object-cover"
+              />
+              <div className="mt-3 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <h1 className="truncate font-display text-2xl">{profile.name}</h1>
+                  {profile.verified && <VerifiedBadge className="size-6 shrink-0" />}
+                </div>
+                <p className="text-sm text-muted-foreground">@{profile.username}</p>
+                <div className="mt-3 flex gap-2">
+                  <span className="rounded-full bg-surface-variant px-3 py-1 text-xs">
+                    <b>{profile.followers.toLocaleString("id-ID")}</b> {t("pengikut")}
+                  </span>
+                  <span className="rounded-full bg-surface-variant px-3 py-1 text-xs">
+                    <b>{profile.following.toLocaleString("id-ID")}</b> {t("mengikuti")}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         <p className="mt-3 px-1 text-xs text-muted-foreground">
           {t("Profil publik kamu:")}{" "}
@@ -122,10 +139,10 @@ function ProfilePage() {
           </Link>
         </p>
 
-        <EditName current={profile.name} remaining={5 - profile.name_changes_today} onDone={refetch} />
-        <EditUsername current={profile.username} cooldownLeft={cooldownLeft} onDone={refetch} />
-        <EditAvatar onDone={refetch} />
-        <EditBanner current={profile.banner_url} onDone={refetch} />
+        <EditName current={profile.name} remaining={5 - profile.name_changes_today} onDone={refreshProfile} onUpdating={setProfileUpdating} />
+        <EditUsername current={profile.username} cooldownLeft={cooldownLeft} onDone={refreshProfile} onUpdating={setProfileUpdating} />
+        <EditAvatar onDone={refreshProfile} onUpdating={setProfileUpdating} />
+        <EditBanner current={profile.banner_url} onDone={refreshProfile} onUpdating={setProfileUpdating} />
 
         <section className="m3-shadow-1 mt-4 rounded-3xl bg-card p-5">
           <h2 className="flex items-center gap-2 font-display text-lg">
@@ -157,6 +174,34 @@ function ProfilePage() {
   );
 }
 
+function ProfileHeaderSkeleton() {
+  return (
+    <section className="m3-shadow-1 overflow-hidden rounded-3xl bg-card" aria-hidden="true">
+      <Skeleton className="h-24 rounded-none" />
+      <div className="px-5 pb-5">
+        <Skeleton className="-mt-12 size-24 rounded-full border-4 border-card" />
+        <Skeleton className="mt-4 h-7 w-40" />
+        <Skeleton className="mt-2 h-4 w-28" />
+        <div className="mt-3 flex gap-2">
+          <Skeleton className="h-6 w-24 rounded-full" />
+          <Skeleton className="h-6 w-24 rounded-full" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+async function waitForImage(url?: string | null) {
+  if (!url) return;
+  await new Promise<void>((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve();
+    image.onerror = () => resolve();
+    image.src = url;
+    if (image.complete) resolve();
+  });
+}
+
 function Card({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="m3-shadow-1 mt-4 rounded-3xl bg-card p-5">
@@ -179,7 +224,7 @@ const inputCls =
 const btnCls =
   "inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition active:scale-95 disabled:opacity-60";
 
-function EditName({ current, remaining, onDone }: { current: string; remaining: number; onDone: () => void }) {
+function EditName({ current, remaining, onDone, onUpdating }: { current: string; remaining: number; onDone: () => Promise<void>; onUpdating: (updating: boolean) => void }) {
   const t = useT();
   const [name, setName] = useState(current);
   const [busy, setBusy] = useState(false);
@@ -196,14 +241,14 @@ function EditName({ current, remaining, onDone }: { current: string; remaining: 
         <button
           disabled={busy || remaining <= 0}
           onClick={async () => {
-            setBusy(true); setError(null); setOk(null);
+            onUpdating(true); setBusy(true); setError(null); setOk(null);
             try {
               await changeNameFn({ data: { name } });
               setOk(t("Nama diperbarui."));
-              onDone();
+              await onDone();
             } catch (e) {
               setError(e instanceof Error ? e.message : "Gagal.");
-            } finally { setBusy(false); }
+            } finally { setBusy(false); onUpdating(false); }
           }}
           className={btnCls}
         >
@@ -215,7 +260,7 @@ function EditName({ current, remaining, onDone }: { current: string; remaining: 
   );
 }
 
-function EditUsername({ current, cooldownLeft, onDone }: { current: string; cooldownLeft: number; onDone: () => void }) {
+function EditUsername({ current, cooldownLeft, onDone, onUpdating }: { current: string; cooldownLeft: number; onDone: () => Promise<void>; onUpdating: (updating: boolean) => void }) {
   const t = useT();
   const [username, setUsername] = useState(current);
   const [busy, setBusy] = useState(false);
@@ -240,14 +285,14 @@ function EditUsername({ current, cooldownLeft, onDone }: { current: string; cool
         <button
           disabled={busy || cooldownLeft > 0}
           onClick={async () => {
-            setBusy(true); setError(null); setOk(null);
+            onUpdating(true); setBusy(true); setError(null); setOk(null);
             try {
               await changeUsernameFn({ data: { username } });
               setOk(t("Username diperbarui."));
-              onDone();
+              await onDone();
             } catch (e) {
               setError(e instanceof Error ? e.message : "Gagal.");
-            } finally { setBusy(false); }
+            } finally { setBusy(false); onUpdating(false); }
           }}
           className={btnCls}
         >
@@ -259,7 +304,7 @@ function EditUsername({ current, cooldownLeft, onDone }: { current: string; cool
   );
 }
 
-function EditAvatar({ onDone }: { onDone: () => void }) {
+function EditAvatar({ onDone, onUpdating }: { onDone: () => Promise<void>; onUpdating: (updating: boolean) => void }) {
   const t = useT();
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -269,17 +314,17 @@ function EditAvatar({ onDone }: { onDone: () => void }) {
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function uploadCroppedFile(file: File) {
-    setBusy(true); setError(null); setOk(null);
+    onUpdating(true); setBusy(true); setError(null); setOk(null);
     try {
       const buf = new Uint8Array(await file.arrayBuffer());
       let bin = "";
       for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
       await uploadAvatarFn({ data: { base64: btoa(bin), contentType: file.type || "image/png" } });
       setOk(t("Foto profil diperbarui."));
-      onDone();
+      await onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal upload.");
-    } finally { setBusy(false); }
+    } finally { setBusy(false); onUpdating(false); }
   }
 
   return (
@@ -297,15 +342,15 @@ function EditAvatar({ onDone }: { onDone: () => void }) {
         <button
           disabled={busy || !url}
           onClick={async () => {
-            setBusy(true); setError(null); setOk(null);
+            onUpdating(true); setBusy(true); setError(null); setOk(null);
             try {
               await setAvatarUrlFn({ data: { url } });
               setOk(t("Foto profil diperbarui."));
               setUrl("");
-              onDone();
+              await onDone();
             } catch (e) {
               setError(e instanceof Error ? e.message : "Gagal.");
-            } finally { setBusy(false); }
+            } finally { setBusy(false); onUpdating(false); }
           }}
           className={btnCls}
         >
@@ -347,7 +392,7 @@ function EditAvatar({ onDone }: { onDone: () => void }) {
   );
 }
 
-function EditBanner({ current, onDone }: { current: string | null; onDone: () => void }) {
+function EditBanner({ current, onDone, onUpdating }: { current: string | null; onDone: () => Promise<void>; onUpdating: (updating: boolean) => void }) {
   const t = useT();
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -357,17 +402,17 @@ function EditBanner({ current, onDone }: { current: string | null; onDone: () =>
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function uploadCroppedFile(file: File) {
-    setBusy(true); setError(null); setOk(null);
+    onUpdating(true); setBusy(true); setError(null); setOk(null);
     try {
       const buf = new Uint8Array(await file.arrayBuffer());
       let bin = "";
       for (let i = 0; i < buf.length; i++) bin += String.fromCharCode(buf[i]);
       await uploadBannerFn({ data: { base64: btoa(bin), contentType: file.type || "image/png" } });
       setOk(t("Banner diperbarui."));
-      onDone();
+      await onDone();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Gagal upload.");
-    } finally { setBusy(false); }
+    } finally { setBusy(false); onUpdating(false); }
   }
 
   return (
@@ -375,13 +420,15 @@ function EditBanner({ current, onDone }: { current: string | null; onDone: () =>
       <p className="mt-1 text-sm text-muted-foreground">
         {t("Gambar latar di bagian atas profil publik kamu. Upload gambar atau tempel URL gambar.")}
       </p>
-      {current && (
+      {busy ? (
+        <Skeleton className="mt-3 h-24 w-full rounded-2xl" />
+      ) : current ? (
         <img
           src={current}
           alt={t("Banner saat ini")}
           className="mt-3 h-24 w-full rounded-2xl object-cover"
         />
-      )}
+      ) : null}
       <div className="mt-3 flex gap-2">
         <input
           value={url}
@@ -392,15 +439,15 @@ function EditBanner({ current, onDone }: { current: string | null; onDone: () =>
         <button
           disabled={busy || !url}
           onClick={async () => {
-            setBusy(true); setError(null); setOk(null);
+            onUpdating(true); setBusy(true); setError(null); setOk(null);
             try {
               await setBannerUrlFn({ data: { url } });
               setOk(t("Banner diperbarui."));
               setUrl("");
-              onDone();
+              await onDone();
             } catch (e) {
               setError(e instanceof Error ? e.message : "Gagal.");
-            } finally { setBusy(false); }
+            } finally { setBusy(false); onUpdating(false); }
           }}
           className={btnCls}
         >
