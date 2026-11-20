@@ -653,6 +653,10 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       let needsSearch = false;
       const forceSearch =
         tool === "searchWeb" || plugin === "searchWeb" || plugin === "deepResearch";
+      const asksForFreshInfo =
+        /\b(?:terbaru|terkini|saat ini|sekarang|hari ini|kemarin|minggu ini|bulan ini|tahun ini|rilis terbaru|lagi ramai|trending|latest|newest|currently|right now|today|this week|this month|this year|upcoming)\b/i.test(
+          lastUser,
+        );
       const deepResearch = plugin === "deepResearch";
       let needsReasoning = tool === "thinkLonger" || plugin === "deepResearch";
       let vision = "";
@@ -709,7 +713,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
               queries?: string[];
               title?: string;
             };
-            needsSearch = !!pj.needsSearch || forceSearch;
+            needsSearch = !!pj.needsSearch || forceSearch || asksForFreshInfo;
             needsReasoning = needsReasoning || !!pj.needsReasoning;
             queries = (pj.queries ?? []).filter(Boolean);
             query = queries[0] ?? pj.query ?? "";
@@ -717,6 +721,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         } catch {
           /* planner opsional */
         }
+        needsSearch = needsSearch || forceSearch || asksForFreshInfo;
 
         try {
           const tr = await fetch("/api/ai-title", {
@@ -732,7 +737,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         } catch {
           /* judul opsional */
         }
-        if (forceSearch && !query) query = lastUser;
+        if ((forceSearch || asksForFreshInfo) && !query) query = lastUser;
         if (queries.length === 0 && query) queries = [query];
       }
 

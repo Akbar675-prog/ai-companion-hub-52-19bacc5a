@@ -253,6 +253,12 @@ function rehypeFadeStreamWords() {
   };
 }
 
+function cleanAnswerMarkup(text: string) {
+  return text
+    .replace(/<Entity\s+value="([^"]*)"[^>]*\s*\/>/g, "$1")
+    .replace(/<Cite\b[^>]*\s*\/>/g, "");
+}
+
 function MarkdownBody({
   text,
   sources,
@@ -266,7 +272,7 @@ function MarkdownBody({
 }) {
   // Rapikan keluaran model: hilangkan baris kosong berlebih dan spasi ekor
   // yang membuat jarak antar paragraf terlihat kepanjangan.
-  const clean = text
+  const clean = cleanAnswerMarkup(text)
     .replace(/\r\n/g, "\n")
     .replace(/[ \t]+$/gm, "")
     .replace(/\n{3,}/g, "\n\n")
@@ -452,7 +458,7 @@ export function AiMessage({
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(message.content);
+      await navigator.clipboard.writeText(cleanAnswerMarkup(message.content));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {

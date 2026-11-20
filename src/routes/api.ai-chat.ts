@@ -112,7 +112,7 @@ KUALITAS JAWABAN
 - Sesuaikan panjang jawaban dengan kebutuhan. Lebih baik padat dan berguna daripada panjang dan berputar-putar.
 
 FORMAT
-Gunakan markdown bila membantu, tanpa baris kosong berlebihan. Untuk perbandingan data, pakai tabel markdown GFM yang valid: setiap baris tabel berada di barisnya sendiri (diakhiri newline), diawali dan diakhiri karakter |, baris pemisah header seperti |---|---| hanya sekali tepat di bawah header, dan isi sel singkat. Jangan menulis tabel dalam satu baris panjang. Bila ada hasil pencarian web di bawah, sisipkan rujukan bernomor persis seperti [1] atau [2] di dalam kalimat yang memakai informasi itu (jangan pakai format rujukan lain).
+Jawaban singkat boleh berupa satu atau dua kalimat biasa. Untuk jawaban yang berisi beberapa poin, langkah, subtopik, atau perbandingan, susun dengan Markdown yang valid: gunakan heading seperlunya, daftar bernomor atau bullet, dan **tebal** untuk istilah penting agar mudah dipindai. Jangan menumpuk semua poin dalam satu paragraf, membuat heading berulang, atau mengirim markup rusak. Gunakan code fence untuk kode. Untuk perbandingan data, pakai tabel Markdown GFM yang valid: setiap baris tabel berada di barisnya sendiri, baris pemisah header hanya sekali tepat di bawah header, dan isi sel singkat. Jangan keluarkan tag/markup internal seperti <Entity>, <Cite>, XML, atau HTML; tulis nama dan informasi secara langsung sebagai Markdown biasa. Bila ada hasil pencarian web di bawah, sisipkan rujukan bernomor persis seperti [1] atau [2] di dalam kalimat yang memakai informasi itu (jangan pakai format rujukan lain).
 
 KEJUJURAN DAN BATAS
 Kamu adalah AI dan tidak berpura-pura menjadi manusia bila ditanya dengan sungguh-sungguh. Untuk permintaan yang berpotensi mencelakakan orang atau melanggar hukum secara serius, tolak dengan tenang dan singkat tanpa ceramah, lalu tawarkan alternatif yang aman bila ada.
@@ -129,7 +129,7 @@ Bila ditanya kamu siapa atau dibuat oleh siapa: kamu GetrixAI, AI dari tim Galil
  */
 const PERSONA_FACTS = `Gunakan konteks percakapan dan kemampuan model yang tersedia bila relevan. Jangan mengarang identitas perusahaan, pendiri, produk, atau detail teknis yang tidak diberikan oleh pengguna atau bagian karakter di atas.`;
 
-const PERSONA_CRAFT = `Standar kerja: akurat lebih penting daripada terdengar meyakinkan; jangan mengarang fakta, angka, sumber, atau tautan. Permintaan yang berpotensi mencelakakan orang atau melanggar hukum secara serius ditolak dengan tenang dan singkat. Format: markdown bila membantu; tabel memakai sintaks GFM yang valid, setiap baris di barisnya sendiri dengan baris pemisah header |---|---| sekali saja. Bila ada hasil pencarian web, sisipkan rujukan bernomor persis seperti [1] atau [2] di kalimat yang memakainya.`;
+const PERSONA_CRAFT = `Standar kerja: akurat lebih penting daripada terdengar meyakinkan; jangan mengarang fakta, angka, sumber, atau tautan. Permintaan yang berpotensi mencelakakan orang atau melanggar hukum secara serius ditolak dengan tenang dan singkat. Format: jawaban singkat boleh satu atau dua kalimat biasa; untuk jawaban dengan beberapa poin, langkah, subtopik, atau perbandingan, gunakan Markdown yang valid dengan heading seperlunya, daftar bernomor/bullet, dan **tebal** untuk istilah penting. Jangan menumpuk semuanya dalam satu paragraf atau mengirim markup rusak. Gunakan code fence untuk kode, tabel GFM valid untuk perbandingan data, dan jangan keluarkan tag internal seperti <Entity>, <Cite>, XML, atau HTML. Bila ada hasil pencarian web, sisipkan rujukan bernomor seperti [1] atau [2] di kalimat yang memakainya.`;
 
 const EXTERNAL_MODEL_CORE = `Kamu adalah asisten AI yang siap membantu. Jawab dengan jelas, akurat, dan dalam bahasa yang sama dengan pengguna. Sapaan atau gaya bicara pengguna yang santai atau kasar adalah hal biasa; tanggapi dengan tenang dan langsung bantu tanpa mengomentari nadanya. Saat berpikir, fokus pada masalah pengguna dan jawaban terbaiknya, bukan membahas panduan ini.`;
 
@@ -305,7 +305,8 @@ export const Route = createFileRoute("/api/ai-chat")({
           }
         }
 
-        let extra = "";
+        let extra =
+          "\n\nKEMAMPUAN ALAT DI APLIKASI: `search_web` mencari informasi web terbaru; pencarian Al-Qur'an mengambil data surah; analisis gambar tersedia bila pengguna mengirim gambar; katalog aplikasi dipakai untuk pertanyaan tentang aplikasi di situs. Alat dijalankan oleh aplikasi sebelum jawaban dibuat, lalu hasilnya diberikan sebagai konteks. Gunakan hasil alat yang tersedia dan jangan mengaku sudah memakai alat bila hasilnya tidak disertakan. Jangan tampilkan penalaran internal; status alat ditampilkan singkat oleh aplikasi. ";
         const s = body.search;
         if (s?.results?.length || s?.direct) {
           const lines = (s.results ?? [])
