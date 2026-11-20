@@ -4,7 +4,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Root } from "hast";
 
-import { Check, ChevronDown, Copy, Download, Globe, RefreshCw, ThumbsDown, ThumbsUp, Volume2, VolumeX, X } from "lucide-react";
+import { Check, ChevronDown, Copy, Download, Link2, RefreshCw, ThumbsDown, ThumbsUp, Volume2, VolumeX, X } from "lucide-react";
 import { AiAvatar } from "@/components/ui/plasma-shader";
 import { CodeBlock } from "@/components/CodeBlock";
 
@@ -14,9 +14,11 @@ import { speakAiTextFn } from "@/lib/ai-speech.functions";
 
 function SourcesSheet({
   sources,
+  query,
   onClose,
 }: {
   sources: NonNullable<ChatMessage["sources"]>;
+  query?: string;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -37,7 +39,7 @@ function SourcesSheet({
         onClick={onClose}
         className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
       />
-      <div className="relative flex max-h-[70vh] w-full max-w-lg flex-col overflow-hidden rounded-t-[28px] bg-card shadow-2xl duration-200 animate-in slide-in-from-bottom">
+      <div className="relative flex max-h-[75dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-[28px] bg-card shadow-2xl duration-200 animate-in slide-in-from-bottom">
         <div className="flex items-center justify-between px-5 pb-3 pt-5">
           <span className="w-8" />
           <h2 className="font-display text-lg">Hasil Pencarian</h2>
@@ -50,6 +52,11 @@ function SourcesSheet({
             <X className="size-4" />
           </button>
         </div>
+        {query && (
+          <p className="px-5 pb-3 text-center text-xs text-muted-foreground">
+            Pencarian: <span className="font-medium text-foreground">{query}</span> · {sources.length} hasil
+          </p>
+        )}
         <ol className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 pb-8">
           {sources.map((s, i) => (
             <li key={s.link}>
@@ -69,6 +76,9 @@ function SourcesSheet({
                 <span className="block text-sm font-medium leading-snug">
                   {s.title || hostOf(s.link)}
                 </span>
+                <span className="block [overflow-wrap:anywhere] text-xs text-primary">
+                  {s.link}
+                </span>
                 {s.snippet && (
                   <span className="line-clamp-2 block text-sm text-muted-foreground">
                     {s.snippet}
@@ -84,7 +94,13 @@ function SourcesSheet({
   );
 }
 
-function SourcesPill({ sources }: { sources: NonNullable<ChatMessage["sources"]> }) {
+function SourcesPill({
+  sources,
+  query,
+}: {
+  sources: NonNullable<ChatMessage["sources"]>;
+  query?: string;
+}) {
   const [open, setOpen] = useState(false);
   const icons = sources.slice(0, 3);
 
@@ -93,25 +109,32 @@ function SourcesPill({ sources }: { sources: NonNullable<ChatMessage["sources"]>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-surface-variant"
+        aria-label={`Lihat ${sources.length} halaman web yang digunakan sebagai sumber`}
+        className="inline-flex min-h-10 items-center gap-2.5 rounded-full border border-border/70 bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-surface-variant"
       >
-        <span className="flex -space-x-1.5">
+        <span className="flex -space-x-1.5" aria-hidden="true">
           {icons.map((s) => (
             <img
               key={s.link}
               src={faviconOf(s.link)}
               alt=""
-              className="size-4 rounded-full bg-background ring-1 ring-border"
+              className="size-5 rounded-full bg-background ring-1 ring-card"
               loading="lazy"
             />
           ))}
-          {icons.length === 0 && <Globe className="size-4" />}
+          {icons.length === 0 && <Link2 className="size-5" />}
         </span>
-        <span>Baca {sources.length} halaman web</span>
-        <ChevronDown className="size-4 -rotate-90" />
+        <span>{sources.length} halaman web</span>
+        <ChevronDown aria-hidden="true" className="size-4 -rotate-90" />
       </button>
 
-      {open && <SourcesSheet sources={sources} onClose={() => setOpen(false)} />}
+      {open && (
+        <SourcesSheet
+          sources={sources}
+          query={query}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </>
   );
 }
@@ -498,7 +521,9 @@ export function AiMessage({
 
         {message.imageUrl && <GeneratedImage url={message.imageUrl} prompt={message.imagePrompt} />}
 
-        {message.sources && message.sources.length > 0 && <SourcesPill sources={message.sources} />}
+        {message.sources && message.sources.length > 0 && (
+          <SourcesPill sources={message.sources} query={message.searchQuery} />
+        )}
 
 
 

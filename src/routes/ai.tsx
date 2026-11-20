@@ -756,11 +756,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
 
       let search: { query?: string; direct?: string; results?: ChatSource[] } | null = null;
       if (needsSearch && query) {
-        setStatus(
-          deepResearch && queries.length > 1
-            ? `Riset mendalam: ${queries.length} pencarian…`
-            : `Mencari "${query}"`,
-        );
+        setStatus('Menggunakan alat "search_web"...');
         try {
           const sr = await fetch("/api/ai-search", {
             method: "POST",

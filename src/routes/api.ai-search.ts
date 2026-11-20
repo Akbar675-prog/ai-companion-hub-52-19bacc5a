@@ -6,12 +6,46 @@ type SerperJson = {
   organic?: { title?: string; link?: string; snippet?: string; date?: string }[];
 };
 
+let nextKeyIndex = 0;
+
+function serperKeys() {
+  return [1, 2, 3]
+    .map((index) => process.env[`SERPER_GOOGLE_API_${index}`]?.trim())
+    .filter((key): key is string => Boolean(key));
+}
+
+async function searchWithKeyRotation(query: string, num: number, keys: string[]) {
+  const start = nextKeyIndex++ % keys.length;
+  for (let attempt = 0; attempt < keys.length; attempt++) {
+    const key = keys[(start + attempt) % keys.length];
+    try {
+      const response = await fetch("https://google.serper.dev/search", {
+        method: "POST",
+        headers: { "X-API-KEY": key, "Content-Type": "application/json" },
+        body: JSON.stringify({ q: query, num }),
+        signal: AbortSignal.timeout(12_000),
+      });
+      if (response.ok) return (await response.json()) as SerperJson;
+      // Hanya pindah key untuk limit/kuota atau kredensial yang ditolak.
+      if (response.status !== 429 && response.status !== 403) return null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 export const Route = createFileRoute("/api/ai-search")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const key = process.env["SERPER_API_KEY"];
-        if (!key) return Response.json({ error: "SERPER_API_KEY belum diatur." }, { status: 500 });
+        const keys = serperKeys();
+        if (keys.length === 0) {
+          return Response.json(
+            { error: "SERPER_GOOGLE_API_1, SERPER_GOOGLE_API_2, atau SERPER_GOOGLE_API_3 belum diatur." },
+            { status: 500 },
+          );
+        }
 
         let body: { query?: string; queries?: string[]; limit?: number };
         try {
@@ -34,19 +68,7 @@ export const Route = createFileRoute("/api/ai-search")({
         const perQuery = Math.min(30, Math.ceil(limit / queries.length));
 
         const responses = await Promise.all(
-          queries.map(async (q) => {
-            try {
-              const res = await fetch("https://google.serper.dev/search", {
-                method: "POST",
-                headers: { "X-API-KEY": key, "Content-Type": "application/json" },
-                body: JSON.stringify({ q, num: perQuery }),
-              });
-              if (!res.ok) return null;
-              return (await res.json()) as SerperJson;
-            } catch {
-              return null;
-            }
-          }),
+          queries.map((query) => searchWithKeyRotation(query, perQuery, keys)),
         );
 
         if (responses.every((r) => r === null))
