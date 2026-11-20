@@ -1,4 +1,4 @@
-// Generate gambar via Cloudflare Workers AI (Stable Diffusion XL) + kuota harian per pengguna.
+// Generate gambar via Cloudflare Workers AI (FLUX.2 [dev]) + kuota harian per pengguna.
 // Hasil gambar disimpan permanen di storage (bucket app-metadata) pada path
 // create/ai-image/<id 32 karakter> dan disajikan lewat host user content.
 //
@@ -13,7 +13,7 @@ const BUCKET = "app-metadata";
 export const DAILY_IMAGE_LIMIT = 5;
 export const AI_IMAGE_PREFIX = "create/ai-image";
 
-const CF_MODEL = "@cf/stabilityai/stable-diffusion-xl-base-1.0";
+const CF_MODEL = "@cf/black-forest-labs/flux-2-dev";
 
 function cfConfig() {
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -112,12 +112,8 @@ async function fetchImageBytes(
 ): Promise<{ bytes: ArrayBuffer; type: string }> {
   const { url, token } = cfConfig();
   
-  const body = JSON.stringify({ 
-    prompt,
-    negative_prompt: "blurry, low quality, deformed, bad anatomy, ugly, bad proportions, text, watermark, signature",
-    num_steps: 15, // Diturunkan ke 15 agar hemat neuron & lebih cepat
-    rejectIfBusy: true, // Langsung tolak jika server penuh (mencegah antrean lama)
-  });
+  const body = new FormData();
+  body.set("prompt", prompt);
 
   let lastError = "";
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -126,7 +122,6 @@ async function fetchImageBytes(
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
         body,
         signal: AbortSignal.timeout(60_000),
@@ -165,8 +160,8 @@ async function fetchImageBytes(
       const contentType = res.headers.get("content-type") || "";
 
       if (contentType.includes("application/json")) {
-        const json = (await res.json()) as { result?: { image?: string }; };
-        const b64 = json?.result?.image;
+        const json = (await res.json()) as { image?: string; result?: { image?: string } };
+        const b64 = json.image ?? json.result?.image;
         if (!b64) {
           lastError = "Response tidak berisi gambar";
           break;
