@@ -45,6 +45,7 @@ import { Route as ApiAiSearchRouteImport } from './routes/api.ai-search'
 import { Route as ApiAiSurahRouteImport } from './routes/api.ai-surah'
 import { Route as ApiAiTitleRouteImport } from './routes/api.ai-title'
 import { Route as ApiAiVisionRouteImport } from './routes/api.ai-vision'
+import { Route as ApiOpenaiRouteImport } from './routes/api.openai'
 import { Route as AppsIdRouteImport } from './routes/apps.$id'
 import { Route as CheckReportRouteImport } from './routes/check.report'
 import { Route as DataGetVerifiedRouteImport } from './routes/data.get-verified'
@@ -58,6 +59,7 @@ import { Route as ApiTempMailInboxRouteImport } from './routes/api.temp-mail.inb
 import { Route as ApiTempMailSendRouteImport } from './routes/api.temp-mail.send'
 import { Route as ApiTempMailWebhookRouteImport } from './routes/api.temp-mail.webhook'
 import { Route as ApiV1LoginRouteImport } from './routes/api.v1.login'
+import { Route as ApiV1UpdateRouteImport } from './routes/api.v1.update'
 import { Route as AppsGypsB64RouteImport } from './routes/apps.gyps.$b64'
 import { Route as AppsIndexApplistDotjsonRouteImport } from './routes/apps.index.applist[.]json'
 import { Route as AppsPreviewIdRouteImport } from './routes/apps.preview.$id'
@@ -251,6 +253,11 @@ const ApiAiVisionRoute = ApiAiVisionRouteImport.update({
   path: '/api/ai-vision',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOpenaiRoute = ApiOpenaiRouteImport.update({
+  id: '/api/openai',
+  path: '/api/openai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppsIdRoute = AppsIdRouteImport.update({
   id: '/apps/$id',
   path: '/apps/$id',
@@ -314,6 +321,11 @@ const ApiTempMailWebhookRoute = ApiTempMailWebhookRouteImport.update({
 const ApiV1LoginRoute = ApiV1LoginRouteImport.update({
   id: '/api/v1/login',
   path: '/api/v1/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1UpdateRoute = ApiV1UpdateRouteImport.update({
+  id: '/api/v1/update',
+  path: '/api/v1/update',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppsGypsB64Route = AppsGypsB64RouteImport.update({
@@ -415,6 +427,7 @@ export interface FileRoutesByFullPath {
   '/api/ai-surah': typeof ApiAiSurahRoute
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
+  '/api/openai': typeof ApiOpenaiRoute
   '/apps/$id': typeof AppsIdRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
@@ -428,6 +441,7 @@ export interface FileRoutesByFullPath {
   '/api/temp-mail/send': typeof ApiTempMailSendRoute
   '/api/temp-mail/webhook': typeof ApiTempMailWebhookRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
+  '/api/v1/update': typeof ApiV1UpdateRoute
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -478,6 +492,7 @@ export interface FileRoutesByTo {
   '/api/ai-surah': typeof ApiAiSurahRoute
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
+  '/api/openai': typeof ApiOpenaiRoute
   '/apps/$id': typeof AppsIdRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
@@ -491,6 +506,7 @@ export interface FileRoutesByTo {
   '/api/temp-mail/send': typeof ApiTempMailSendRoute
   '/api/temp-mail/webhook': typeof ApiTempMailWebhookRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
+  '/api/v1/update': typeof ApiV1UpdateRoute
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -542,6 +558,7 @@ export interface FileRoutesById {
   '/api/ai-surah': typeof ApiAiSurahRoute
   '/api/ai-title': typeof ApiAiTitleRoute
   '/api/ai-vision': typeof ApiAiVisionRoute
+  '/api/openai': typeof ApiOpenaiRoute
   '/apps/$id': typeof AppsIdRoute
   '/check/report': typeof CheckReportRoute
   '/data/get-verified': typeof DataGetVerifiedRoute
@@ -555,6 +572,7 @@ export interface FileRoutesById {
   '/api/temp-mail/send': typeof ApiTempMailSendRoute
   '/api/temp-mail/webhook': typeof ApiTempMailWebhookRoute
   '/api/v1/login': typeof ApiV1LoginRouteWithChildren
+  '/api/v1/update': typeof ApiV1UpdateRoute
   '/apps/gyps/$b64': typeof AppsGypsB64Route
   '/apps/preview/$id': typeof AppsPreviewIdRoute
   '/broadcasts/image/$id': typeof BroadcastsImageIdRoute
@@ -607,6 +625,7 @@ export interface FileRouteTypes {
     | '/api/ai-surah'
     | '/api/ai-title'
     | '/api/ai-vision'
+    | '/api/openai'
     | '/apps/$id'
     | '/check/report'
     | '/data/get-verified'
@@ -620,6 +639,7 @@ export interface FileRouteTypes {
     | '/api/temp-mail/send'
     | '/api/temp-mail/webhook'
     | '/api/v1/login'
+    | '/api/v1/update'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
     | '/broadcasts/image/$id'
@@ -670,6 +690,7 @@ export interface FileRouteTypes {
     | '/api/ai-surah'
     | '/api/ai-title'
     | '/api/ai-vision'
+    | '/api/openai'
     | '/apps/$id'
     | '/check/report'
     | '/data/get-verified'
@@ -683,6 +704,7 @@ export interface FileRouteTypes {
     | '/api/temp-mail/send'
     | '/api/temp-mail/webhook'
     | '/api/v1/login'
+    | '/api/v1/update'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
     | '/broadcasts/image/$id'
@@ -733,6 +755,7 @@ export interface FileRouteTypes {
     | '/api/ai-surah'
     | '/api/ai-title'
     | '/api/ai-vision'
+    | '/api/openai'
     | '/apps/$id'
     | '/check/report'
     | '/data/get-verified'
@@ -746,6 +769,7 @@ export interface FileRouteTypes {
     | '/api/temp-mail/send'
     | '/api/temp-mail/webhook'
     | '/api/v1/login'
+    | '/api/v1/update'
     | '/apps/gyps/$b64'
     | '/apps/preview/$id'
     | '/broadcasts/image/$id'
@@ -797,6 +821,7 @@ export interface RootRouteChildren {
   ApiAiSurahRoute: typeof ApiAiSurahRoute
   ApiAiTitleRoute: typeof ApiAiTitleRoute
   ApiAiVisionRoute: typeof ApiAiVisionRoute
+  ApiOpenaiRoute: typeof ApiOpenaiRoute
   AppsIdRoute: typeof AppsIdRoute
   CheckReportRoute: typeof CheckReportRoute
   DataGetVerifiedRoute: typeof DataGetVerifiedRoute
@@ -810,6 +835,7 @@ export interface RootRouteChildren {
   ApiTempMailSendRoute: typeof ApiTempMailSendRoute
   ApiTempMailWebhookRoute: typeof ApiTempMailWebhookRoute
   ApiV1LoginRoute: typeof ApiV1LoginRouteWithChildren
+  ApiV1UpdateRoute: typeof ApiV1UpdateRoute
   AppsGypsB64Route: typeof AppsGypsB64Route
   AppsPreviewIdRoute: typeof AppsPreviewIdRoute
   BroadcastsImageIdRoute: typeof BroadcastsImageIdRoute
@@ -1077,6 +1103,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiVisionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/openai': {
+      id: '/api/openai'
+      path: '/api/openai'
+      fullPath: '/api/openai'
+      preLoaderRoute: typeof ApiOpenaiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/apps/$id': {
       id: '/apps/$id'
       path: '/apps/$id'
@@ -1166,6 +1199,13 @@ declare module '@tanstack/react-router' {
       path: '/api/v1/login'
       fullPath: '/api/v1/login'
       preLoaderRoute: typeof ApiV1LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/update': {
+      id: '/api/v1/update'
+      path: '/api/v1/update'
+      fullPath: '/api/v1/update'
+      preLoaderRoute: typeof ApiV1UpdateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/apps/gyps/$b64': {
@@ -1304,6 +1344,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiSurahRoute: ApiAiSurahRoute,
   ApiAiTitleRoute: ApiAiTitleRoute,
   ApiAiVisionRoute: ApiAiVisionRoute,
+  ApiOpenaiRoute: ApiOpenaiRoute,
   AppsIdRoute: AppsIdRoute,
   CheckReportRoute: CheckReportRoute,
   DataGetVerifiedRoute: DataGetVerifiedRoute,
@@ -1317,6 +1358,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiTempMailSendRoute: ApiTempMailSendRoute,
   ApiTempMailWebhookRoute: ApiTempMailWebhookRoute,
   ApiV1LoginRoute: ApiV1LoginRouteWithChildren,
+  ApiV1UpdateRoute: ApiV1UpdateRoute,
   AppsGypsB64Route: AppsGypsB64Route,
   AppsPreviewIdRoute: AppsPreviewIdRoute,
   BroadcastsImageIdRoute: BroadcastsImageIdRoute,
