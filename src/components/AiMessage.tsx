@@ -11,6 +11,14 @@ import { ShiningText } from "@/components/ui/shining-text";
 import { faviconOf, hostOf, type ChatMessage } from "@/lib/ai-history";
 import { speakAiTextFn } from "@/lib/ai-speech.functions";
 
+// ── GenUI (box, row, AsyncImage, radio-group, button, dst.) ──
+import { configureGenUiImages, GenUiBlock } from "@/components/GenUi";
+import { genUiStart, splitGenUI, toPlainText } from "@/lib/genui";
+import { serperResolver } from "@/lib/genui-images";
+
+// Pasang pencari gambar Serper sekali saat modul dimuat.
+configureGenUiImages(serperResolver);
+
 function SourcesSheet({
   sources,
   query,
@@ -213,36 +221,73 @@ function CitationPill({
   );
 }
 
+// Catatan: tag <AsyncImageGroup> TIDAK lagi dihapus di sini — sekarang dirender oleh GenUI.
 function cleanAnswerMarkup(text: string) {
   return text
     .replace(/<Entity\s+value="([^"]*)"[^>]*\s*\/>/g, "$1")
-    .replace(/<Cite\b[^>]*\s*\/>/g, "")
-    .replace(/<\/?AsyncImageGroup\b[^>]*>/gi, "");
+    .replace(/<Cite\b[^>]*\s*\/>/g, "");
 }
 
+/**
+ * Pintu masuk render jawaban:
+ * - saat streaming: teks biasa + placeholder "Menyusun tampilan..." untuk blok GenUI
+ * - setelah selesai: teks → markdown, blok GenUI → komponen interaktif
+ */
 function MarkdownBody({
   text,
   sources,
   muted,
   streaming,
+  onIssueTurn,
 }: {
   text: string;
   sources?: ChatMessage["sources"];
   muted?: boolean;
   streaming?: boolean;
+  onIssueTurn?: (text: string) => void;
 }) {
+  const cleaned = cleanAnswerMarkup(text);
+
   if (streaming) {
+    const cut = genUiStart(cleaned);
+    const visible = cut >= 0 ? cleaned.slice(0, cut).trimEnd() : cleaned;
     return (
       <div
-        className={`whitespace-pre-wrap text-sm leading-relaxed [overflow-wrap:anywhere] ${
+        className={`space-y-2 text-sm leading-relaxed [overflow-wrap:anywhere] ${
           muted ? "text-muted-foreground" : "text-foreground"
         }`}
       >
-        {cleanAnswerMarkup(text)}
+        {visible && <div className="whitespace-pre-wrap">{visible}</div>}
+        {cut >= 0 && <ShiningText text="Menyusun tampilan..." />}
       </div>
     );
   }
 
+  const segments = splitGenUI(cleaned);
+
+  return (
+    <div className="space-y-3">
+      {segments.map((s, i) =>
+        s.type === "md" ? (
+          <MarkdownChunk key={i} text={s.text} sources={sources} muted={muted} />
+        ) : (
+          <GenUiBlock key={i} block={s.block} onIssueTurn={onIssueTurn} />
+        ),
+      )}
+    </div>
+  );
+}
+
+/** Render markdown biasa (kode lama MarkdownBody, tanpa mode streaming). */
+function MarkdownChunk({
+  text,
+  sources,
+  muted,
+}: {
+  text: string;
+  sources?: ChatMessage["sources"];
+  muted?: boolean;
+}) {
   // Rapikan keluaran model: hilangkan baris kosong berlebih dan spasi ekor
   // yang membuat jarak antar paragraf terlihat kepanjangan.
   const clean = cleanAnswerMarkup(text)
@@ -416,11 +461,14 @@ export function AiMessage({
   streaming,
   voiceId,
   onRegenerate,
+  onIssueTurn,
 }: {
   message: ChatMessage;
   streaming?: boolean;
   voiceId?: string;
   onRegenerate?: () => void;
+  /** Dipanggil saat GenUI.issueNewTurn("...") — kirim teks itu sebagai pesan user baru. */
+  onIssueTurn?: (text: string) => void;
 }) {
   const [copied, setCopied] = useState(false);
   const [speaking, setSpeaking] = useState(false);
@@ -430,7 +478,7 @@ export function AiMessage({
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(cleanAnswerMarkup(message.content));
+      await navigator.clipboard.writeText(toPlainText(cleanAnswerMarkup(message.content)));
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
@@ -449,7 +497,10 @@ export function AiMessage({
     }
     setSpeaking(true);
     try {
-      const result = await speakAiTextFn({ data: { text: message.content, voiceId } });
+      // Bacakan teks polos, bukan tag GenUI mentah.
+      const result = await speakAiTextFn({
+        data: { text: toPlainText(cleanAnswerMarkup(message.content)), voiceId },
+      });
       if (!result.audio) {
         setSpeaking(false);
         return;
@@ -493,7 +544,12 @@ export function AiMessage({
         )}
 
         {message.content && (
-          <MarkdownBody text={message.content} sources={message.sources} streaming={streaming} />
+          <MarkdownBody
+            text={message.content}
+            sources={message.sources}
+            streaming={streaming}
+            onIssueTurn={onIssueTurn}
+          />
         )}
 
 
@@ -562,3 +618,4 @@ export function AiMessage({
     </div>
   );
 }
+

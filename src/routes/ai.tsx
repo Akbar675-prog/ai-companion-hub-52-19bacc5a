@@ -103,10 +103,6 @@ function looksLikeImageRequest(text: string) {
   return IMAGE_REQUEST_RE.test(text);
 }
 
-function cleanThirdPartyMarkup(text: string) {
-  return text.replace(/<\/?AsyncImageGroup\b[^>]*>/gi, "");
-}
-
 function splitReasoningSummary(text: string) {
   const match = text.match(/\n?###\s+Ringkasan alasan\s*\n([\s\S]*)$/i);
   if (!match) return { content: text.trim(), reasoning: "" };
@@ -439,7 +435,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
           message: lastUser,
           messages: history.map((item) => ({
             role: item.role,
-            content: cleanThirdPartyMarkup(item.content),
+            content: item.content,
           })),
           systemPrompt: model.persona,
           stream: true,
@@ -477,7 +473,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         } else if (evt.type === "error") {
           throw new Error(evt.error || "Stream error");
         } else if (evt.type === "text" && evt.v) {
-          acc = cleanThirdPartyMarkup(acc + evt.v);
+          acc += evt.v;
           setDraft({ content: acc, reasoning: "" });
         }
       };
@@ -1218,6 +1214,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
                 message={m}
                 voiceId={aiProfile?.selectedVoiceId}
                 onRegenerate={i === messages.length - 1 ? () => void regenerate() : undefined}
+                onIssueTurn={(text) => void send(text)}
               />
             ),
           )}
