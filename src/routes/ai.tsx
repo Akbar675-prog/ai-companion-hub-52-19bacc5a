@@ -406,7 +406,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     setError(null);
     setLoading(true);
     setDraft({ content: "", reasoning: "" });
-    setStatus("Menyiapkan jawaban...");
+    setStatus("Memikirkan langkah...");
 
     const started = Date.now();
     const controller = new AbortController();
