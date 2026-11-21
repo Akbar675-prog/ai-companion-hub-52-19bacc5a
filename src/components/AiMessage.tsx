@@ -256,7 +256,8 @@ function rehypeFadeStreamWords() {
 function cleanAnswerMarkup(text: string) {
   return text
     .replace(/<Entity\s+value="([^"]*)"[^>]*\s*\/>/g, "$1")
-    .replace(/<Cite\b[^>]*\s*\/>/g, "");
+    .replace(/<Cite\b[^>]*\s*\/>/g, "")
+    .replace(/<\/?AsyncImageGroup\b[^>]*>/gi, "");
 }
 
 function MarkdownBody({

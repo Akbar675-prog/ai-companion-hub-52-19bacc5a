@@ -103,6 +103,19 @@ function looksLikeImageRequest(text: string) {
   return IMAGE_REQUEST_RE.test(text);
 }
 
+function cleanThirdPartyMarkup(text: string) {
+  return text.replace(/<\/?AsyncImageGroup\b[^>]*>/gi, "");
+}
+
+function splitReasoningSummary(text: string) {
+  const match = text.match(/\n?###\s+Ringkasan alasan\s*\n([\s\S]*)$/i);
+  if (!match) return { content: text.trim(), reasoning: "" };
+  return {
+    content: text.slice(0, match.index).trim(),
+    reasoning: match[1].trim(),
+  };
+}
+
 type Draft = {
   content: string;
   reasoning: string;
@@ -487,7 +500,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             } else if (evt.type === "error") {
               throw new Error(evt.error || "Stream error");
             } else if (evt.type === "text" && evt.v) {
-              acc += evt.v;
+              acc = cleanThirdPartyMarkup(acc + evt.v);
             }
           }
         }
@@ -499,11 +512,14 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         throw new Error("Stream berakhir tanpa jawaban");
       }
 
+      const answer = splitReasoningSummary(acc);
       stopPaint();
+      setDraft({ content: answer.content, reasoning: answer.reasoning });
 
       const reply: ChatMessage = {
         role: "assistant",
-        content: acc,
+        content: answer.content,
+        ...(answer.reasoning ? { reasoning: answer.reasoning } : {}),
         thoughtSeconds: Math.max(1, Math.round((Date.now() - started) / 1000)),
       };
 
