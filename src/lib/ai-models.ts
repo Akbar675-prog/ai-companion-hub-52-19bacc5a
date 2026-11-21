@@ -16,6 +16,8 @@ export type AiModel = {
   custom?: boolean;
   /** Bila true, pakai model resmi (modelType) alih-alih prompting/persona. */
   realModel?: boolean;
+  /** Jalankan model kustom melalui endpoint GPT-6 internal dengan persona kustom. */
+  gpt6Based?: boolean;
   /** ID model resmi, contoh: nvidia/nemotron-3.5-lightning:free */
   modelType?: string;
   /** Prompt respons kreatif yang lebih langsung untuk model ini. */
@@ -92,7 +94,7 @@ const HIDDEN_KEY = "gma:ai:hidden-models";
 type Override = Partial<
   Pick<
     AiModel,
-    | "name" | "tagline" | "persona" | "logo" | "isNew" | "realModel" | "modelType" | "abilities"
+    | "name" | "tagline" | "persona" | "logo" | "isNew" | "realModel" | "gpt6Based" | "modelType" | "abilities"
     | "endpointUrl" | "endpointKey" | "uncensored"
   >
 >;

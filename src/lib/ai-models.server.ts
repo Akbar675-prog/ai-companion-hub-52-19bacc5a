@@ -9,6 +9,7 @@ type StoredModelRow = {
   logo: string | null;
   custom: boolean;
   real_model: boolean;
+  gpt6_based: boolean;
   model_type: string | null;
   uncensored: boolean;
   abilities: string | null;
@@ -26,6 +27,7 @@ function toModel(row: StoredModelRow): AiModel {
     logo: row.logo ?? undefined,
     custom: true,
     realModel: row.real_model,
+    gpt6Based: row.gpt6_based ?? false,
     modelType: row.model_type ?? undefined,
     uncensored: row.uncensored ?? false,
     abilities: row.abilities ?? undefined,
@@ -39,7 +41,7 @@ export async function listStoredAiModels(): Promise<AiModel[]> {
   const { data, error } = await supabaseAdmin
     .from("ai_models")
     .select(
-      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, uncensored, abilities, endpoint_url, endpoint_key",
+      "id, name, tagline, persona, is_new, logo, custom, real_model, gpt6_based, model_type, uncensored, abilities, endpoint_url, endpoint_key",
     )
     .order("created_at", { ascending: true });
 
@@ -61,6 +63,7 @@ export async function saveStoredAiModel(model: AiModel): Promise<AiModel> {
         logo: model.logo ?? null,
         custom: true,
         real_model: model.realModel ?? false,
+        gpt6_based: model.gpt6Based ?? false,
         model_type: model.modelType ?? null,
         uncensored: model.uncensored ?? false,
         abilities: model.abilities ?? null,
@@ -70,7 +73,7 @@ export async function saveStoredAiModel(model: AiModel): Promise<AiModel> {
       { onConflict: "id" },
     )
     .select(
-      "id, name, tagline, persona, is_new, logo, custom, real_model, model_type, uncensored, abilities, endpoint_url, endpoint_key",
+      "id, name, tagline, persona, is_new, logo, custom, real_model, gpt6_based, model_type, uncensored, abilities, endpoint_url, endpoint_key",
     )
     .single();
 

@@ -72,7 +72,15 @@ export interface OpenAIMessageInput {
 }
 
 function buildPayload({ message, messages: history, systemPrompt }: OpenAIMessageInput) {
-  const prompt = systemPrompt === undefined ? DEFAULT_SYSTEM_PROMPT : systemPrompt;
+  const customPrompt = systemPrompt?.trim().slice(0, 10_000);
+  const prompt = [
+    DEFAULT_SYSTEM_PROMPT,
+    customPrompt
+      ? `PERSONA DAN INSTRUKSI KHUSUS MODEL INI:\n${customPrompt}\n\nIkuti persona dan format yang diminta selama sesuai dengan keselamatan, fakta, dan format Markdown yang didukung aplikasi.`
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   const messages: any[] = [];
 
   if (prompt && prompt.trim()) {

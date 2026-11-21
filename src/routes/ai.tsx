@@ -344,6 +344,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
   );
 
   const atBottomRef = useRef(true);
+  const lastStreamScrollRef = useRef(0);
   useEffect(() => {
     const onScroll = () => {
       const atBottom =
@@ -362,9 +363,11 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
   }, [messages.length]);
 
   useEffect(() => {
-    if (loading && followLatestRef.current && (draft?.content || draft?.reasoning)) {
-      endRef.current?.scrollIntoView({ behavior: "auto" });
-    }
+    if (!loading || !followLatestRef.current || (!draft?.content && !draft?.reasoning)) return;
+    const now = performance.now();
+    if (now - lastStreamScrollRef.current < 100) return;
+    lastStreamScrollRef.current = now;
+    endRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
   }, [draft?.content, draft?.reasoning, loading]);
 
   function jumpToLatest() {
@@ -393,6 +396,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     _attached: string | null,
     threadIdIn: string | null,
     baseIn: ChatThread[],
+    model: AiModel,
   ) {
     const lastUser = history[history.length - 1]?.content ?? "";
     let threadId = threadIdIn;
@@ -427,31 +431,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
 
     let acc = "";
 
-    let revealed = 0;
-    let painting = true;
-    let rafId: number | undefined;
-
-    const paint = () => {
-      const target = acc.length;
-      if (revealed < target) {
-        const diff = target - revealed;
-        revealed += diff > 80 ? Math.ceil(diff / 4) : Math.max(1, Math.ceil(diff / 6));
-        if (revealed > target) revealed = target;
-      }
-      const candidate = acc.slice(0, revealed);
-      const completeWords = candidate.match(/[\s\S]*\s/)?.[0] ?? "";
-      setDraft({ content: completeWords, reasoning: "" });
-      if (painting) rafId = requestAnimationFrame(paint);
-    };
-
-    const stopPaint = () => {
-      painting = false;
-      if (rafId !== undefined) cancelAnimationFrame(rafId);
-      setDraft({ content: acc, reasoning: "" });
-    };
-
-    rafId = requestAnimationFrame(paint);
-
     try {
       const res = await fetch("/api/openai", {
         method: "POST",
@@ -462,6 +441,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
             role: item.role,
             content: cleanThirdPartyMarkup(item.content),
           })),
+          systemPrompt: model.persona,
           stream: true,
         }),
         signal: controller.signal,
@@ -498,6 +478,7 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
           throw new Error(evt.error || "Stream error");
         } else if (evt.type === "text" && evt.v) {
           acc = cleanThirdPartyMarkup(acc + evt.v);
+          setDraft({ content: acc, reasoning: "" });
         }
       };
 
@@ -522,7 +503,6 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       }
 
       const answer = splitReasoningSummary(acc);
-      stopPaint();
       setDraft({ content: answer.content, reasoning: answer.reasoning });
 
       const reply: ChatMessage = {
@@ -549,9 +529,8 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         void navigate({ to: "/ai/c/$threadId", params: { threadId } });
       }
     } catch (e) {
-      stopPaint();
-
       if (acc.trim()) {
+        setDraft({ content: acc, reasoning: "" });
         const withReply = [
           ...history,
           {
@@ -601,8 +580,8 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
     const lastUser = history[history.length - 1]?.content ?? "";
 
     const activeModel = modelById(modelId, models);
-    if (activeModel?.id === "gpt-6") {
-      return runThirdParty(history, attached, threadIdIn, baseIn);
+    if (activeModel?.id === "gpt-6" || activeModel?.gpt6Based) {
+      return runThirdParty(history, attached, threadIdIn, baseIn, activeModel);
     }
 
     let threadId = threadIdIn;

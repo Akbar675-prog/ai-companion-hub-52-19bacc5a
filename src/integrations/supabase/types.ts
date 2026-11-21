@@ -21,6 +21,7 @@ export type Database = {
           custom: boolean
           endpoint_key: string | null
           endpoint_url: string | null
+          gpt6_based: boolean
           id: string
           is_new: boolean
           logo: string | null
@@ -38,6 +39,7 @@ export type Database = {
           custom?: boolean
           endpoint_key?: string | null
           endpoint_url?: string | null
+          gpt6_based?: boolean
           id: string
           is_new?: boolean
           logo?: string | null
@@ -55,6 +57,7 @@ export type Database = {
           custom?: boolean
           endpoint_key?: string | null
           endpoint_url?: string | null
+          gpt6_based?: boolean
           id?: string
           is_new?: boolean
           logo?: string | null

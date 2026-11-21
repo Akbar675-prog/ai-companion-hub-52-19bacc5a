@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { Root } from "hast";
 
 import { Check, ChevronDown, Copy, Download, Link2, RefreshCw, ThumbsDown, ThumbsUp, Volume2, VolumeX, X } from "lucide-react";
 import { AiAvatar } from "@/components/ui/plasma-shader";
@@ -214,45 +213,6 @@ function CitationPill({
   );
 }
 
-type AnimatedMarkdownNode = {
-  type: string;
-  tagName?: string;
-  value?: string;
-  properties?: Record<string, string[]>;
-  children?: AnimatedMarkdownNode[];
-};
-
-function rehypeFadeStreamWords() {
-  return (tree: Root) => {
-    const latestWord: { node?: AnimatedMarkdownNode } = {};
-
-    function visit(node: AnimatedMarkdownNode, inCode = false) {
-      if (!node.children) return;
-      const skipWords = inCode || node.tagName === "code" || node.tagName === "pre";
-      node.children = node.children.flatMap((child) => {
-        if (!skipWords && child.type === "text" && child.value) {
-          return child.value.split(/(\s+)/).filter(Boolean).map((part) => {
-            if (/^\s+$/.test(part)) return { type: "text", value: part };
-            const word: AnimatedMarkdownNode = {
-              type: "element",
-              tagName: "span",
-              properties: {},
-              children: [{ type: "text", value: part }],
-            };
-            latestWord.node = word;
-            return word;
-          });
-        }
-        visit(child, skipWords);
-        return [child];
-      });
-    }
-
-    visit(tree as unknown as AnimatedMarkdownNode);
-    if (latestWord.node) latestWord.node.properties = { className: ["ai-stream-word"] };
-  };
-}
-
 function cleanAnswerMarkup(text: string) {
   return text
     .replace(/<Entity\s+value="([^"]*)"[^>]*\s*\/>/g, "$1")
@@ -271,6 +231,18 @@ function MarkdownBody({
   muted?: boolean;
   streaming?: boolean;
 }) {
+  if (streaming) {
+    return (
+      <div
+        className={`whitespace-pre-wrap text-sm leading-relaxed [overflow-wrap:anywhere] ${
+          muted ? "text-muted-foreground" : "text-foreground"
+        }`}
+      >
+        {cleanAnswerMarkup(text)}
+      </div>
+    );
+  }
+
   // Rapikan keluaran model: hilangkan baris kosong berlebih dan spasi ekor
   // yang membuat jarak antar paragraf terlihat kepanjangan.
   const clean = cleanAnswerMarkup(text)
@@ -299,7 +271,6 @@ function MarkdownBody({
     >
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={streaming ? [rehypeFadeStreamWords] : []}
         components={{
           table: ({ children }) => (
             <div className="my-1 w-full overflow-x-auto rounded-2xl border border-border/70">

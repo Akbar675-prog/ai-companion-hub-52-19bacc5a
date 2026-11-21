@@ -55,6 +55,7 @@ function AddAiPage() {
   const [persona, setPersona] = useState("");
   const [markNew, setMarkNew] = useState(true);
   const [realModel, setRealModel] = useState(false);
+  const [gpt6Based, setGpt6Based] = useState(false);
   const [modelType, setModelType] = useState("");
   const [uncensored, setUncensored] = useState(false);
   const [abilities, setAbilities] = useState("");
@@ -89,6 +90,7 @@ function AddAiPage() {
     setPersona("");
     setMarkNew(true);
     setRealModel(false);
+    setGpt6Based(false);
     setModelType("");
     setUncensored(false);
     setAbilities("");
@@ -104,6 +106,7 @@ function AddAiPage() {
     setPersona(m.persona ?? "");
     setMarkNew(Boolean(m.isNew));
     setRealModel(Boolean(m.realModel));
+    setGpt6Based(Boolean(m.gpt6Based));
     setModelType(m.modelType ?? "");
     setUncensored(Boolean(m.uncensored));
     setAbilities(m.abilities ?? "");
@@ -126,7 +129,7 @@ function AddAiPage() {
       return;
     }
     const ep = endpointUrl.trim();
-    if (realModel) {
+    if (realModel && !gpt6Based) {
       if (modelType.trim() && !/^[\w.:\/-]+$/.test(modelType.trim())) {
         setError("Model type harus seperti: nvidia/nemotron-3.5-lightning:free");
         return;
@@ -142,15 +145,16 @@ function AddAiPage() {
     const patch = {
       name: name.trim().slice(0, 40),
       tagline: tagline.trim().slice(0, 120) || "AI kustom buatan kamu.",
-      persona: realModel ? "" : persona.trim().slice(0, 4000),
+      persona: realModel && !gpt6Based ? "" : persona.trim().slice(0, 10_000),
       logo: logo.trim() || undefined,
       isNew: markNew,
-      realModel,
-      modelType: realModel && modelType.trim() ? modelType.trim().slice(0, 120) : undefined,
+      realModel: realModel && !gpt6Based,
+      gpt6Based,
+      modelType: realModel && !gpt6Based && modelType.trim() ? modelType.trim().slice(0, 120) : undefined,
       uncensored,
       abilities: parseAbilities(abilities).join(", ") || undefined,
-      endpointUrl: realModel && ep ? ep.slice(0, 300) : undefined,
-      endpointKey: realModel && ep ? endpointKey.trim().slice(0, 400) || undefined : undefined,
+      endpointUrl: realModel && !gpt6Based && ep ? ep.slice(0, 300) : undefined,
+      endpointKey: realModel && !gpt6Based && ep ? endpointKey.trim().slice(0, 400) || undefined : undefined,
     };
 
     try {
@@ -262,11 +266,35 @@ function AddAiPage() {
             />
           </Field>
 
+          <label className="flex items-start gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-3 text-sm">
+            <input
+              type="checkbox"
+              checked={gpt6Based}
+              onChange={(e) => {
+                setGpt6Based(e.target.checked);
+                if (e.target.checked) setRealModel(false);
+              }}
+              className="mt-0.5 size-4 accent-primary"
+            />
+            <span>
+              <span className="font-medium">Use GPT-6 based model AI</span>
+              <span className="block text-xs leading-relaxed text-muted-foreground">
+                Memakai mesin GPT-6 yang sama dengan model utama. Nama, prompt persona hingga 10.000
+                karakter, dan kemampuan bisa dikustomisasi. Ini fine-tuning lewat prompt, bukan
+                pelatihan ulang model. Model disimpan di katalog global dan dapat dipilih semua
+                pengguna.
+              </span>
+            </span>
+          </label>
+
           <label className="flex items-start gap-2 text-sm">
             <input
               type="checkbox"
               checked={realModel}
-              onChange={(e) => setRealModel(e.target.checked)}
+              onChange={(e) => {
+                setRealModel(e.target.checked);
+                if (e.target.checked) setGpt6Based(false);
+              }}
               className="mt-0.5 size-4 accent-primary"
             />
             <span>
@@ -292,7 +320,7 @@ function AddAiPage() {
             </span>
           </Field>
 
-          {realModel ? (
+          {realModel && !gpt6Based ? (
             <>
               <Field label="Model type (opsional)">
                 <input
@@ -335,14 +363,19 @@ function AddAiPage() {
               )}
             </>
           ) : (
-            <Field label="Prompting AI (gaya & aturan menjawab)">
+            <Field label={gpt6Based ? "Prompt GPT-6 (persona & fine-tuning)" : "Prompting AI (gaya & aturan menjawab)"}>
               <textarea
                 value={persona}
                 onChange={(e) => setPersona(e.target.value)}
-                rows={5}
-                placeholder="Contoh: Jawab formal, selalu beri contoh nyata, dan akhiri dengan ringkasan tiga poin."
+                rows={6}
+                maxLength={10_000}
+                placeholder="Contoh: Tangani tugas kompleks secara sistematis, jelaskan asumsi, format hasil sesuai kebutuhan, dan verifikasi kesimpulan."
                 className={`${inputClass} resize-y`}
+                aria-describedby="persona-help"
               />
+              <span id="persona-help" className="mt-1 block text-xs text-muted-foreground">
+                {persona.length.toLocaleString("id-ID")} / 10.000 karakter. Berlaku untuk semua percakapan dengan model ini.
+              </span>
             </Field>
           )}
 
@@ -434,6 +467,11 @@ function AddAiPage() {
                     <p className="flex flex-wrap items-center gap-2 text-sm font-medium">
                       {m.name}
                       {m.isNew && <NewBadge />}
+                      {m.gpt6Based && (
+                        <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+                          GPT-6 based
+                        </span>
+                      )}
                       {!m.custom && (
                         <span className="rounded-full bg-surface-variant px-2 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
                           bawaan
