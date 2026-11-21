@@ -1,0 +1,20 @@
+**Game terbaru** adalah permainan video yang baru dirilis atau sedang populer saat ini.
+
+Ada banyak jenis game, misalnya:
+- 🎮 **PC:** game untuk komputer atau laptop.
+- 📱 **Mobile:** game Android dan iPhone.
+- 🕹️ **Konsol:** game PlayStation, Xbox, dan Nintendo Switch.
+- 🌐 **Online:** game yang dimainkan bersama pemain lain melalui internet.
+
+Kalau yang sedang ramai pada November 2026, beberapa judul yang menarik perhatian adalah:
+
+- **Kalau yang sedang ramai pada November 2026, beberapa judul yang menarik perhatian adalah:
+
+- **<Entity value="Grand Theft Auto VI (GTA 6)" category="video_game"/>** – PS5 dan Xbox.
+- **<Entity value="The Legend of Zelda: Ocarina of Time Remake" category="video_game"/>** – Switch 2.
+- **<Entity value="World of Warcraft: Forever" category="video_game"/>** – PC.
+- **<Entity value="Pikmin 4" category="video_game"/>** – Switch 2. 
+
+Sumber: <Cite refs={["turn960174search0","turn960174search1"]}/>
+
+Kamu sedang mencari game terbaru untuk **Android, iPhone, PC, atau PlayStation**? Biar saya bisa berikan daftar yang sesuai.
