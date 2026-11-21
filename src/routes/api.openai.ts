@@ -67,10 +67,11 @@ function baseMetadata() {
 
 export interface OpenAIMessageInput {
   message: string;
+  messages?: { role: "user" | "assistant"; content: string }[];
   systemPrompt?: string | null;
 }
 
-function buildPayload({ message, systemPrompt }: OpenAIMessageInput) {
+function buildPayload({ message, messages: history, systemPrompt }: OpenAIMessageInput) {
   const prompt = systemPrompt === undefined ? DEFAULT_SYSTEM_PROMPT : systemPrompt;
   const messages: any[] = [];
 
@@ -85,14 +86,16 @@ function buildPayload({ message, systemPrompt }: OpenAIMessageInput) {
     });
   }
 
-  messages.push({
-    id: buildMessageId(),
-    author: { role: "user" },
-    content: { parts: [message], content_type: "text" },
-    status: "finished_successfully",
-    recipient: "all",
-    metadata: baseMetadata(),
-  });
+  for (const item of history?.length ? history : [{ role: "user" as const, content: message }]) {
+    messages.push({
+      id: buildMessageId(),
+      author: { role: item.role },
+      content: { parts: [item.content], content_type: "text" },
+      status: "finished_successfully",
+      recipient: "all",
+      metadata: baseMetadata(),
+    });
+  }
 
   return {
     action: "next",
@@ -197,6 +200,40 @@ export async function streamOpenAIChat(input: OpenAIMessageInput, signal?: Abort
 
   return new ReadableStream<Uint8Array>({
     async start(streamCtrl) {
+      const consumeUpstreamLine = (rawLine: string) => {
+        const line = rawLine.trim();
+        if (!line.startsWith("data:")) return;
+        const jsonStr = line.slice(5).trim();
+        if (!jsonStr || jsonStr === "[DONE]") return;
+
+        let data: any;
+        try {
+          data = JSON.parse(jsonStr);
+        } catch {
+          return;
+        }
+
+        if (Array.isArray(data.v)) {
+          for (const patch of data.v) {
+            if (
+              patch?.p === "/message/content/parts/0" &&
+              patch.o === "append" &&
+              typeof patch.v === "string"
+            ) {
+              accumulated += patch.v;
+              emittedAny = true;
+              streamCtrl.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text", v: patch.v })}\n\n`));
+            }
+          }
+        }
+        const part = data?.v?.message?.content?.parts?.[0];
+        if (!emittedAny && data?.v?.message?.author?.role === "assistant" && typeof part === "string") {
+          accumulated = part;
+          emittedAny = true;
+          streamCtrl.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text", v: part })}\n\n`));
+        }
+      };
+
       try {
         for (;;) {
           const { done, value } = await reader.read();
@@ -205,32 +242,10 @@ export async function streamOpenAIChat(input: OpenAIMessageInput, signal?: Abort
           const lines = buffer.split("\n");
           buffer = lines.pop() ?? "";
 
-          for (const rawLine of lines) {
-            const line = rawLine.trim();
-            if (!line.startsWith("data:")) continue;
-            const jsonStr = line.slice(5).trim();
-            if (!jsonStr || jsonStr === "[DONE]") continue;
-
-            let data: any;
-            try { data = JSON.parse(jsonStr); } catch { continue; }
-
-            if (Array.isArray(data.v)) {
-              for (const patch of data.v) {
-                if (patch?.p === "/message/content/parts/0" && patch.o === "append" && typeof patch.v === "string") {
-                  accumulated += patch.v;
-                  emittedAny = true;
-                  streamCtrl.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text", v: patch.v })}\n\n`));
-                }
-              }
-            }
-            const part = data?.v?.message?.content?.parts?.[0];
-            if (!emittedAny && data?.v?.message?.author?.role === "assistant" && typeof part === "string") {
-              accumulated = part;
-              emittedAny = true;
-              streamCtrl.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "text", v: part })}\n\n`));
-            }
-          }
+          for (const rawLine of lines) consumeUpstreamLine(rawLine);
         }
+        buffer += decoder.decode();
+        if (buffer.trim()) consumeUpstreamLine(buffer);
         streamCtrl.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "done", complete: emittedAny, full: accumulated })}\n\n`));
         streamCtrl.close();
       } catch (err) {
@@ -260,7 +275,21 @@ export const Route = createFileRoute("/api/openai")({
             return Response.json({ ok: false, error: "message kosong" }, { status: 400 });
           }
 
-          const input = { message: body.message.trim(), systemPrompt: body.systemPrompt };
+          const messages = Array.isArray(body.messages)
+            ? body.messages
+                .filter(
+                  (item: any) =>
+                    (item?.role === "user" || item?.role === "assistant") &&
+                    typeof item.content === "string" &&
+                    item.content.trim(),
+                )
+                .slice(-40)
+            : undefined;
+          const input = {
+            message: body.message.trim(),
+            messages: messages?.at(-1)?.role === "user" ? messages : undefined,
+            systemPrompt: body.systemPrompt,
+          };
 
           // Non-stream
           if (body.stream !== true) {

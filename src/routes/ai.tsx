@@ -456,7 +456,14 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       const res = await fetch("/api/openai", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: lastUser, stream: true }),
+        body: JSON.stringify({
+          message: lastUser,
+          messages: history.map((item) => ({
+            role: item.role,
+            content: cleanThirdPartyMarkup(item.content),
+          })),
+          stream: true,
+        }),
         signal: controller.signal,
       });
 
@@ -469,6 +476,30 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
       const decoder = new TextDecoder();
       let buffer = "";
       let finished = false;
+      const consumeEvent = (part: string) => {
+        const line = part.trim();
+        if (!line.startsWith("data:")) return;
+
+        let evt: {
+          type?: string;
+          v?: string;
+          complete?: boolean;
+          error?: string;
+        };
+        try {
+          evt = JSON.parse(line.slice(5).trim());
+        } catch {
+          return;
+        }
+
+        if (evt.type === "done") {
+          finished = evt.complete === true;
+        } else if (evt.type === "error") {
+          throw new Error(evt.error || "Stream error");
+        } else if (evt.type === "text" && evt.v) {
+          acc = cleanThirdPartyMarkup(acc + evt.v);
+        }
+      };
 
       try {
         for (;;) {
@@ -478,32 +509,10 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
           buffer += decoder.decode(value, { stream: true });
           const parts = buffer.split("\n\n");
           buffer = parts.pop() ?? "";
-
-          for (const part of parts) {
-            const line = part.trim();
-            if (!line.startsWith("data:")) continue;
-
-            let evt: {
-              type?: string;
-              v?: string;
-              complete?: boolean;
-              error?: string;
-            };
-            try {
-              evt = JSON.parse(line.slice(5).trim());
-            } catch {
-              continue;
-            }
-
-            if (evt.type === "done") {
-              finished = evt.complete === true;
-            } else if (evt.type === "error") {
-              throw new Error(evt.error || "Stream error");
-            } else if (evt.type === "text" && evt.v) {
-              acc = cleanThirdPartyMarkup(acc + evt.v);
-            }
-          }
+          for (const part of parts) consumeEvent(part);
         }
+        buffer += decoder.decode();
+        if (buffer.trim()) consumeEvent(buffer);
       } finally {
         await reader.cancel().catch(() => {});
       }

@@ -239,7 +239,7 @@ m3e-loading-indicator.m3-loading-lg {
 
 @keyframes ai-word-in {
   from {
-    opacity: 0;
+    opacity: 1;
     transform: translateY(3px);
   }
   to {
