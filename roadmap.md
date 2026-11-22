@@ -1,0 +1,4 @@
+- [ ] Explain why the welcome greeting appears with AI answers and correct the repeated stream output.
+- [ ] Make supported GenUI markup render reliably, including interactive controls and image cards.
+- [ ] Fix GenUI image search/loading and verify images can resolve when a configured key is available.
+- [ ] Run focused tests and inspect the preview/build diagnostics.
