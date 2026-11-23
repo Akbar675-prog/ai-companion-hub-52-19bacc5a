@@ -300,7 +300,7 @@ export const Route = createFileRoute("/api/ai-chat")({
           if (ap.about) bits.push(`Tentang dia: ${String(ap.about).slice(0, 600)}`);
           if (bits.length > 0) {
             profileBlock =
-              "\n\nYANG KAMU KETAHUI TENTANG LAWAN BICARAMU (dia isi sendiri; manfaatkan secara natural untuk menyapa dan menyesuaikan jawaban, tanpa menyebut bahwa kamu membaca profilnya):\n" +
+              "\n\nYANG KAMU KETAHUI TENTANG LAWAN BICARAMU (dia isi sendiri; gunakan hanya bila relevan untuk menyesuaikan jawaban, tanpa menyebut bahwa kamu membaca profilnya. Jangan menambahkan sapaan otomatis pada jawaban informatif):\n" +
               bits.join("\n");
           }
         }
@@ -430,7 +430,7 @@ export const Route = createFileRoute("/api/ai-chat")({
             "\n\n" +
             PERSONA_CRAFT +
             (userName
-              ? `\n\nLawan bicaramu: ${userName}. Sapa dengan namanya bila cocok dengan karakter di atas, jangan di setiap kalimat.`
+              ? `\n\nLawan bicaramu: ${userName}. Gunakan namanya hanya bila relevan; jangan awali jawaban informatif dengan sapaan.`
               : "") +
             profileBlock +
             extra +
@@ -445,7 +445,7 @@ export const Route = createFileRoute("/api/ai-chat")({
           systemContent =
             GETRIX_CORE +
             (userName
-              ? `\n\nLAWAN BICARAMU: ${userName}. Sapa dengan namanya bila terasa natural, jangan di setiap kalimat.`
+              ? `\n\nLAWAN BICARAMU: ${userName}. Gunakan namanya hanya bila relevan; jangan awali jawaban informatif dengan sapaan.`
               : "") +
             profileBlock +
             extra;

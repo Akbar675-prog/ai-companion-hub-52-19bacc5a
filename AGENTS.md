@@ -10,3 +10,5 @@
 <!-- LOVABLE:END -->
 
 - Register shared web components once in the root route and declare their JSX attributes in `src/types`; this keeps route UI consistent and type-safe.
+- GenUI image lookup runs through `useServerFn` in its image component so server-only provider keys stay private.
+- Resumed AI streams merge each attempt against prior text so replayed prefixes are not shown twice.

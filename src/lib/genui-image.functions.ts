@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
 
 /**
  * Pencarian gambar Serper di SERVER (API key tidak pernah sampai ke browser).
@@ -21,25 +22,29 @@ function shapeScore(im: SerperImage, target: number) {
 }
 
 export const searchGenUiImagesFn = createServerFn({ method: "POST" })
-  .inputValidator((d: { query: string; ratio: number }) => d)
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        query: z.string().trim().min(1).max(200),
+        ratio: z.number().finite().positive().max(10),
+      })
+      .parse(d),
+  )
   .handler(async ({ data }) => {
-    const key = process.env.SERPER_API_KEY;
+    const key = process.env["SERPER_API_KEY"];
     if (!key) throw new Error("SERPER_API_KEY belum diset di server");
-
-    const query = String(data.query ?? "").trim().slice(0, 200);
-    const target = Number.isFinite(data.ratio) && data.ratio > 0 ? data.ratio : 1;
-    if (!query) return { originals: [] as string[], thumbs: [] as string[] };
 
     const res = await fetch("https://google.serper.dev/images", {
       method: "POST",
       headers: { "X-API-KEY": key, "Content-Type": "application/json" },
-      body: JSON.stringify({ q: query, gl: "id", hl: "id", num: 10 }),
+      body: JSON.stringify({ q: data.query, gl: "id", hl: "id", num: 10 }),
+      signal: AbortSignal.timeout(12_000),
     });
     if (!res.ok) throw new Error(`Serper HTTP ${res.status}`);
 
     const json = (await res.json()) as { images?: SerperImage[] };
     const ranked = (json.images ?? [])
-      .map((im) => ({ im, score: shapeScore(im, target) }))
+      .map((im) => ({ im, score: shapeScore(im, data.ratio) }))
       .sort((a, b) => a.score - b.score || (b.im.imageWidth ?? 0) - (a.im.imageWidth ?? 0))
       .map((x) => x.im);
 

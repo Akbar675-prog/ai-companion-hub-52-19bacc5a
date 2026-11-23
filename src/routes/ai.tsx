@@ -14,6 +14,7 @@ import { getAiProfileFn } from "@/lib/ai-profile.functions";
 import { getAiChatHistoryFn, saveAiChatHistoryFn } from "@/lib/ai-chat-history.functions";
 import { chatCreditsFn, recordChatUsageFn } from "@/lib/ai-credits.functions";
 import { listAiModelsFn } from "@/lib/ai-models.functions";
+import { mergeStreamContinuation } from "@/lib/ai-stream";
 import type { AiProfile } from "@/lib/ai-profile.server";
 import { DEFAULT_AVATAR, useAccount } from "@/lib/use-account";
 import {
@@ -811,6 +812,13 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
         const signal = AbortSignal.any([controller.signal, ctrl.signal]);
 
         const resume = acc.content.trim();
+        const baseContent = resume;
+        const baseReasoning = acc.reasoning.trimEnd();
+        let streamedContent = "";
+        let streamedReasoning = "";
+        if (acc.content !== baseContent || acc.reasoning !== baseReasoning) {
+          acc = { ...acc, content: baseContent, reasoning: baseReasoning };
+        }
 
         const messages = resume
           ? [
@@ -887,9 +895,19 @@ export function AiChatPage({ requestedThreadId }: { requestedThreadId?: string }
                 };
                 if (evt.type === "done") {
                   closed = evt.complete === true;
-                } else if (evt.type === "reasoning")
-                  acc = { ...acc, reasoning: acc.reasoning + (evt.v ?? "") };
-                else if (evt.type === "text") acc = { ...acc, content: acc.content + (evt.v ?? "") };
+                } else if (evt.type === "reasoning") {
+                  streamedReasoning += evt.v ?? "";
+                  acc = {
+                    ...acc,
+                    reasoning: mergeStreamContinuation(baseReasoning, streamedReasoning),
+                  };
+                } else if (evt.type === "text") {
+                  streamedContent += evt.v ?? "";
+                  acc = {
+                    ...acc,
+                    content: mergeStreamContinuation(baseContent, streamedContent),
+                  };
+                }
               } catch {
                 /* skip */
               }

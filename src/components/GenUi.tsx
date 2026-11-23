@@ -8,41 +8,47 @@ import {
   type CSSProperties,
   type ReactNode,
 } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { ImageOff } from "lucide-react";
 import { emptyScope, evalExpr, type Attr, type GBlock, type GNode, type Scope } from "@/lib/genui";
+import { searchGenUiImagesFn } from "@/lib/genui-image.functions";
+import { createSerperResolver, invalidateSerperImageCache } from "@/lib/genui-images";
 
 /* ───────────────────── Pencari gambar (AsyncImage) ───────────────────── */
 
 /** `ratio` = lebar/tinggi bingkai (mis. 0.75 untuk 3:4). Pilih gambar yang bentuknya paling mendekati. */
 export type ImageResolver = (query: string, ratio: number) => Promise<string | null>;
 
-/** Default: GET /api/image-search?q=... → { url }. Ganti lewat configureGenUiImages(). */
-let resolver: ImageResolver = async (query, ratio) => {
-  const res = await fetch(`/api/image-search?q=${encodeURIComponent(query)}&ratio=${ratio.toFixed(3)}`);
-  if (!res.ok) return null;
-  const data = (await res.json()) as { url?: string | null };
-  return data.url ?? null;
-};
-
 const imageCache = new Map<string, Promise<string | null>>();
-
-export function configureGenUiImages(fn: ImageResolver) {
-  resolver = fn;
-  imageCache.clear();
-}
 
 function ratioOf(ratio?: string): number {
   const m = /^(\d+(?:\.\d+)?)\s*[:/]\s*(\d+(?:\.\d+)?)$/.exec((ratio ?? "").trim());
   return m ? Number(m[1]) / Number(m[2]) : 1;
 }
 
-function resolveImage(query: string, ratio?: string) {
+function imageKey(query: string, ratio: number) {
+  return `${query}|${ratio < 0.85 ? "potret" : ratio > 1.2 ? "lanskap" : "kotak"}`;
+}
+
+function invalidateImage(query: string, ratio?: string) {
+  const numericRatio = ratioOf(ratio);
+  imageCache.delete(imageKey(query, numericRatio));
+  invalidateSerperImageCache(query, numericRatio);
+}
+
+function resolveImage(query: string, ratio: string | undefined, resolver: ImageResolver) {
   const r = ratioOf(ratio);
-  const key = `${query}|${r < 0.85 ? "potret" : r > 1.2 ? "lanskap" : "kotak"}`;
+  const key = imageKey(query, r);
   let p = imageCache.get(key);
   if (!p) {
-    p = resolver(query, r).catch(() => null);
+    p = resolver(query, r).catch((error: unknown) => {
+      console.warn("[GenUI] pencarian gambar gagal:", error instanceof Error ? error.message : error);
+      return null;
+    });
     imageCache.set(key, p);
+    void p.then((url) => {
+      if (!url && imageCache.get(key) === p) imageCache.delete(key);
+    });
   }
   return p;
 }
@@ -208,6 +214,8 @@ function AsyncImageView({ query, ratio, width, maxWidth, radius, fill, alt }: {
   fill?: boolean;
   alt?: string;
 }) {
+  const searchImages = useServerFn(searchGenUiImagesFn);
+  const resolver = useMemo(() => createSerperResolver(searchImages), [searchImages]);
   const [src, setSrc] = useState<string | null | undefined>(undefined);
   const [loaded, setLoaded] = useState(false);
 
@@ -216,9 +224,9 @@ function AsyncImageView({ query, ratio, width, maxWidth, radius, fill, alt }: {
     setSrc(undefined);
     setLoaded(false);
     if (!query) { setSrc(null); return; }
-    void resolveImage(query, ratio).then((u) => { if (!off) setSrc(u); });
+    void resolveImage(query, ratio, resolver).then((u) => { if (!off) setSrc(u); });
     return () => { off = true; };
-  }, [query, ratio]);
+  }, [query, ratio, resolver]);
 
   const style: CSSProperties = fill
     ? { width: "100%", height: "100%" }
@@ -238,8 +246,9 @@ function AsyncImageView({ query, ratio, width, maxWidth, radius, fill, alt }: {
       }`}
     >
       {src === null && (
-        <div className="absolute inset-0 grid place-items-center text-muted-foreground/60">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground/70">
           <ImageOff className="size-5" aria-hidden="true" />
+          <span className="px-2 text-center text-xs">Gambar tidak ditemukan</span>
         </div>
       )}
       {src && (
@@ -248,7 +257,10 @@ function AsyncImageView({ query, ratio, width, maxWidth, radius, fill, alt }: {
           alt={alt || query}
           loading="lazy"
           onLoad={() => setLoaded(true)}
-          onError={() => setSrc(null)}
+          onError={() => {
+            invalidateImage(query, ratio);
+            setSrc(null);
+          }}
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
         />
       )}

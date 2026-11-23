@@ -12,12 +12,8 @@ import { faviconOf, hostOf, type ChatMessage } from "@/lib/ai-history";
 import { speakAiTextFn } from "@/lib/ai-speech.functions";
 
 // ── GenUI (box, row, AsyncImage, radio-group, button, dst.) ──
-import { configureGenUiImages, GenUiBlock } from "@/components/GenUi";
+import { GenUiBlock } from "@/components/GenUi";
 import { genUiStart, splitGenUI, toPlainText } from "@/lib/genui";
-import { serperResolver } from "@/lib/genui-images";
-
-// Pasang pencari gambar Serper sekali saat modul dimuat.
-configureGenUiImages(serperResolver);
 
 function SourcesSheet({
   sources,
