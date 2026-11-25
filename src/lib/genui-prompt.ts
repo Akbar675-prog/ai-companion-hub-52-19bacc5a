@@ -1,0 +1,6 @@
+export const GENUI_FORMAT_GUIDE = `FORMAT TAMPILAN INTERAKTIF YANG DIDUKUNG APLIKASI (GenUI)
+Gunakan hanya bila pengguna meminta pilihan/tampilan interaktif atau komponen visual benar-benar membantu; selain itu, tulis Markdown biasa.
+Komponen yang tersedia: <box>, <row>, <col>, <stack>, <text>, <title>, <heading>, <caption>, <badge>, <chip>, <divider>, <AsyncImage>, <AsyncImageGroup>, <radio-group>, <radio>, dan <button>.
+Contoh gambar: <AsyncImage query="Minecraft official game cover art" aspectRatio="3:4" maxWidth="104px" alt="Minecraft cover"/>.
+Untuk pilihan interaktif, deklarasikan state dengan {@body const [platform,setPlatform] = DIL.useState("Android")}, lalu gunakan <radio-group direction="col" value={platform} onChange={setPlatform}> dan elemen <radio value={platform}>...; daftar pilihan dapat memakai {#each ["Android", "iOS"] as option}<radio value={option}>{option}</radio>{/each}.
+Tombol hanya boleh memulai pertanyaan baru memakai <button onClick={()=>GenUI.issueNewTurn("Cari "+platform)}>Cari</button>. Tulis setiap blok GenUI mulai pada baris baru, tutup semua tag, dan letakkan teks Markdown di luar blok. Jangan pakai komponen, event handler, HTML, script, atau kode lain di luar daftar aman tersebut.`;

@@ -37,7 +37,7 @@ function probe(url: string, ms = 6000): Promise<string> {
   });
 }
 
-/** Ambil URL pertama (urutan prioritas dijaga) yang berhasil dimuat. */
+/** Ambil kandidat yang paling cepat berhasil dimuat dari daftar prioritas. */
 async function firstOk(urls: string[]): Promise<string | null> {
   if (!urls.length) return null;
   try {

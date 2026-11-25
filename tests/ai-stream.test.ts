@@ -28,4 +28,10 @@ describe("AI stream continuation", () => {
       "Jawaban yang sudah tampil.",
     );
   });
+
+  test("removes a short preamble when a retry replays the answer", () => {
+    expect(
+      mergeStreamContinuation("Jawaban yang sudah tampil.", "Melanjutkan: Jawaban yang sudah tampil. Tambahan."),
+    ).toBe("Jawaban yang sudah tampil. Tambahan.");
+  });
 });
